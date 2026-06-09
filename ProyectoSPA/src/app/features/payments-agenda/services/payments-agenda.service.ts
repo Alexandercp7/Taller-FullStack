@@ -72,6 +72,7 @@ export class PaymentsAgendaService {
     if (update.montoPresupuestado !== undefined) body['monto_presupuestado'] = update.montoPresupuestado;
     if (update.montoPagado !== undefined) body['monto_pagado'] = update.montoPagado;
     if (update.notas !== undefined) body['notas'] = update.notas;
+    if (update.estado !== undefined) body['estado'] = update.estado;
     this._http.put(`/api/v1/payments-agenda/${id}`, body).subscribe();
   }
 

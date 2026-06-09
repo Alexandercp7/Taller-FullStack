@@ -78,19 +78,23 @@ export class ClientDetailContentComponent {
 			return;
 		}
 
-		const nextId = this._service.updateClient(client.id, {
-			nombre: this.nombreEdit().trim(),
-			telefono: this.telefonoEdit().trim(),
-			correo: this.correoEdit().trim(),
-			rfc: this.rfcEdit().trim(),
-		});
+		const nombre = this.nombreEdit().trim();
+		const telefono = this.telefonoEdit().trim();
+		const correo = this.correoEdit().trim();
+		const rfc = this.rfcEdit().trim();
+
+		this._service.updateClient(client.id, { nombre, telefono, correo, rfc });
+
+		this.detail.update(d => d ? {
+			...d,
+			nombre: nombre || d.nombre,
+			telefono: telefono || '-',
+			correo: correo || '-',
+			rfc: rfc || 'RFC pendiente',
+		} : d);
 
 		this.editFicha.set(false);
 		this._notification.success('Ficha del cliente actualizada.');
-
-		if (nextId && nextId !== client.id) {
-			void this._router.navigate(['/app/clientes-vehiculos', nextId], { replaceUrl: true });
-		}
 	}
 
 	protected tagClass(tag: string): string {

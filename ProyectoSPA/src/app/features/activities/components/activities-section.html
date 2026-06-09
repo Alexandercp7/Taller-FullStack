@@ -115,36 +115,44 @@
                   <td hlmTd>{{ activity.asignadoA }}</td>
                   
                   <td hlmTd>
-                    <hlm-select [value]="activity.etiqueta" (valueChange)="updateActivityTag(activity.id, ($event ?? activity.etiqueta) + '')">
-                      <hlm-select-trigger size="sm" class="w-full">
-                        <hlm-select-value />
-                      </hlm-select-trigger>
-                      <hlm-select-content *hlmSelectPortal>
-                        <hlm-select-group>
-                          @for (tag of getAvailableTags(); track tag) {
-                            <hlm-select-item [value]="tag">{{ tag }}</hlm-select-item>
-                          }
-                        </hlm-select-group>
-                      </hlm-select-content>
-                    </hlm-select>
+                    @if (canManage(activity)) {
+                      <hlm-select [value]="activity.etiqueta" (valueChange)="updateActivityTag(activity.id, ($event ?? activity.etiqueta) + '')">
+                        <hlm-select-trigger size="sm" class="w-full">
+                          <hlm-select-value />
+                        </hlm-select-trigger>
+                        <hlm-select-content *hlmSelectPortal>
+                          <hlm-select-group>
+                            @for (tag of getAvailableTags(); track tag) {
+                              <hlm-select-item [value]="tag">{{ tag }}</hlm-select-item>
+                            }
+                          </hlm-select-group>
+                        </hlm-select-content>
+                      </hlm-select>
+                    } @else {
+                      <span hlmBadge variant="outline">{{ activity.etiqueta }}</span>
+                    }
                   </td>
 
                   <td hlmTd>
-                    <hlm-select 
-                      [value]="activity.prioridad" 
-                      (valueChange)="updateActivityPriority(activity.id, $event)"
-                    >
-                      <hlm-select-trigger size="sm" class="w-full">
-                        <hlm-select-value />
-                      </hlm-select-trigger>
-                      <hlm-select-content *hlmSelectPortal>
-                        <hlm-select-group>
-                          @for (priority of prioridades; track priority) {
-                            <hlm-select-item [value]="priority">{{ priority }}</hlm-select-item>
-                          }
-                        </hlm-select-group>
-                      </hlm-select-content>
-                    </hlm-select>
+                    @if (canManage(activity)) {
+                      <hlm-select
+                        [value]="activity.prioridad"
+                        (valueChange)="updateActivityPriority(activity.id, $event)"
+                      >
+                        <hlm-select-trigger size="sm" class="w-full">
+                          <hlm-select-value />
+                        </hlm-select-trigger>
+                        <hlm-select-content *hlmSelectPortal>
+                          <hlm-select-group>
+                            @for (priority of prioridades; track priority) {
+                              <hlm-select-item [value]="priority">{{ priority }}</hlm-select-item>
+                            }
+                          </hlm-select-group>
+                        </hlm-select-content>
+                      </hlm-select>
+                    } @else {
+                      <span hlmBadge [ngClass]="['act-chip', priorityChipClass(activity.prioridad)]" [variant]="priorityVariant(activity.prioridad)">{{ activity.prioridad }}</span>
+                    }
                   </td>
 
                   <td hlmTd>
@@ -177,26 +185,28 @@
                       >
                         <ng-icon name="lucideEye" class="size-4" />
                       </button>
-                      <button
-                        hlmBtn
-                        size="icon"
-                        variant="outline"
-                        type="button"
-                        (click)="editActivity(activity)"
-                        title="Editar"
-                      >
-                        <ng-icon name="lucidePencil" class="size-4" />
-                      </button>
-                      <button
-                        hlmBtn
-                        size="icon"
-                        variant="destructive"
-                        type="button"
-                        (click)="deleteActivity(activity.id)"
-                        title="Eliminar"
-                      >
-                        <ng-icon name="lucideTrash2" class="size-4" />
-                      </button>
+                      @if (canManage(activity)) {
+                        <button
+                          hlmBtn
+                          size="icon"
+                          variant="outline"
+                          type="button"
+                          (click)="editActivity(activity)"
+                          title="Editar"
+                        >
+                          <ng-icon name="lucidePencil" class="size-4" />
+                        </button>
+                        <button
+                          hlmBtn
+                          size="icon"
+                          variant="destructive"
+                          type="button"
+                          (click)="deleteActivity(activity.id)"
+                          title="Eliminar"
+                        >
+                          <ng-icon name="lucideTrash2" class="size-4" />
+                        </button>
+                      }
                     </div>
                   </td>
                 </tr>
@@ -239,6 +249,7 @@
                 cdkDrag
                 [cdkDragData]="activity"
                 [cdkDragStartDelay]="{ touch: 140, mouse: 0 }"
+                [cdkDragDisabled]="!canManage(activity)"
               >
                 <span class="font-medium">{{ activity.titulo }}</span>
                 <span class="text-muted-foreground text-xs">{{ activity.asignadoA }}</span>

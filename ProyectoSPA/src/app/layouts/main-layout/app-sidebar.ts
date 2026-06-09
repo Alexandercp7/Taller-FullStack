@@ -52,13 +52,11 @@ export class AppSidebarInset {
 	protected readonly navSecondary = navSecondary;
 
 	protected readonly filteredSections = computed(() => {
-		const user = this._authService.currentUser();
-		const isAdmin = user?.roles?.includes('ADMIN') ?? false;
-		const permissions = user?.permissions ?? [];
+		const roles = this._authService.currentUser()?.roles ?? [];
 		return navMainSections
 			.map(section => ({
 				...section,
-				items: section.items.filter(item => isAdmin || !item.permission || permissions.includes(item.permission)),
+				items: section.items.filter(item => !item.roles || item.roles.some(r => roles.includes(r))),
 			}))
 			.filter(section => section.items.length > 0);
 	});

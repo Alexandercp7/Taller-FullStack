@@ -11,6 +11,8 @@ interface ActivityApi {
   etiqueta: string;
   fecha_limite: string;
   asignado_a: { id: number; name: string } | null;
+  creado_por_id: string | null;
+  creado_por_role: string | null;
   comentarios: CommentApi[] | null;
   created_at: string;
 }
@@ -44,6 +46,9 @@ export class ActivitiesService {
       titulo: item.titulo,
       descripcion: item.descripcion,
       asignadoA: item.asignado_a?.name ?? '',
+      asignadoAId: item.asignado_a ? String(item.asignado_a.id) : undefined,
+      creadoPorId: item.creado_por_id ?? undefined,
+      creadoPorRole: item.creado_por_role ?? undefined,
       fechaLimite: item.fecha_limite,
       prioridad: item.prioridad as Activity['prioridad'],
       etiqueta: item.etiqueta,
@@ -63,8 +68,8 @@ export class ActivitiesService {
     return this._activities().find(a => a.id === id);
   }
 
-  addActivity(activity: Activity) {
-    const body = {
+  addActivity(activity: Activity, asignadoAId?: string) {
+    const body: Record<string, unknown> = {
       titulo: activity.titulo,
       descripcion: activity.descripcion,
       prioridad: activity.prioridad,
@@ -72,12 +77,13 @@ export class ActivitiesService {
       fecha_limite: activity.fechaLimite,
       estado: activity.estado,
     };
+    if (asignadoAId) body['asignado_a_id'] = asignadoAId;
     this._http.post<{ data: ActivityApi }>('/api/v1/activities', body).subscribe({
       next: (res) => this._activities.update(list => [...list, this.map(res.data)]),
     });
   }
 
-  updateActivity(id: string, update: Partial<Activity>) {
+  updateActivity(id: string, update: Partial<Activity>, asignadoAId?: string | null) {
     this._activities.update(list => list.map(a => a.id === id ? { ...a, ...update } : a));
     const body: Record<string, unknown> = {};
     if (update.titulo !== undefined) body['titulo'] = update.titulo;
@@ -86,6 +92,7 @@ export class ActivitiesService {
     if (update.etiqueta !== undefined) body['etiqueta'] = update.etiqueta;
     if (update.fechaLimite !== undefined) body['fecha_limite'] = update.fechaLimite;
     if (update.estado !== undefined) body['estado'] = update.estado;
+    if (asignadoAId !== undefined) body['asignado_a_id'] = asignadoAId;
     this._http.put(`/api/v1/activities/${id}`, body).subscribe();
   }
 

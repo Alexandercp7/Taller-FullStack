@@ -10,7 +10,7 @@ import { HlmSelectImports } from '@spartan-ng/helm/select';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideEye, lucidePencil, lucideTrash2 } from '@ng-icons/lucide';
-import { NotificationService } from '../../../core';
+import { AuthService, NotificationService } from '../../../core';
 import { ActivitiesService } from '../services/activities.service';
 import { Activity } from '../models/activity.model';
 import { ActivityDetailDialogComponent, type ActivityDetailDialogContext } from './activity-detail-dialog/activity-detail-dialog';
@@ -39,6 +39,18 @@ export class ActivitiesSectionComponent implements OnInit {
   private readonly service = inject(ActivitiesService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(HlmDialogService);
+  private readonly auth = inject(AuthService);
+
+  protected readonly currentUser = this.auth.currentUser;
+  protected readonly isAdmin = computed(() => {
+    const roles = this.currentUser()?.roles ?? [];
+    return roles.includes('ADMIN') || roles.includes('MANAGER');
+  });
+
+  protected canManage(activity: Activity): boolean {
+    if (this.isAdmin()) return true;
+    return activity.creadoPorId === String(this.currentUser()?.id ?? '');
+  }
 
   public readonly activities = computed(() => this.service.getActivities());
 
@@ -221,9 +233,9 @@ export class ActivitiesSectionComponent implements OnInit {
 
   protected createActivity(): void {
     const context: CreateActivityDialogContext = {
-      onCreate: (payload) => {
+      onCreate: (payload, asignadoAId) => {
         const activity = this.service.generateActivityWithId(payload);
-        this.service.addActivity(activity);
+        this.service.addActivity(activity, asignadoAId);
         this.notification.success('Actividad creada correctamente.');
       },
     };
@@ -237,8 +249,8 @@ export class ActivitiesSectionComponent implements OnInit {
   protected editActivity(activity: Activity): void {
     const context: CreateActivityDialogContext = {
       activity,
-      onUpdate: (id: string, payload) => {
-        this.service.updateActivity(id, payload);
+      onUpdate: (id: string, payload, asignadoAId) => {
+        this.service.updateActivity(id, payload, asignadoAId);
         this.notification.success('Actividad actualizada correctamente.');
       },
     };

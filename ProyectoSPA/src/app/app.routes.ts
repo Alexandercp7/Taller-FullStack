@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, loggedOutGuard, permissionGuard } from './core/auth/auth.guards';
+import { authGuard, loggedOutGuard, roleGuard } from './core/auth/auth.guards';
 
 export const routes: Routes = [
 	{
@@ -33,57 +33,56 @@ export const routes: Routes = [
 			},
 			{
 				path: 'clientes-vehiculos',
-				canActivate: [permissionGuard('clients.view')],
+				canActivate: [roleGuard('ADMIN', 'RECEPTIONIST')],
 				loadComponent: () => import('./features/clients-vehicles').then((m) => m.ClientsVehiclesPageComponent),
 			},
 			{
 				path: 'clientes-vehiculos/:id',
-				canActivate: [permissionGuard('clients.view')],
+				canActivate: [roleGuard('ADMIN', 'RECEPTIONIST')],
 				loadComponent: () => import('./features/clients-vehicles').then((m) => m.ClientDetailPageComponent),
 			},
 			{
 				path: 'inventario',
-				canActivate: [permissionGuard('inventory.view')],
+				canActivate: [roleGuard('ADMIN', 'TECHNICIAN')],
 				loadComponent: () => import('./features/inventory').then((m) => m.InventoryPageComponent),
 			},
 			{
 				path: 'agenda-pagos',
-				canActivate: [permissionGuard('finance.view')],
+				canActivate: [roleGuard('ADMIN', 'MANAGER')],
 				loadComponent: () => import('./features/payments-agenda').then((m) => m.PaymentsAgendaPage),
 			},
 			{
 				path: 'contactos-proveedores',
-				canActivate: [permissionGuard('settings.manage')],
+				canActivate: [roleGuard('ADMIN', 'MANAGER')],
 				loadComponent: () => import('./features/contacts').then((m) => m.ContactsPageComponent),
 			},
 			{
 				path: 'lista-actividades',
-				canActivate: [permissionGuard('work-orders.view')],
 				loadComponent: () => import('./features/activities').then((m) => m.ActivitiesPageComponent),
 			},
 			{
 				path: 'lista-precios',
-				canActivate: [permissionGuard('settings.manage')],
+				canActivate: [roleGuard('ADMIN', 'MANAGER')],
 				loadComponent: () => import('./features/prices').then((m) => m.PricesPageComponent),
 			},
 			{
 				path: 'kpis',
-				canActivate: [permissionGuard('finance.view')],
+				canActivate: [roleGuard('ADMIN', 'MANAGER')],
 				loadComponent: () => import('./features/kpis').then((m) => m.KpisDashboardComponent),
 			},
 			{
 				path: 'finanzas-reportes',
-				canActivate: [permissionGuard('finance.view')],
+				canActivate: [roleGuard('ADMIN', 'MANAGER')],
 				loadComponent: () => import('./features/finanzas').then((m) => m.FinancesPageComponent),
 			},
 			{
 				path: 'ordenes-trabajo',
-				canActivate: [permissionGuard('work-orders.view')],
+				canActivate: [roleGuard('ADMIN', 'TECHNICIAN', 'RECEPTIONIST')],
 				loadComponent: () => import('./features/work-orders').then((m) => m.WorkOrdersPageComponent),
 			},
 			{
 				path: 'ordenes-trabajo/:id',
-				canActivate: [permissionGuard('work-orders.view')],
+				canActivate: [roleGuard('ADMIN', 'TECHNICIAN', 'RECEPTIONIST')],
 				loadComponent: () => import('./features/work-orders').then((m) => m.WorkOrderDetailPageComponent),
 			},
 			{

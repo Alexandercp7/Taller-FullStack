@@ -211,7 +211,19 @@
 							</div>
 						}
 					</label>
-					<label class="field"><span>Mecanico asignado</span><input hlmInput [value]="tecnicoEdit()" (input)="tecnicoEdit.set(($any($event.target)).value)" /></label>
+					<label class="field">
+						<span>Mecanico asignado</span>
+						<hlm-select [value]="tecnicoId()" (valueChange)="onTecnicoChange(($event ?? '') + '')">
+							<hlm-select-trigger class="w-full"><hlm-select-value [placeholder]="tecnicoEdit() || 'Seleccionar tecnico'" /></hlm-select-trigger>
+							<hlm-select-content *hlmSelectPortal>
+								<hlm-select-group>
+									@for (emp of employees(); track emp.id) {
+										<hlm-select-item [value]="emp.id">{{ emp.name }}</hlm-select-item>
+									}
+								</hlm-select-group>
+							</hlm-select-content>
+						</hlm-select>
+					</label>
 					<div class="flex justify-end"><button hlmBtn size="sm" type="button" (click)="saveIssueCard()">Guardar</button></div>
 				}
 			</div>

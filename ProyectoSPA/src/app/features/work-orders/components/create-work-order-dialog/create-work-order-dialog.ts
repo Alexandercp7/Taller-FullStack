@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmComboboxImports } from '@spartan-ng/helm/combobox';
@@ -30,16 +31,19 @@ export class CreateWorkOrderDialogComponent {
 	private readonly _dialogRef = inject(BrnDialogRef<unknown>);
 	private readonly _context = injectBrnDialogContext<CreateWorkOrderDialogContext>();
 	private readonly _carQueryApi = inject(CarQueryApiService);
+	private readonly _http = inject(HttpClient);
 	private readonly _notification = inject(NotificationService);
 	private _makeSearchTimer: ReturnType<typeof setTimeout> | null = null;
 	private _modelSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
 	protected readonly priorities = WORK_ORDER_PRIORITIES;
 	protected readonly clients = computed(() => this._context.clients);
+	protected readonly employees = signal<{ id: string; name: string }[]>([]);
 
 	protected readonly cliente = signal('');
 	protected readonly telefono = signal('');
 	protected readonly correo = signal('');
+	protected readonly tecnicoId = signal('');
 	protected readonly tecnico = signal('Sin asignar');
 	protected readonly fechaProgramada = signal(this.todayDate());
 	protected readonly priority = signal<WorkOrderPriority>('Media');
@@ -76,12 +80,23 @@ export class CreateWorkOrderDialogComponent {
 	});
 
 	protected readonly canCreate = computed(() =>
-		this.cliente().trim().length > 0 && this.tecnico().trim().length > 0 && this.problema().trim().length > 0,
+		this.cliente().trim().length > 0 && this.problema().trim().length > 0,
 	);
     protected readonly canSearchRecalls = computed(() => this.marca().trim().length > 0 && this.modelo().trim().length > 0 && this.anio() > 0);
 
 	constructor() {
 		void this.loadMakes('');
+		this._http.get<{ data: { id: string; name: string }[] }>('/api/v1/employees').subscribe({
+			next: (res) => this.employees.set(res.data),
+		});
+	}
+
+	protected onTecnicoChange(value: string): void {
+		const emp = this.employees().find(e => e.id === value);
+		if (emp) {
+			this.tecnicoId.set(emp.id);
+			this.tecnico.set(emp.name);
+		}
 	}
 
 	protected onPriorityChange(value: string): void {

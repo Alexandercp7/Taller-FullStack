@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmComboboxImports } from '@spartan-ng/helm/combobox';
@@ -35,6 +36,7 @@ export class WorkOrderDetailsSectionComponent {
 	private readonly _route = inject(ActivatedRoute);
 	private readonly _router = inject(Router);
 	private readonly _service = inject(WorkOrdersService);
+	private readonly _http = inject(HttpClient);
 	private readonly _notification = inject(NotificationService);
 	private readonly _carQueryApi = inject(CarQueryApiService);
 	private readonly _params = toSignal(this._route.paramMap, { initialValue: this._route.snapshot.paramMap });
@@ -44,6 +46,7 @@ export class WorkOrderDetailsSectionComponent {
 	protected readonly statuses = WORK_ORDER_STATUSES;
 	protected readonly priorities = WORK_ORDER_PRIORITIES;
 	protected readonly clients = this._service.allClients;
+	protected readonly employees = signal<{ id: string; name: string }[]>([]);
 
 	protected readonly editClient = signal(false);
 	protected readonly editVehicle = signal(false);
@@ -76,6 +79,7 @@ export class WorkOrderDetailsSectionComponent {
 	protected readonly recalls = signal<VehicleRecallItem[]>([]);
 	protected readonly recallsLoading = signal(false);
 	protected readonly recallsError = signal('');
+	protected readonly tecnicoId = signal('');
 	protected readonly tecnicoEdit = signal('');
 	protected readonly fechaProgramadaEdit = signal('');
 
@@ -96,6 +100,9 @@ export class WorkOrderDetailsSectionComponent {
 
 	constructor() {
 		void this.loadVehicleMakes('');
+		this._http.get<{ data: { id: string; name: string }[] }>('/api/v1/employees').subscribe({
+			next: (res) => this.employees.set(res.data),
+		});
 		effect(() => {
 			const ot = this.order();
 			if (!ot) {
@@ -117,6 +124,8 @@ export class WorkOrderDetailsSectionComponent {
 			this.diagnosticoEdit.set(ot.diagnostico);
 			this.tecnicoEdit.set(ot.tecnico);
 			this.fechaProgramadaEdit.set(ot.fechaProgramada);
+			const matched = this.employees().find(e => e.name === ot.tecnico);
+			if (matched) this.tecnicoId.set(matched.id);
 		});
 	}
 
@@ -353,11 +362,19 @@ export class WorkOrderDetailsSectionComponent {
 		}
 	}
 
+	protected onTecnicoChange(value: string): void {
+		const emp = this.employees().find(e => e.id === value);
+		if (emp) {
+			this.tecnicoId.set(emp.id);
+			this.tecnicoEdit.set(emp.name);
+		}
+	}
+
 	protected saveIssueCard(): void {
 		const order = this.order();
 		if (!order) return;
 		this._service.updateProblemDiagnosis(order.id, this.problemaEdit(), this.diagnosticoEdit());
-		this._service.updateAssignedTechnician(order.id, this.tecnicoEdit());
+		this._service.updateAssignedTechnician(order.id, this.tecnicoId(), this.tecnicoEdit());
 		this.editIssue.set(false);
 		this._notification.success('Detalles tecnicos guardados.');
 	}

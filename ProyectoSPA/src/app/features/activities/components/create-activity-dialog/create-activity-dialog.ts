@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmInputImports } from '@spartan-ng/helm/input';
@@ -11,8 +12,8 @@ import { Activity } from '../../models/activity.model';
 
 export interface CreateActivityDialogContext {
   activity?: Activity;
-  onCreate?: (payload: Omit<Activity, 'id' | 'comentarios'>) => void;
-  onUpdate?: (id: string, payload: Omit<Activity, 'id' | 'comentarios'>) => void;
+  onCreate?: (payload: Omit<Activity, 'id' | 'comentarios'>, asignadoAId: string) => void;
+  onUpdate?: (id: string, payload: Omit<Activity, 'id' | 'comentarios'>, asignadoAId: string) => void;
 }
 
 @Component({
@@ -34,12 +35,15 @@ export interface CreateActivityDialogContext {
 export class CreateActivityDialogComponent {
   private readonly _dialogRef = inject(BrnDialogRef<unknown>);
   private readonly _context = injectBrnDialogContext<CreateActivityDialogContext>();
+  private readonly _http = inject(HttpClient);
 
   protected readonly isEditing = signal(!!this._context.activity);
+  protected readonly employees = signal<{ id: string; name: string }[]>([]);
 
   protected readonly titulo = signal('');
   protected readonly descripcion = signal('');
-  protected readonly asignadoA = signal('');
+  protected readonly asignadoAId = signal('');
+  protected readonly asignadoAName = signal('');
   protected readonly fechaLimite = signal('');
   protected readonly prioridad = signal<'Alta' | 'Media' | 'Baja'>('Media');
   protected readonly etiqueta = signal<
@@ -48,15 +52,29 @@ export class CreateActivityDialogComponent {
   protected readonly estado = signal<'Pendiente' | 'En Progreso' | 'Completada' | 'Cancelada'>('Pendiente');
 
   constructor() {
+    this._http.get<{ data: { id: string; name: string }[] }>('/api/v1/employees').subscribe({
+      next: (res) => {
+        this.employees.set(res.data);
+        if (this._context.activity?.asignadoAId) {
+          this.asignadoAId.set(this._context.activity.asignadoAId);
+        } else if (this._context.activity?.asignadoA) {
+          const match = res.data.find(e => e.name === this._context.activity!.asignadoA);
+          if (match) this.asignadoAId.set(match.id);
+        }
+      },
+    });
+
     effect(() => {
-      if (this._context.activity) {
-        this.titulo.set(this._context.activity.titulo);
-        this.descripcion.set(this._context.activity.descripcion);
-        this.asignadoA.set(this._context.activity.asignadoA);
-        this.fechaLimite.set(this._context.activity.fechaLimite);
-        this.prioridad.set(this._context.activity.prioridad);
-        this.etiqueta.set(this._context.activity.etiqueta);
-        this.estado.set(this._context.activity.estado);
+      const act = this._context.activity;
+      if (act) {
+        this.titulo.set(act.titulo);
+        this.descripcion.set(act.descripcion);
+        this.asignadoAName.set(act.asignadoA);
+        if (act.asignadoAId) this.asignadoAId.set(act.asignadoAId);
+        this.fechaLimite.set(act.fechaLimite);
+        this.prioridad.set(act.prioridad);
+        this.etiqueta.set(act.etiqueta);
+        this.estado.set(act.estado);
       }
     });
   }
@@ -67,7 +85,7 @@ export class CreateActivityDialogComponent {
     'Técnica',
     'Comercial',
     'Compras',
-    'Mantenimiento'
+    'Mantenimiento',
   ] as const;
   protected readonly estados = ['Pendiente', 'En Progreso', 'Completada', 'Cancelada'] as const;
 
@@ -75,9 +93,17 @@ export class CreateActivityDialogComponent {
     () =>
       this.titulo().trim().length > 0 &&
       this.descripcion().trim().length > 0 &&
-      this.asignadoA().trim().length > 0 &&
+      this.asignadoAId().trim().length > 0 &&
       this.fechaLimite().trim().length > 0
   );
+
+  protected onAsignadoChange(value: string): void {
+    const emp = this.employees().find(e => e.id === value);
+    if (emp) {
+      this.asignadoAId.set(emp.id);
+      this.asignadoAName.set(emp.name);
+    }
+  }
 
   protected onPrioridadChange(value: string): void {
     if (value === 'Alta' || value === 'Media' || value === 'Baja') {
@@ -96,14 +122,13 @@ export class CreateActivityDialogComponent {
   }
 
   protected submit(): void {
-    if (!this.canCreate()) {
-      return;
-    }
+    if (!this.canCreate()) return;
 
     const payload = {
       titulo: this.titulo().trim(),
       descripcion: this.descripcion().trim(),
-      asignadoA: this.asignadoA().trim(),
+      asignadoA: this.asignadoAName().trim(),
+      asignadoAId: this.asignadoAId().trim(),
       fechaLimite: this.fechaLimite(),
       prioridad: this.prioridad(),
       etiqueta: this.etiqueta(),
@@ -111,9 +136,9 @@ export class CreateActivityDialogComponent {
     };
 
     if (this.isEditing() && this._context.onUpdate && this._context.activity) {
-      this._context.onUpdate(this._context.activity.id, payload);
+      this._context.onUpdate(this._context.activity.id, payload, this.asignadoAId());
     } else if (!this.isEditing() && this._context.onCreate) {
-      this._context.onCreate(payload);
+      this._context.onCreate(payload, this.asignadoAId());
     }
 
     this._dialogRef.close();

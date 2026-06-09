@@ -251,10 +251,11 @@ export class WorkOrdersService {
     this._http.patch(`/api/v1/work-orders/${id}/diagnosis`, { problema, diagnostico }).subscribe();
   }
 
-  public updateAssignedTechnician(id: string, tecnico: string): void {
-    const trimmed = tecnico.trim();
-    if (!trimmed) return;
+  public updateAssignedTechnician(id: string, technicianId: string, technicianName: string): void {
+    const trimmed = technicianName.trim();
+    if (!trimmed || !technicianId) return;
     this._workOrders.update(orders => orders.map(o => o.id === id ? { ...o, tecnico: trimmed } : o));
+    this._http.patch(`/api/v1/work-orders/${id}/technician`, { technicianId }).subscribe();
   }
 
   public updateScheduledDate(id: string, fechaProgramada: string, _usuario = 'Asesor'): void {
@@ -279,6 +280,7 @@ export class WorkOrdersService {
 
   public updatePriority(id: string, priority: WorkOrderPriority, _usuario = 'Supervisor'): void {
     this._workOrders.update(orders => orders.map(o => o.id === id ? { ...o, priority } : o));
+    this._http.patch(`/api/v1/work-orders/${id}/priority`, { priority }).subscribe();
   }
 
   public toggleChecklist(id: string, listType: 'checklistInicial' | 'checklistTrabajo', itemId: string, _usuario = 'Tecnico'): void {

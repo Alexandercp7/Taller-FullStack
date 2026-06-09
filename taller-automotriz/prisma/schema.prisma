@@ -124,11 +124,14 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  createdOrders    WorkOrder[] @relation("CreatedBy")
-  assignedOrders   WorkOrder[] @relation("AssignedTo")
-  timelineEntries  TimelineEntry[]
-  tasks            Task[]      @relation("AssignedTasks")
-  createdTasks     Task[]      @relation("CreatedTasks")
+  createdOrders       WorkOrder[]      @relation("CreatedBy")
+  assignedOrders      WorkOrder[]      @relation("AssignedTo")
+  timelineEntries     TimelineEntry[]
+  tasks               Task[]           @relation("AssignedTasks")
+  createdTasks        Task[]           @relation("CreatedTasks")
+  assignedActivities  Activity[]       @relation("AssignedActivities")
+  createdActivities   Activity[]       @relation("CreatedActivities")
+  activityComments    ActivityComment[]
 
   @@map("users")
 }
@@ -138,7 +141,7 @@ model User {
 model Client {
   id        String    @id @default(cuid())
   name      String
-  phone     String    @unique
+  phone     String?
   email     String?
   tag       ClientTag @default(NEW)
   notes     String?
@@ -292,14 +295,25 @@ model CustodyPiece {
 // ─── Price List ───────────────────────────────────────────────────────────────
 
 model PriceList {
-  id          String      @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
   description String?
-  vehicleType VehicleType
-  price       Decimal     @db.Decimal(12, 2)
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  vehicleType VehicleType?
+  price       Decimal      @default(0) @db.Decimal(12, 2)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  categoriaPrincipal String  @default("Mecánica General")
+  sistema            String?
+  familia            String?
+  concepto           String?
+  precioAuto         Decimal? @db.Decimal(12, 2)
+  precioCamioneta    Decimal? @db.Decimal(12, 2)
+  precioCamion       Decimal? @db.Decimal(12, 2)
+  tamano             String?
+  diametro           String?
+  observacion        String?
 
   quotes Quote[]
 
@@ -416,20 +430,58 @@ model ScheduledPayment {
 // ─── Supplier ─────────────────────────────────────────────────────────────────
 
 model Supplier {
-  id        String   @id @default(cuid())
-  name      String
-  contact   String?
-  phone     String?
-  email     String?
-  notes     String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  name               String
+  contact            String?
+  phone              String?
+  email              String?
+  notes              String?
+  diasPago           Int      @default(30)
+  limiteCredito      Decimal  @default(0) @db.Decimal(12, 2)
+  politicaDescuentos String   @default("")
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   inventory      InventoryItem[]
   accountsPayable AccountPayable[]
 
   @@map("suppliers")
+}
+
+// ─── Activity ─────────────────────────────────────────────────────────────────
+
+model Activity {
+  id          String    @id @default(cuid())
+  titulo      String
+  descripcion String?
+  prioridad   String    @default("Media")
+  etiqueta    String    @default("")
+  estado      String    @default("Pendiente")
+  asignadoAId String?
+  fechaLimite DateTime?
+  creadoPorId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  asignee  User?             @relation("AssignedActivities", fields: [asignadoAId], references: [id])
+  creator  User              @relation("CreatedActivities", fields: [creadoPorId], references: [id])
+  comments ActivityComment[]
+
+  @@map("activities")
+}
+
+model ActivityComment {
+  id         String   @id @default(cuid())
+  activityId String
+  userId     String
+  texto      String
+  createdAt  DateTime @default(now())
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@map("activity_comments")
 }
 
 // ─── Appointments ─────────────────────────────────────────────────────────────

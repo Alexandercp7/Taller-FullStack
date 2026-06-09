@@ -344,6 +344,27 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     return { message: 'ok' };
   });
 
+  app.patch('/api/v1/work-orders/:id/priority', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    const body = req.body as any;
+    const dbPriority = (PRIORITY_REVERSE[body.priority] ?? body.priority) as any;
+    await db.workOrder.update({ where: { id }, data: { priority: dbPriority } });
+    return { message: 'ok' };
+  });
+
+  app.patch('/api/v1/work-orders/:id/technician', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    const body = req.body as any;
+    const tech = await db.user.findUnique({ where: { id: body.technicianId } });
+    if (!tech) return reply.status(404).send({ error: 'Tecnico no encontrado' });
+    await db.workOrder.update({ where: { id }, data: { technicianId: body.technicianId } });
+    return { data: { tecnico: tech.name } };
+  });
+
   app.post('/api/v1/work-orders/:id/notes', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
@@ -492,7 +513,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const c = await db.client.create({
       data: {
         name: body.nombre ?? body.name,
-        phone: body.telefono ?? body.phone ?? `TEMP-${Date.now()}`,
+        phone: body.telefono ?? body.phone ?? null,
         email: body.correo ?? body.email ?? null,
         tag: (CLIENT_TAG_REVERSE[body.tag] ?? 'NEW') as any,
       },
@@ -594,6 +615,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       where: { id },
       data: {
         name: body.nombre || undefined,
+        stock: body.stock_actual !== undefined ? Number(body.stock_actual) : undefined,
         minStock: body.stock_minimo !== undefined ? Number(body.stock_minimo) : undefined,
         purchasePrice: body.precio !== undefined ? Number(body.precio) : undefined,
         salePrice: body.precio_venta !== undefined ? Number(body.precio_venta) : undefined,
@@ -850,19 +872,23 @@ export async function registerRestApi(app: FastifyInstance, container: Container
 
   // ── CONTACTS (Suppliers) ──────────────────────────────────────────────────
 
+  function mapSupplier(s: any) {
+    return {
+      id: s.id, nombre: s.name, rfc: '', empresa: s.name,
+      telefono: s.phone ?? '', correo: s.email ?? '',
+      dias_pago: s.diasPago ?? 30,
+      limite_credito: Number(s.limiteCredito ?? 0),
+      politica_descuentos: s.politicaDescuentos ?? '',
+      productos: null, etiquetas: null,
+    };
+  }
+
   app.get('/api/v1/contacts', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const perPage = Math.min(Number((req.query as any).per_page ?? 100), 500);
     const suppliers = await db.supplier.findMany({ where: { isActive: true }, take: perPage });
-    return {
-      data: suppliers.map(s => ({
-        id: s.id, nombre: s.name, rfc: '', empresa: s.name,
-        telefono: s.phone ?? '', correo: s.email ?? '',
-        dias_pago: 30, limite_credito: 0, politica_descuentos: '',
-        productos: null, etiquetas: null,
-      })),
-    };
+    return { data: suppliers.map(mapSupplier) };
   });
 
   app.post('/api/v1/contacts', async (req, reply) => {
@@ -870,9 +896,16 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const body = req.body as any;
     const s = await db.supplier.create({
-      data: { name: body.nombre, phone: body.telefono || null, email: body.correo || null },
+      data: {
+        name: body.nombre,
+        phone: body.telefono || null,
+        email: body.correo || null,
+        diasPago: body.dias_pago !== undefined ? Number(body.dias_pago) : 30,
+        limiteCredito: body.limite_credito !== undefined ? Number(body.limite_credito) : 0,
+        politicaDescuentos: body.politica_descuentos ?? '',
+      },
     });
-    return { data: { id: s.id, nombre: s.name, rfc: '', empresa: s.name, telefono: s.phone ?? '', correo: s.email ?? '', dias_pago: 30, limite_credito: 0, politica_descuentos: '', productos: null, etiquetas: null } };
+    return { data: mapSupplier(s) };
   });
 
   app.put('/api/v1/contacts/:id', async (req, reply) => {
@@ -882,9 +915,16 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const body = req.body as any;
     const s = await db.supplier.update({
       where: { id },
-      data: { name: body.nombre || undefined, phone: body.telefono || null, email: body.correo || null },
+      data: {
+        name: body.nombre || undefined,
+        phone: body.telefono !== undefined ? (body.telefono || null) : undefined,
+        email: body.correo !== undefined ? (body.correo || null) : undefined,
+        diasPago: body.dias_pago !== undefined ? Number(body.dias_pago) : undefined,
+        limiteCredito: body.limite_credito !== undefined ? Number(body.limite_credito) : undefined,
+        politicaDescuentos: body.politica_descuentos !== undefined ? body.politica_descuentos : undefined,
+      },
     });
-    return { data: { id: s.id, nombre: s.name, rfc: '', empresa: s.name, telefono: s.phone ?? '', correo: s.email ?? '', dias_pago: 30, limite_credito: 0, politica_descuentos: '', productos: null, etiquetas: null } };
+    return { data: mapSupplier(s) };
   });
 
   app.delete('/api/v1/contacts/:id', async (req, reply) => {
@@ -938,6 +978,9 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const { id } = req.params as any;
     const body = req.body as any;
+    const PAYMENT_STATUS_REVERSE: Record<string, string> = Object.fromEntries(
+      Object.entries(PAYMENT_STATUS_MAP).map(([k, v]) => [v, k]),
+    );
     const p = await db.scheduledPayment.update({
       where: { id },
       data: {
@@ -945,6 +988,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         amount: body.monto_presupuestado !== undefined ? Number(body.monto_presupuestado) : undefined,
         dueDate: body.fecha_vencimiento ? new Date(body.fecha_vencimiento) : undefined,
         notes: body.notas !== undefined ? body.notas : undefined,
+        status: body.estado !== undefined ? ((PAYMENT_STATUS_REVERSE[body.estado] ?? body.estado) as any) : undefined,
       },
     });
     return { data: { id: p.id, concepto: p.description, tipo: CASH_TYPE_MAP[p.type] ?? p.type, categoria: 'General', fecha_vencimiento: toDate(p.dueDate) ?? '', monto_presupuestado: Number(p.amount), monto_pagado: 0, estado: PAYMENT_STATUS_MAP[p.status] ?? p.status, comprobante_url: null, notas: p.notes ?? null } };
@@ -960,36 +1004,55 @@ export async function registerRestApi(app: FastifyInstance, container: Container
 
   // ── PRICES ────────────────────────────────────────────────────────────────
 
+  function mapPriceItem(p: any) {
+    const isTorno = p.categoriaPrincipal === 'Servicio de Torno';
+    return {
+      id: p.id,
+      categoria_principal: p.categoriaPrincipal,
+      sistema: p.sistema ?? null,
+      familia: p.familia ?? null,
+      concepto: p.concepto ?? p.name,
+      tamano: p.tamano ?? null,
+      diametro: p.diametro ?? null,
+      precio_auto: p.precioAuto !== null && p.precioAuto !== undefined ? String(Number(p.precioAuto)) : null,
+      precio_camioneta: p.precioCamioneta !== null && p.precioCamioneta !== undefined ? String(Number(p.precioCamioneta)) : null,
+      precio_camion: p.precioCamion !== null && p.precioCamion !== undefined ? String(Number(p.precioCamion)) : null,
+      precio: isTorno && p.precioAuto !== null && p.precioAuto !== undefined ? String(Number(p.precioAuto)) : null,
+      observacion: p.observacion ?? null,
+      activo: p.isActive,
+    };
+  }
+
   app.get('/api/v1/prices', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const perPage = Math.min(Number((req.query as any).per_page ?? 200), 1000);
-    const prices = await db.priceList.findMany({ where: { isActive: true }, take: perPage });
-    return {
-      data: prices.map(p => ({
-        id: p.id, categoria_principal: 'Mecánica General',
-        sistema: null, familia: null, concepto: p.name,
-        tamano: null, diametro: null,
-        precio_auto: String(p.vehicleType === 'CAR' ? Number(p.price) : ''),
-        precio_camioneta: String(p.vehicleType === 'TRUCK' ? Number(p.price) : ''),
-        precio_camion: String(p.vehicleType === 'HEAVY_TRUCK' ? Number(p.price) : ''),
-        precio: null, activo: p.isActive,
-      })),
-    };
+    const prices = await db.priceList.findMany({ where: { isActive: true }, take: perPage, orderBy: { createdAt: 'desc' } });
+    return { data: prices.map(mapPriceItem) };
   });
 
   app.post('/api/v1/prices', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const body = req.body as any;
+    const isTorno = body.categoria_principal === 'Servicio de Torno';
     const p = await db.priceList.create({
       data: {
-        name: body.concepto ?? body.nombre ?? 'Servicio',
-        vehicleType: 'CAR',
-        price: Number(body.precio_auto ?? body.precio ?? 0),
+        name: body.concepto ?? body.tamano ?? 'Servicio',
+        categoriaPrincipal: body.categoria_principal ?? 'Mecánica General',
+        sistema: body.sistema ?? null,
+        familia: body.familia ?? null,
+        concepto: body.concepto ?? null,
+        tamano: body.tamano ?? null,
+        diametro: body.diametro ?? null,
+        precioAuto: body.precio_auto !== undefined && body.precio_auto !== '' ? Number(body.precio_auto) :
+                    isTorno && body.precio !== undefined && body.precio !== '' ? Number(body.precio) : null,
+        precioCamioneta: body.precio_camioneta !== undefined && body.precio_camioneta !== '' ? Number(body.precio_camioneta) : null,
+        precioCamion: body.precio_camion !== undefined && body.precio_camion !== '' ? Number(body.precio_camion) : null,
+        observacion: body.observacion ?? null,
       },
     });
-    return { data: { id: p.id, categoria_principal: 'Mecánica General', concepto: p.name, precio_auto: String(Number(p.price)), precio_camioneta: '', precio_camion: '', activo: p.isActive } };
+    return { data: mapPriceItem(p) };
   });
 
   app.put('/api/v1/prices/:id', async (req, reply) => {
@@ -997,45 +1060,127 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const { id } = req.params as any;
     const body = req.body as any;
+    const isTorno = body.categoria_principal === 'Servicio de Torno';
     const p = await db.priceList.update({
       where: { id },
       data: {
-        name: body.concepto || undefined,
-        price: body.precio_auto !== undefined ? Number(body.precio_auto) : undefined,
+        name: body.concepto ?? body.tamano ?? undefined,
+        categoriaPrincipal: body.categoria_principal ?? undefined,
+        sistema: body.sistema !== undefined ? (body.sistema || null) : undefined,
+        familia: body.familia !== undefined ? (body.familia || null) : undefined,
+        concepto: body.concepto !== undefined ? (body.concepto || null) : undefined,
+        tamano: body.tamano !== undefined ? (body.tamano || null) : undefined,
+        diametro: body.diametro !== undefined ? (body.diametro || null) : undefined,
+        precioAuto: body.precio_auto !== undefined && body.precio_auto !== '' ? Number(body.precio_auto) :
+                    isTorno && body.precio !== undefined && body.precio !== '' ? Number(body.precio) :
+                    body.precio_auto === '' ? null : undefined,
+        precioCamioneta: body.precio_camioneta !== undefined ? (body.precio_camioneta !== '' ? Number(body.precio_camioneta) : null) : undefined,
+        precioCamion: body.precio_camion !== undefined ? (body.precio_camion !== '' ? Number(body.precio_camion) : null) : undefined,
+        observacion: body.observacion !== undefined ? (body.observacion || null) : undefined,
       },
     });
-    return { data: { id: p.id, categoria_principal: 'Mecánica General', concepto: p.name, precio_auto: String(Number(p.price)), precio_camioneta: '', precio_camion: '', activo: p.isActive } };
+    return { data: mapPriceItem(p) };
   });
 
-  // ── ACTIVITIES (in-memory) ────────────────────────────────────────────────
+  // ── ACTIVITIES ────────────────────────────────────────────────────────────
+
+  function mapActivity(a: any) {
+    return {
+      id: a.id, titulo: a.titulo, descripcion: a.descripcion ?? '',
+      prioridad: a.prioridad, etiqueta: a.etiqueta, estado: a.estado,
+      fecha_limite: a.fechaLimite ? toDate(a.fechaLimite) : null,
+      asignado_a: a.asignee ? { id: a.asignee.id, name: a.asignee.name } : null,
+      creado_por_id: a.creadoPorId ?? null,
+      creado_por_role: a.creator?.role ?? null,
+      comentarios: (a.comments ?? []).map((c: any) => ({
+        id: c.id, texto: c.texto,
+        user: c.user ? { name: c.user.name } : null,
+        created_at: c.createdAt.toISOString(),
+      })),
+      created_at: a.createdAt.toISOString(),
+    };
+  }
 
   app.get('/api/v1/activities', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { data: [] };
+    const perPage = Math.min(Number((req.query as any).per_page ?? 100), 500);
+    const where = u.role === 'ADMIN' || u.role === 'MANAGER' ? {} : { asignadoAId: u.id };
+    const activities = await db.activity.findMany({
+      where,
+      include: { asignee: true, creator: true, comments: { include: { user: true }, orderBy: { createdAt: 'asc' } } },
+      orderBy: { createdAt: 'desc' },
+      take: perPage,
+    });
+    return { data: activities.map(mapActivity) };
   });
 
   app.post('/api/v1/activities', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { data: { id: `act-${Date.now()}`, ...(req.body as any), comentarios: null } };
+    const body = req.body as any;
+    const a = await db.activity.create({
+      data: {
+        titulo: body.titulo,
+        descripcion: body.descripcion || null,
+        prioridad: body.prioridad ?? 'Media',
+        etiqueta: body.etiqueta ?? '',
+        estado: body.estado ?? 'Pendiente',
+        asignadoAId: body.asignado_a_id || null,
+        fechaLimite: body.fecha_limite ? new Date(body.fecha_limite) : null,
+        creadoPorId: u.id,
+      },
+      include: { asignee: true, creator: true, comments: { include: { user: true } } },
+    });
+    return { data: mapActivity(a) };
   });
 
   app.put('/api/v1/activities/:id', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { message: 'ok' };
+    const { id } = req.params as any;
+    const body = req.body as any;
+    const a = await db.activity.update({
+      where: { id },
+      data: {
+        titulo: body.titulo || undefined,
+        descripcion: body.descripcion !== undefined ? body.descripcion : undefined,
+        prioridad: body.prioridad || undefined,
+        etiqueta: body.etiqueta !== undefined ? body.etiqueta : undefined,
+        estado: body.estado || undefined,
+        asignadoAId: body.asignado_a_id !== undefined ? (body.asignado_a_id || null) : undefined,
+        fechaLimite: body.fecha_limite !== undefined ? (body.fecha_limite ? new Date(body.fecha_limite) : null) : undefined,
+      },
+      include: { asignee: true, creator: true, comments: { include: { user: true } } },
+    });
+    return { data: mapActivity(a) };
   });
 
   app.delete('/api/v1/activities/:id', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    await db.activity.delete({ where: { id } });
     return { message: 'ok' };
   });
 
   app.post('/api/v1/activities/:id/comments', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    const body = req.body as any;
+    const c = await db.activityComment.create({
+      data: { activityId: id, userId: u.id, texto: body.texto },
+      include: { user: true },
+    });
+    return { data: { id: c.id, texto: c.texto, user: { name: c.user.name }, created_at: c.createdAt.toISOString() } };
+  });
+
+  app.delete('/api/v1/activities/:id/comments/:commentId', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { commentId } = req.params as any;
+    await db.activityComment.delete({ where: { id: commentId } });
     return { message: 'ok' };
   });
 

@@ -6,10 +6,12 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  const adminHash = await argon2.hash('admin123456');
-  const techHash = await argon2.hash('tech123456');
+  const adminHash        = await argon2.hash('admin123456');
+  const managerHash      = await argon2.hash('gerente123456');
+  const techHash         = await argon2.hash('tech123456');
+  const receptionistHash = await argon2.hash('recepcion123456');
 
-  const admin = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'admin@taller.com' },
     update: {},
     create: {
@@ -23,7 +25,21 @@ async function main() {
     },
   });
 
-  const tech = await prisma.user.upsert({
+  await prisma.user.upsert({
+    where: { email: 'gerente@taller.com' },
+    update: {},
+    create: {
+      id: 'seed-manager-001',
+      name: 'Gerente General',
+      email: 'gerente@taller.com',
+      passwordHash: managerHash,
+      role: 'MANAGER',
+      permissions: [],
+      isActive: true,
+    },
+  });
+
+  await prisma.user.upsert({
     where: { email: 'tecnico@taller.com' },
     update: {},
     create: {
@@ -32,13 +48,27 @@ async function main() {
       email: 'tecnico@taller.com',
       passwordHash: techHash,
       role: 'TECHNICIAN',
-      permissions: ['orders.view', 'orders.edit', 'inventory.view'],
+      permissions: [],
+      isActive: true,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'recepcion@taller.com' },
+    update: {},
+    create: {
+      id: 'seed-receptionist-001',
+      name: 'Recepcionista',
+      email: 'recepcion@taller.com',
+      passwordHash: receptionistHash,
+      role: 'RECEPTIONIST',
+      permissions: [],
       isActive: true,
     },
   });
 
   const client = await prisma.client.upsert({
-    where: { phone: '5551234567' },
+    where: { id: 'seed-client-001' },
     update: {},
     create: {
       id: 'seed-client-001',
@@ -82,8 +112,10 @@ async function main() {
   });
 
   console.log('✅ Seed completado');
-  console.log(`   Admin: admin@taller.com / admin123456`);
-  console.log(`   Técnico: tecnico@taller.com / tech123456`);
+  console.log(`   Admin:         admin@taller.com      / admin123456`);
+  console.log(`   Gerente:       gerente@taller.com    / gerente123456`);
+  console.log(`   Técnico:       tecnico@taller.com    / tech123456`);
+  console.log(`   Recepcionista: recepcion@taller.com  / recepcion123456`);
 }
 
 main()

@@ -185,6 +185,7 @@ export class InventoryService {
         estado: updated.estado,
         precio: updated.precio,
         precio_venta: updated.precioVenta,
+        stock_actual: updated.stockActual,
         stock_minimo: updated.stockMinimo,
       }).subscribe();
     }

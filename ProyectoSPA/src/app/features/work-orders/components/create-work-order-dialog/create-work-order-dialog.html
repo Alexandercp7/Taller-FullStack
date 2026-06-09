@@ -45,7 +45,16 @@
 
 		<label class="field">
 			<span>Tecnico asignado</span>
-			<input hlmInput type="text" [value]="tecnico()" (input)="tecnico.set(($any($event.target)).value)" />
+			<hlm-select [value]="tecnicoId()" (valueChange)="onTecnicoChange(($event ?? '') + '')">
+				<hlm-select-trigger class="w-full"><hlm-select-value placeholder="Seleccionar tecnico" /></hlm-select-trigger>
+				<hlm-select-content *hlmSelectPortal>
+					<hlm-select-group>
+						@for (emp of employees(); track emp.id) {
+							<hlm-select-item [value]="emp.id">{{ emp.name }}</hlm-select-item>
+						}
+					</hlm-select-group>
+				</hlm-select-content>
+			</hlm-select>
 		</label>
 
 		<label class="field">

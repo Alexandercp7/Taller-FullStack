@@ -14,11 +14,9 @@ export const loggedOutGuard: CanActivateFn = () => {
 	return auth.isAuthenticated() ? router.createUrlTree(['/app']) : true;
 };
 
-export const permissionGuard = (permission: string): CanActivateFn => () => {
+export const roleGuard = (...allowedRoles: string[]): CanActivateFn => () => {
 	const auth = inject(AuthService);
 	const router = inject(Router);
-	const user = auth.currentUser();
-	const isAdmin = user?.roles?.includes('ADMIN') ?? false;
-	const permissions = user?.permissions ?? [];
-	return isAdmin || permissions.includes(permission) ? true : router.createUrlTree(['/app/dashboard']);
+	const roles = auth.currentUser()?.roles ?? [];
+	return allowedRoles.some(r => roles.includes(r)) ? true : router.createUrlTree(['/app/dashboard']);
 };

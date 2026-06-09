@@ -3,6 +3,9 @@ export interface Activity {
   titulo: string;
   descripcion: string;
   asignadoA: string;
+  asignadoAId?: string;
+  creadoPorId?: string;
+  creadoPorRole?: string;
   fechaLimite: string;
   prioridad: 'Alta' | 'Media' | 'Baja';
   etiqueta: 'Administrativa' | 'Técnica' | 'Comercial' | 'Compras' | 'Mantenimiento' | string;

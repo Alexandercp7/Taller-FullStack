@@ -34,6 +34,10 @@
 							</hlm-select>
 						</label>
 						<label class="field">
+							<span>Stock actual</span>
+							<input hlmInput class="w-full" type="number" [value]="createStockActual()" (input)="createStockActual.set(+($any($event.target)).value || 0)" />
+						</label>
+						<label class="field">
 							<span>Stock minimo</span>
 							<input hlmInput class="w-full" type="number" [value]="createStockMinimo()" (input)="createStockMinimo.set(+($any($event.target)).value || 0)" />
 						</label>

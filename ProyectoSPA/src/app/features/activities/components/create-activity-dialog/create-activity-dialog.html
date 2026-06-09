@@ -31,13 +31,18 @@
 
     <label class="field">
       <span>Asignado a</span>
-      <input
-        hlmInput
-        type="text"
-        placeholder="Nombre de la persona"
-        [value]="asignadoA()"
-        (input)="asignadoA.set(($any($event.target)).value)"
-      />
+      <hlm-select [value]="asignadoAId()" (valueChange)="onAsignadoChange(($event ?? '') + '')">
+        <hlm-select-trigger class="w-full">
+          <hlm-select-value placeholder="Seleccionar persona" />
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          <hlm-select-group>
+            @for (emp of employees(); track emp.id) {
+              <hlm-select-item [value]="emp.id">{{ emp.name }}</hlm-select-item>
+            }
+          </hlm-select-group>
+        </hlm-select-content>
+      </hlm-select>
     </label>
 
     <label class="field">

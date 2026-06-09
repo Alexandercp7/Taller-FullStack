@@ -14,6 +14,7 @@ interface PriceItemApi {
   precio_camioneta: string | null;
   precio_camion: string | null;
   precio: string | null;
+  observacion: string | null;
   activo: boolean;
 }
 
@@ -39,7 +40,7 @@ export class PricesService {
         categoriaPrincipal: 'Servicio de Torno',
         tamano: item.tamano ?? '',
         diametro: item.diametro ?? '',
-        precio: item.precio ?? '',
+        precio: item.precio ?? item.precio_auto ?? '',
       } satisfies ServicioTorno;
     }
     return {
@@ -51,7 +52,7 @@ export class PricesService {
       precioAuto: item.precio_auto ?? '',
       precioCamioneta: item.precio_camioneta ?? '',
       precioCamion: item.precio_camion ?? '',
-      observacion: '',
+      observacion: item.observacion ?? '',
     } satisfies ServicioAutomotriz;
   }
 
@@ -155,6 +156,7 @@ export class PricesService {
       categoria_principal: a.categoriaPrincipal,
       sistema: a.sistema, familia: a.familia, concepto: a.concepto,
       precio_auto: a.precioAuto, precio_camioneta: a.precioCamioneta, precio_camion: a.precioCamion,
+      observacion: a.observacion,
     };
   }
 }
