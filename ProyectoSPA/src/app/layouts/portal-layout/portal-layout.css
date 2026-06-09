@@ -1,0 +1,39 @@
+:host {
+	display: block;
+	min-height: 100dvh;
+}
+
+.portal-shell {
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	background-color: var(--background);
+}
+
+.portal-header {
+	border-bottom: 1px solid var(--border);
+	background-color: var(--card);
+}
+
+.portal-header-inner {
+	display: flex;
+	align-items: center;
+	padding: 0.875rem 1.25rem;
+}
+
+.portal-brand {
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: var(--foreground);
+}
+
+.portal-main {
+	flex: 1;
+	padding: 1.5rem 1rem;
+}
+
+@media (min-width: 768px) {
+	.portal-main {
+		padding: 2rem 1.5rem;
+	}
+}

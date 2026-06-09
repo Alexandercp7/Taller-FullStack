@@ -1,0 +1,52 @@
+@if (order(); as ot) {
+	<hlm-card>
+		<hlm-card-header><h3 hlmCardTitle>Galeria de ingreso (danos previos)</h3></hlm-card-header>
+		<div hlmCardContent class="space-y-4">
+			<div class="add-photo-row">
+				<input hlmInput type="url" placeholder="Pega URL de foto" [value]="newPhotoUrl()" (input)="newPhotoUrl.set(($any($event.target)).value)" />
+				<button hlmBtn type="button" variant="outline" (click)="addPhotoByUrl()">Agregar URL</button>
+				<input class="sr-only" #photoFileInput type="file" accept="image/*" (change)="onPhotoFileSelected($event)" />
+				<button hlmBtn type="button" variant="outline" (click)="photoFileInput.click()">Subir archivo</button>
+			</div>
+
+			@if (ot.fotosIngreso.length === 0) {
+				<p class="text-muted-foreground text-sm">Sin fotos</p>
+			} @else {
+				<div class="px-12 sm:px-16">
+					<hlm-carousel>
+						<hlm-carousel-content class="-ml-3">
+							@for (foto of ot.fotosIngreso; track $index) {
+								<hlm-carousel-item class="pl-3 basis-full md:basis-1/2 xl:basis-1/3">
+									<figure class="photo-placeholder" (click)="openPhoto(foto)">
+										@if (foto.startsWith('blob:') || foto.startsWith('http') || foto.startsWith('data:image')) {
+											<img [src]="foto" alt="Foto de ingreso" class="photo-thumb" />
+										} @else {
+											<div class="label">Foto {{ $index + 1 }}</div>
+											<figcaption class="text-xs">{{ foto }}</figcaption>
+										}
+									</figure>
+								</hlm-carousel-item>
+							}
+						</hlm-carousel-content>
+						<button hlm-carousel-previous></button>
+						<button hlm-carousel-next></button>
+					</hlm-carousel>
+				</div>
+			}
+		</div>
+	</hlm-card>
+
+	@if (previewPhoto(); as photoSrc) {
+		<div class="photo-viewer-backdrop" (click)="closePhotoPreview()">
+			<div class="photo-viewer-dialog" (click)="$event.stopPropagation()">
+				<button hlmBtn type="button" size="sm" variant="outline" (click)="closePhotoPreview()">Cerrar</button>
+				@if (photoSrc.startsWith('blob:') || photoSrc.startsWith('http') || photoSrc.startsWith('data:image')) {
+					<img [src]="photoSrc" alt="Vista ampliada" class="photo-full" />
+				} @else {
+					<p class="text-sm">No hay vista previa disponible para esta entrada.</p>
+					<p class="text-muted-foreground text-xs">{{ photoSrc }}</p>
+				}
+			</div>
+		</div>
+	}
+}

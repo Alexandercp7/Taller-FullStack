@@ -1,0 +1,35 @@
+<div class="share-shell">
+	<div>
+		<h2 class="text-lg font-semibold">Compartir OT con cliente</h2>
+		<p class="text-muted-foreground text-sm">El cliente puede escanear el QR o abrir el enlace para ver el estado de la orden {{ orderId }}.</p>
+	</div>
+
+	<div class="email-block">
+		<label class="email-label" for="client-email">Correo del cliente</label>
+		<input
+			id="client-email"
+			hlmInput
+			type="email"
+			placeholder="cliente@correo.com"
+			[(ngModel)]="email"
+			[ngModelOptions]="{ standalone: true }"
+		/>
+		<p class="text-muted-foreground text-xs">Se enviará el QR y el enlace directo al portal del cliente.</p>
+	</div>
+
+	<div class="qr-container">
+		<img [src]="qrUrl" [alt]="'QR para OT ' + orderId" class="qr-image" />
+	</div>
+
+	<div class="url-row">
+		<span class="url-text">{{ portalUrl }}</span>
+	</div>
+
+	<div class="actions-row">
+		<button hlmBtn type="button" variant="outline" (click)="close()">Cerrar</button>
+		<button hlmBtn type="button" variant="outline" [disabled]="sending()" (click)="sendEmail()">
+			{{ sending() ? 'Enviando...' : 'Enviar correo' }}
+		</button>
+		<button hlmBtn type="button" (click)="copyLink()">Copiar enlace</button>
+	</div>
+</div>

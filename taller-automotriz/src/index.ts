@@ -1,0 +1,55 @@
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
+import { createContainer } from './infrastructure/di/container';
+import { createContext } from './presentation/trpc/context';
+import { createAppRouter } from './presentation/trpc/router';
+import { createNotificationWorker } from './infrastructure/queue/workers/notification.worker';
+import { createStockAlertWorker } from './infrastructure/queue/workers/stock-alert.worker';
+import { createCloseOrderWorker } from './infrastructure/queue/workers/close-order.worker';
+import { getRedis } from './infrastructure/config/redis';
+import { logger } from './infrastructure/config/logger';
+import { env } from './infrastructure/config/env';
+import { registerRestApi } from './presentation/rest/api.plugin';
+
+async function bootstrap() {
+  const container = createContainer();
+  const appRouter = createAppRouter(container);
+  const createContextFn = createContext(container);
+
+  const app = Fastify({ logger: true });
+
+  await app.register(cors, { origin: true });
+  await app.register(helmet);
+
+  await app.register(fastifyTRPCPlugin, {
+    prefix: '/trpc',
+    trpcOptions: {
+      router: appRouter,
+      createContext: createContextFn,
+      onError: ({ error }: { error: Error }) => {
+        logger.error({ err: error }, 'tRPC error');
+      },
+    },
+  });
+
+  app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
+
+  await registerRestApi(app, container);
+
+  // BullMQ workers
+  const redis = getRedis();
+  createNotificationWorker(redis);
+  createStockAlertWorker(redis);
+  createCloseOrderWorker(redis);
+
+  const port = env.PORT;
+  await app.listen({ port, host: '0.0.0.0' });
+  logger.info(`🚀 Servidor corriendo en puerto ${port}`);
+}
+
+bootstrap().catch((err) => {
+  logger.error(err, 'Error al iniciar el servidor');
+  process.exit(1);
+});

@@ -1,0 +1,13 @@
+@if (order(); as ot) {
+	<hlm-card>
+		<hlm-card-header><h3 hlmCardTitle>Timeline de cambios</h3></hlm-card-header>
+		<div hlmCardContent class="timeline-list">
+			@for (event of ot.timeline; track event.id) {
+				<article class="timeline-item">
+					<p class="text-sm font-medium">{{ event.descripcion }}</p>
+					<p class="text-muted-foreground text-xs">{{ event.timestamp }} - {{ event.usuario }}</p>
+				</article>
+			}
+		</div>
+	</hlm-card>
+}

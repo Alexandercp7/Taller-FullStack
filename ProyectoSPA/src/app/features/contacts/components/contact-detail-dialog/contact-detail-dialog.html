@@ -1,0 +1,78 @@
+<div class="dialog-shell">
+  <div>
+    <h2 class="text-lg font-semibold">{{ contact.nombre }}</h2>
+    <p class="text-muted-foreground text-sm">Detalles del contacto/proveedor.</p>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-row">
+      <span class="label">RFC:</span>
+      <span class="value">{{ contact.rfc }}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Empresa:</span>
+      <span class="value">{{ contact.empresa }}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Teléfono:</span>
+      <span class="value">{{ contact.telefono }}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Correo:</span>
+      <span class="value">{{ contact.correo }}</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3 class="text-sm font-semibold mb-3">Condiciones de Crédito</h3>
+    <div class="info-grid">
+      <div class="info-row">
+        <span class="label">Días de Pago:</span>
+        <span class="value">{{ contact.condicionesDeCreditoL.diasPago }} días</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Límite de Crédito:</span>
+        <span class="value">${{ contact.condicionesDeCreditoL.limiteCredito | number }}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Política de Descuentos:</span>
+        <span class="value">{{ contact.condicionesDeCreditoL.politicaDescuentos }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3 class="text-sm font-semibold mb-3">Productos que Surte</h3>
+    @if (contact.productosQueSurten.length > 0) {
+      <div class="product-list">
+        @for (product of contact.productosQueSurten; track product.id) {
+          <div class="product-item">
+            <span class="product-name">{{ product.nombre }}</span>
+            @if (product.cantidad) {
+              <span class="text-muted-foreground text-xs">Disponibles: {{ product.cantidad }}</span>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <p class="text-muted-foreground text-sm">No hay productos registrados</p>
+    }
+  </div>
+
+  <div class="section">
+    <h3 class="text-sm font-semibold mb-3">Etiquetas</h3>
+    @if (contact.etiquetas.length > 0) {
+      <div class="tags-container">
+        @for (tag of contact.etiquetas; track tag) {
+          <span hlmBadge variant="secondary">{{ tag }}</span>
+        }
+      </div>
+    } @else {
+      <p class="text-muted-foreground text-sm">Sin etiquetas</p>
+    }
+  </div>
+
+  <div class="flex justify-end gap-2 pt-4">
+    <button hlmBtn (click)="close()">Cerrar</button>
+  </div>
+</div>

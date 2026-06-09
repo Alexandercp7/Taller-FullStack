@@ -1,0 +1,27 @@
+ 
+.payable-container {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.metrics-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.table-responsive {
+	overflow-x: auto;
+}
+
+table {
+	width: 100%;
+	font-size: 0.875rem;
+}
+
+.amount-info {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 1rem;
+}

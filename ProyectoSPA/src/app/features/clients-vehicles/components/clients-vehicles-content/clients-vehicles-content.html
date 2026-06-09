@@ -1,0 +1,91 @@
+<section class="clients-page">
+	<div class="header-row">
+		<div>
+			<h1 class="text-xl font-semibold">Clientes y vehiculos</h1>
+			<p class="text-muted-foreground text-sm">Ficha de cliente, historial por vehiculo y consulta por nombre, telefono o placas.</p>
+		</div>
+		<button hlmBtn type="button" (click)="createClient()">Crear cliente</button>
+	</div>
+
+	<hlm-card>
+		<div hlmCardContent class="space-y-4 pt-4">
+			<input
+				hlmInput
+				type="text"
+				placeholder="Buscar cliente por nombre, telefono o placas..."
+				[value]="search()"
+				(input)="updateSearch(($any($event.target)).value)"
+			/>
+
+			<div hlmTableContainer>
+				<table hlmTable>
+					<thead hlmTHead>
+						<tr hlmTr>
+							<th hlmTh>Cliente</th>
+							<th hlmTh>Telefono</th>
+							<th hlmTh>Correo</th>
+							<th hlmTh>RFC</th>
+							<th hlmTh>Etiqueta</th>
+							<th hlmTh>Vehiculos</th>
+							<th hlmTh>OTs</th>
+							<th hlmTh>Acciones</th>
+						</tr>
+					</thead>
+					<tbody hlmTBody>
+						@for (client of filteredClients(); track client.id) {
+							<tr hlmTr>
+								<td hlmTd class="font-medium">{{ client.nombre }}</td>
+								<td hlmTd>{{ client.telefono }}</td>
+								<td hlmTd>{{ client.correo }}</td>
+								<td hlmTd>{{ client.rfc }}</td>
+								<td hlmTd>
+									<span hlmBadge [ngClass]="tagClass(client.tag)">{{ client.tag }}</span>
+								</td>
+								<td hlmTd>{{ client.vehicleCount }}</td>
+								<td hlmTd>{{ client.workOrderCount }}</td>
+								<td hlmTd>
+									<div class="actions-cell">
+										<button hlmBtn size="sm" variant="outline" type="button" (click)="goToDetail(client.id)">Ver detalle</button>
+										<hlm-alert-dialog>
+											<button
+												hlmBtn
+												hlmAlertDialogTrigger
+												size="icon"
+												variant="destructive"
+												type="button"
+												aria-label="Eliminar cliente"
+												title="Eliminar cliente"
+												[disabled]="!canDeleteClient(client.id)"
+												[attr.title]="!canDeleteClient(client.id) ? deleteDisabledReason(client.id) : 'Eliminar cliente'"
+											>
+												<ng-icon name="lucideTrash2" class="size-4" />
+											</button>
+											<div hlmAlertDialogContent *hlmAlertDialogPortal="let ctx">
+												<div hlmAlertDialogHeader>
+													<h4 hlmAlertDialogTitle>Eliminar cliente</h4>
+													<p hlmAlertDialogDescription>
+														Se eliminara <strong>{{ client.nombre }}</strong> de esta seccion.
+													</p>
+												</div>
+												<div hlmAlertDialogFooter>
+													<button hlmAlertDialogCancel (click)="ctx.close()">Cancelar</button>
+													<button
+														hlmAlertDialogAction
+														variant="destructive"
+														(click)="confirmDeleteClient(client.id); ctx.close()"
+													>
+														Si, eliminar
+													</button>
+												</div>
+											</div>
+										</hlm-alert-dialog>
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</hlm-card>
+</section>

@@ -1,0 +1,70 @@
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.priority-high {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.priority-medium {
+  background: var(--warning);
+  color: var(--warning-foreground);
+}
+
+.priority-low {
+  background: var(--success);
+  color: var(--success-foreground);
+}
+
+.status-pending {
+  background: var(--warning);
+  color: var(--warning-foreground);
+}
+
+.status-progress {
+  background: hsl(210, 100%, 50%);
+  color: white;
+}
+
+.status-completed {
+  background: var(--success);
+  color: var(--success-foreground);
+}
+
+.status-cancelled {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.tag-administrative {
+  background: hsl(210, 100%, 50%);
+  color: white;
+}
+
+.tag-technical {
+  background: hsl(280, 100%, 50%);
+  color: white;
+}
+
+.tag-commercial {
+  background: hsl(120, 100%, 35%);
+  color: white;
+}
+
+.tag-purchasing {
+  background: hsl(30, 100%, 50%);
+  color: white;
+}
+
+.tag-maintenance {
+  background: hsl(0, 100%, 50%);
+  color: white;
+}
+
+.tag-default {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}

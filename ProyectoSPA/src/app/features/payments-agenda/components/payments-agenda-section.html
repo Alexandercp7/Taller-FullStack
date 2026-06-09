@@ -1,0 +1,235 @@
+<section class="payments-page">
+  <div class="header-row">
+    <div>
+      <h1 class="text-xl font-semibold">Agenda de Pagos</h1>
+      <p class="text-muted-foreground text-sm">Pagos periódicos y extraordinarios, calendario de vencimientos, alertas y comprobantes.</p>
+    </div>
+    <div class="header-buttons">
+      <button hlmBtn size="sm" [variant]="viewMode() === 'table' ? 'default' : 'outline'" type="button" (click)="viewMode.set('table')">
+        Tabla
+      </button>
+      <button hlmBtn size="sm" [variant]="viewMode() === 'calendar' ? 'default' : 'outline'" type="button" (click)="viewMode.set('calendar')">
+        Calendario
+      </button>
+      <button
+        hlmBtn
+        size="sm"
+        variant="outline"
+        type="button"
+        [disabled]="isExportingAll()"
+        (click)="exportAllToGoogleCalendar()"
+        title="Exportar pagos pendientes a Google Calendar"
+      >
+        <ng-icon [name]="isExportingAll() ? 'lucideCalendarCheck' : 'lucideCalendarPlus'" class="size-4" />
+        {{ isExportingAll() ? 'Exportando...' : 'Exportar a Google Calendar' }}
+      </button>
+      <button hlmBtn type="button" (click)="createPayment()">
+        <ng-icon name="lucidePlus" />
+        Agregar pago
+      </button>
+    </div>
+  </div>
+
+  <hlm-card>
+    <div hlmCardContent class="space-y-4 pt-4" *ngIf="viewMode() === 'table'">
+      <input
+        hlmInput
+        type="text"
+        placeholder="Buscar pago por concepto o categoría..."
+        [value]="search()"
+        (input)="updateSearch(($any($event.target)).value)"
+      />
+
+      <div class="filters-row">
+        <div class="filter-group">
+          <label class="text-sm font-medium">Fecha Inicio</label>
+          <spartan-date-picker-field
+            [value]="filterDateStart()"
+            (valueChange)="updateDateStart($event)"
+            placeholder="Desde"
+          />
+        </div>
+        <div class="filter-group">
+          <label class="text-sm font-medium">Fecha Fin</label>
+          <spartan-date-picker-field
+            [value]="filterDateEnd()"
+            (valueChange)="updateDateEnd($event)"
+            placeholder="Hasta"
+          />
+        </div>
+        @if (filterDateStart() || filterDateEnd()) {
+          <button hlmBtn size="sm" variant="outline" type="button" (click)="filterDateStart.set(''); filterDateEnd.set('')" class="self-end">
+            <ng-icon name="lucideX" />
+            Limpiar
+          </button>
+        }
+      </div>
+
+      <div hlmTableContainer>
+        <table hlmTable>
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>Concepto</th>
+              <th hlmTh>Categoría</th>
+              <th hlmTh>Tipo</th>
+              <th hlmTh>Vencimiento</th>
+              <th hlmTh>Estado</th>
+              <th hlmTh>Presupuestado</th>
+              <th hlmTh>Pagado</th>
+              <th hlmTh>Comprobante</th>
+              <th hlmTh>Acciones</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (payment of filteredPayments(); track payment.id) {
+              <tr hlmTr>
+                <td hlmTd class="font-medium">{{ payment.concepto }}</td>
+                <td hlmTd>{{ payment.categoria }}</td>
+                <td hlmTd>{{ payment.tipo }}</td>
+                <td hlmTd>{{ payment.fechaVencimiento }}</td>
+                <td hlmTd><span hlmBadge [ngClass]="getStatusClass(payment.estado)">{{ payment.estado }}</span></td>
+                <td hlmTd>${{ payment.montoPresupuestado | number:'1.2-2' }}</td>
+                <td hlmTd>${{ payment.montoPagado | number:'1.2-2' }}</td>
+                <td hlmTd>
+                  <div class="actions-cell">
+                    <a *ngIf="payment.comprobanteUrl" [href]="payment.comprobanteUrl" target="_blank">Ver</a>
+                    <button hlmBtn size="icon" variant="outline" type="button" (click)="onComprobanteSelected(payment)" title="Gestionar comprobante">
+                      <ng-icon name="lucideCamera" class="size-4" />
+                    </button>
+                  </div>
+                </td>
+                <td hlmTd>
+                  <div class="actions-cell">
+                    <button
+                      hlmBtn
+                      size="icon"
+                      variant="outline"
+                      type="button"
+                      (click)="editPayment(payment)"
+                      title="Editar pago"
+                    >
+                      <ng-icon name="lucidePencil" class="size-4" />
+                    </button>
+                    <button
+                      hlmBtn
+                      size="icon"
+                      [variant]="payment.estado === 'Pagado' ? 'default' : 'outline'"
+                      [disabled]="payment.estado === 'Pagado'"
+                      type="button"
+                      (click)="confirmPayment(payment)"
+                      title="Confirmar pago"
+                      class="[&]:bg-success [&]:text-success-foreground [&]:hover:bg-success/90"
+                    >
+                      <ng-icon name="lucideCheck" class="size-4" />
+                    </button>
+                    <button
+                      hlmBtn
+                      size="icon"
+                      variant="outline"
+                      type="button"
+                      [disabled]="exportingPaymentId() === payment.id"
+                      (click)="exportPaymentToGoogleCalendar(payment)"
+                      title="Exportar a Google Calendar"
+                    >
+                      <ng-icon
+                        [name]="exportingPaymentId() === payment.id ? 'lucideCalendarCheck' : 'lucideCalendarPlus'"
+                        class="size-4"
+                      />
+                    </button>
+                    <button hlmBtn size="icon" variant="destructive" type="button" (click)="deletePayment(payment.id)" title="Eliminar pago">
+                      <ng-icon name="lucideTrash2" class="size-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div hlmCardContent class="space-y-4 pt-4 calendar-view" *ngIf="viewMode() === 'calendar'">
+      <div class="calendar-container">
+        <div class="calendar-panel">
+          <hlm-calendar
+            [date]="selectedCalendarDate()"
+            (dateChange)="onCalendarDateChange($event)"
+            captionLayout="dropdown"
+          />
+        </div>
+        <div class="payments-panel">
+          <h3 class="text-lg font-semibold mb-4">
+            Pagos para {{ selectedCalendarDate().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+          </h3>
+          @if (filteredPayments().length > 0) {
+            <div class="payments-list">
+              @for (payment of filteredPayments(); track payment.id) {
+                <div class="payment-item" [ngClass]="getStatusClass(payment.estado)">
+                  <div class="payment-header">
+                    <div class="payment-concepto">{{ payment.concepto }}</div>
+                    <span hlmBadge [ngClass]="getStatusClass(payment.estado)">{{ payment.estado }}</span>
+                  </div>
+                  <div class="payment-details">
+                    <div class="detail-row">
+                      <span class="label">Categoría:</span>
+                      <span class="value">{{ payment.categoria }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="label">Presupuestado:</span>
+                      <span class="value">${{ payment.montoPresupuestado | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="label">Pagado:</span>
+                      <span class="value">${{ payment.montoPagado | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
+                  <div class="payment-actions">
+                    <button hlmBtn size="icon" variant="outline" type="button" (click)="editPayment(payment)" title="Editar pago">
+                      <ng-icon name="lucidePencil" class="size-4" />
+                    </button>
+                    <button
+                      hlmBtn
+                      size="icon"
+                      [variant]="payment.estado === 'Pagado' ? 'default' : 'outline'"
+                      [disabled]="payment.estado === 'Pagado'"
+                      type="button"
+                      (click)="confirmPayment(payment)"
+                      title="Confirmar pago"
+                      class="[&]:bg-success [&]:text-success-foreground [&]:hover:bg-success/90"
+                    >
+                      <ng-icon name="lucideCheck" class="size-4" />
+                    </button>
+                    <button
+                      hlmBtn
+                      size="icon"
+                      variant="outline"
+                      type="button"
+                      [disabled]="exportingPaymentId() === payment.id"
+                      (click)="exportPaymentToGoogleCalendar(payment)"
+                      title="Exportar a Google Calendar"
+                    >
+                      <ng-icon
+                        [name]="exportingPaymentId() === payment.id ? 'lucideCalendarCheck' : 'lucideCalendarPlus'"
+                        class="size-4"
+                      />
+                    </button>
+                    <button hlmBtn size="icon" variant="outline" type="button" (click)="onComprobanteSelected(payment)" title="Gestionar comprobante">
+                      <ng-icon name="lucideCamera" class="size-4" />
+                    </button>
+                    <button hlmBtn size="icon" variant="destructive" type="button" (click)="deletePayment(payment.id)" title="Eliminar pago">
+                      <ng-icon name="lucideTrash2" class="size-4" />
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="no-payments">
+              <p class="text-muted-foreground">No hay pagos programados para este día.</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </hlm-card>
+</section>

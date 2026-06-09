@@ -1,0 +1,142 @@
+@if (detail(); as client) {
+	<section class="detail-page">
+		<div class="detail-header">
+			<div class="flex items-center gap-2">
+				<h1 class="text-xl font-semibold">{{ client.nombre }}</h1>
+				<span hlmBadge [ngClass]="tagClass(client.tag)">{{ client.tag }}</span>
+			</div>
+			<button hlmBtn type="button" variant="outline" (click)="goBack()">Volver a clientes</button>
+		</div>
+
+		<hlm-card>
+			<hlm-card-header>
+				<div class="flex items-center justify-between gap-2">
+					<h3 hlmCardTitle>Ficha del cliente</h3>
+					<button hlmBtn size="sm" variant="outline" type="button" (click)="toggleEditFicha()">
+						{{ editFicha() ? 'Cancelar' : 'Editar' }}
+					</button>
+				</div>
+			</hlm-card-header>
+			@if (!editFicha()) {
+				<div hlmCardContent class="client-grid">
+					<p><strong>Nombre:</strong> {{ client.nombre }}</p>
+					<p><strong>Telefono:</strong> {{ client.telefono }}</p>
+					<p><strong>Correo:</strong> {{ client.correo }}</p>
+					<p><strong>RFC:</strong> {{ client.rfc }}</p>
+					<p><strong>Vehiculos:</strong> {{ client.vehicles.length }}</p>
+					<p><strong>OTs con adeudo:</strong> {{ totalAdeudo() }}</p>
+				</div>
+			} @else {
+				<div hlmCardContent class="space-y-3">
+					<div class="client-grid">
+						<label class="field">
+							<span>Nombre</span>
+							<input hlmInput type="text" [value]="nombreEdit()" (input)="nombreEdit.set(($any($event.target)).value)" />
+						</label>
+						<label class="field">
+							<span>Telefono</span>
+							<input hlmInput type="text" [value]="telefonoEdit()" (input)="telefonoEdit.set(($any($event.target)).value)" />
+						</label>
+						<label class="field">
+							<span>Correo</span>
+							<input hlmInput type="text" [value]="correoEdit()" (input)="correoEdit.set(($any($event.target)).value)" />
+						</label>
+						<label class="field">
+							<span>RFC</span>
+							<input hlmInput type="text" [value]="rfcEdit()" (input)="rfcEdit.set(($any($event.target)).value)" />
+						</label>
+					</div>
+					<div class="flex justify-end">
+						<button hlmBtn type="button" size="sm" (click)="saveFicha()">Guardar</button>
+					</div>
+				</div>
+			}
+		</hlm-card>
+
+		<hlm-card>
+			<hlm-card-header>
+				<h3 hlmCardTitle>Historial de vehiculos y servicios</h3>
+			</hlm-card-header>
+			<div hlmCardContent>
+				<div hlmTableContainer>
+					<table hlmTable>
+						<thead hlmTHead>
+							<tr hlmTr>
+								<th hlmTh>Vehiculo</th>
+								<th hlmTh>Placas</th>
+								<th hlmTh>VIN</th>
+								<th hlmTh>Servicios realizados</th>
+								<th hlmTh>OTs</th>
+							</tr>
+						</thead>
+						<tbody hlmTBody>
+							@for (vehicle of client.vehicles; track vehicle.id) {
+								<tr hlmTr>
+									<td hlmTd>{{ vehicle.marca }} {{ vehicle.modelo }} {{ vehicle.anio }}</td>
+									<td hlmTd>{{ vehicle.placas }}</td>
+									<td hlmTd>{{ vehicle.vin }}</td>
+									<td hlmTd>{{ vehicle.services.join(', ') }}</td>
+									<td hlmTd>{{ vehicle.workOrderIds.join(', ') }}</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</hlm-card>
+
+		<hlm-card>
+			<hlm-card-header>
+				<h3 hlmCardTitle>OTs relacionadas</h3>
+				<p hlmCardDescription>Haz click en una OT para abrir su detalle.</p>
+			</hlm-card-header>
+			<div hlmCardContent>
+				<div hlmTableContainer>
+					<table hlmTable>
+						<thead hlmTHead>
+							<tr hlmTr>
+								<th hlmTh>OT</th>
+								<th hlmTh>Vehiculo</th>
+								<th hlmTh>Tecnico</th>
+								<th hlmTh>Fecha programada</th>
+								<th hlmTh>Estatus</th>
+								<th hlmTh>Prioridad</th>
+								<th hlmTh>Pago</th>
+								<th hlmTh>Acciones</th>
+							</tr>
+						</thead>
+						<tbody hlmTBody>
+							@for (ot of client.workOrders; track ot.id) {
+								<tr hlmTr>
+									<td hlmTd class="font-medium">{{ ot.id }}</td>
+									<td hlmTd>{{ ot.vehiculo }}</td>
+									<td hlmTd>{{ ot.tecnico }}</td>
+									<td hlmTd>{{ ot.fechaProgramada }}</td>
+									<td hlmTd>{{ ot.status }}</td>
+									<td hlmTd>{{ ot.priority }}</td>
+									<td hlmTd>
+										<span hlmBadge [ngClass]="paymentClass(ot.paymentState)">{{ ot.paymentState }}</span>
+									</td>
+									<td hlmTd>
+										<button hlmBtn size="sm" variant="outline" type="button" (click)="openWorkOrder(ot.id)">Abrir OT</button>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</hlm-card>
+	</section>
+} @else {
+	<section class="detail-page">
+		<hlm-card>
+			<div hlmCardContent class="space-y-3 pt-4">
+				<p class="text-sm text-muted-foreground">Cliente no encontrado.</p>
+				<div>
+					<button hlmBtn type="button" variant="outline" (click)="goBack()">Volver a clientes</button>
+				</div>
+			</div>
+		</hlm-card>
+	</section>
+}

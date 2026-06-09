@@ -1,0 +1,120 @@
+<div class="roles-users-layout">
+	<section hlmCard>
+		<div hlmCardHeader>
+			<h2 hlmCardTitle>Roles disponibles</h2>
+			<p hlmCardDescription>Roles configurados en el sistema.</p>
+		</div>
+		<div hlmCardContent>
+			<div hlmTableContainer>
+				<table hlmTable>
+					<thead hlmTHead>
+						<tr hlmTr>
+							<th hlmTh>Rol</th>
+						</tr>
+					</thead>
+					<tbody hlmTBody>
+						@for (role of roles(); track role) {
+							<tr hlmTr>
+								<td hlmTd>{{ role }}</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+
+	<section hlmCard>
+		<div hlmCardHeader class="users-header">
+			<div>
+				<h2 hlmCardTitle>Usuarios del sistema</h2>
+				<p hlmCardDescription>Administra acceso y rol asignado por usuario.</p>
+			</div>
+			@if (!showForm()) {
+				<button hlmBtn type="button" (click)="openForm()">Nuevo Usuario</button>
+			}
+		</div>
+
+		@if (showForm()) {
+			<div class="new-user-form">
+				<h3 class="form-title">Nuevo usuario</h3>
+				<div class="form-grid">
+					<div class="form-field">
+						<label hlmLabel for="new-name">Nombre</label>
+						<input hlmInput id="new-name" type="text" placeholder="Nombre completo" [ngModel]="newName()" (ngModelChange)="newName.set($event)" />
+					</div>
+					<div class="form-field">
+						<label hlmLabel for="new-email">Correo</label>
+						<input hlmInput id="new-email" type="email" placeholder="correo@ejemplo.com" [ngModel]="newEmail()" (ngModelChange)="newEmail.set($event)" />
+					</div>
+					<div class="form-field">
+						<label hlmLabel for="new-password">Contraseña</label>
+						<input hlmInput id="new-password" type="password" placeholder="Mínimo 8 caracteres" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" />
+					</div>
+					<div class="form-field">
+						<label hlmLabel for="new-role">Rol</label>
+						<hlm-select [value]="newRole()" (valueChange)="newRole.set(($event ?? '') + '')">
+							<hlm-select-trigger id="new-role">
+								<hlm-select-value />
+							</hlm-select-trigger>
+							<hlm-select-content *hlmSelectPortal>
+								<hlm-select-group>
+									@for (role of roles(); track role) {
+										<hlm-select-item [value]="role">{{ role }}</hlm-select-item>
+									}
+								</hlm-select-group>
+							</hlm-select-content>
+						</hlm-select>
+					</div>
+				</div>
+				<div class="form-actions">
+					<button hlmBtn type="button" (click)="submitUser()" [disabled]="!canSubmit() || isSubmitting()">
+						{{ isSubmitting() ? 'Guardando...' : 'Guardar' }}
+					</button>
+					<button hlmBtn variant="outline" type="button" (click)="cancelForm()">Cancelar</button>
+				</div>
+			</div>
+		}
+
+		<div hlmCardContent>
+			@if (isLoading()) {
+				<p class="loading-text">Cargando usuarios...</p>
+			} @else {
+				<div hlmTableContainer>
+					<table hlmTable>
+						<thead hlmTHead>
+							<tr hlmTr>
+								<th hlmTh>Nombre</th>
+								<th hlmTh>Correo</th>
+								<th hlmTh>Rol asignado</th>
+								<th hlmTh></th>
+							</tr>
+						</thead>
+						<tbody hlmTBody>
+							@for (user of users(); track user.id) {
+								<tr hlmTr>
+									<td hlmTd>{{ user.name }}</td>
+									<td hlmTd>{{ user.email }}</td>
+									<td hlmTd>{{ user.role }}</td>
+									<td hlmTd class="actions-cell">
+										@if (deletingId() === user.id) {
+											<span class="confirm-delete">
+												¿Confirmar?
+												<button hlmBtn size="sm" variant="destructive" type="button" (click)="deleteUser(user.id)">Sí</button>
+												<button hlmBtn size="sm" variant="outline" type="button" (click)="cancelDelete()">No</button>
+											</span>
+										} @else {
+											<button hlmBtn size="icon" variant="ghost" type="button" (click)="deleteUser(user.id)" aria-label="Eliminar usuario">
+												<ng-icon name="lucideTrash2" class="text-destructive" />
+											</button>
+										}
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		</div>
+	</section>
+</div>

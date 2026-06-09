@@ -1,0 +1,45 @@
+<div class="activity-card" [ngClass]="priorityClass(activity().prioridad)">
+  <div class="card-header">
+    <div class="title-section">
+      <h4 class="activity-title">{{ activity().titulo }}</h4>
+      <span hlmBadge [ngClass]="tagStyle(activity().etiqueta)">{{ activity().etiqueta }}</span>
+    </div>
+    <div class="action-buttons">
+      <button
+        hlmBtn
+        size="icon"
+        variant="outline"
+        type="button"
+        (click)="onView()"
+        title="Ver detalles"
+      >
+        <ng-icon name="lucideEye" class="size-4" />
+      </button>
+      <button
+        hlmBtn
+        size="icon"
+        variant="destructive"
+        type="button"
+        (click)="onDelete()"
+        title="Eliminar"
+      >
+        <ng-icon name="lucideTrash2" class="size-4" />
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <p class="description">{{ activity().descripcion }}</p>
+
+    <div class="card-footer">
+      <div class="info-item">
+        <span class="label">Asignado:</span>
+        <span class="value">{{ activity().asignadoA }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Vencimiento:</span>
+        <span class="value">{{ activity().fechaLimite }}</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,266 @@
+:host {
+	display: block;
+}
+
+.payments-page {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+.header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.actions-cell {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.filters-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 1rem;
+	flex-wrap: wrap;
+	max-width: 600px;
+}
+
+.filter-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	min-width: auto;
+}
+
+.filter-group > label {
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.hidden-file-input {
+	display: none;
+}
+
+.header-buttons {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.calendar-view {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.calendar-container {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 2rem;
+	align-items: start;
+}
+
+.calendar-panel {
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 1.5rem;
+	background: var(--background);
+	flex-shrink: 0;
+	max-width: 80rem;
+}
+
+::ng-deep .calendar-panel hlm-calendar {
+	display: flex;
+}
+
+::ng-deep .calendar-panel hlm-calendar > div {
+	display: flex ;
+	width: 100%;
+}
+
+::ng-deep .calendar-panel table {
+	width: 100%;
+}
+
+::ng-deep .calendar-panel th {
+	width: 70px ;
+	height: 60px ;
+	padding: 0.5rem ;
+	font-size: 0.95rem ;
+	font-weight: 700 ;
+	display: flex ;
+	align-items: center ;
+	justify-content: center ;
+}
+
+::ng-deep .calendar-panel td {
+	width: 70px ;
+	height: 60px ;
+	padding: 2px ;
+	margin: 0 ;
+}
+
+::ng-deep .calendar-panel button[aria-label] {
+	width: 64px ;
+	height: 54px ;
+	font-size: 1.1rem ;
+	font-weight: 700 ;
+	padding: 0 ;
+}
+
+::ng-deep .calendar-panel tr {
+	gap: 0.375rem ;
+	display: flex;
+}
+
+::ng-deep .calendar-panel tbody tr {
+	margin-bottom: 0.375rem;
+}
+
+.payments-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.payments-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	max-height: 600px;
+	overflow-y: auto;
+	padding-right: 0.5rem;
+}
+
+.payment-item {
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	transition: all 0.2s ease;
+}
+
+.payment-item:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	transform: translateY(-2px);
+}
+
+.payment-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1rem;
+}
+
+.payment-concepto {
+	font-weight: 600;
+	color: var(--foreground);
+	flex: 1;
+}
+
+.payment-details {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+}
+
+.detail-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.detail-row .label {
+	color: var(--muted-foreground);
+	font-weight: 500;
+}
+
+.detail-row .value {
+	color: var(--foreground);
+	font-weight: 600;
+}
+
+.payment-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+
+.no-payments {
+	text-align: center;
+	padding: 2rem 1rem;
+	color: var(--muted-foreground);
+}
+
+.calendar-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: 1rem;
+}
+
+.calendar-card {
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	transition: all 0.2s ease;
+}
+
+.calendar-card:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	transform: translateY(-2px);
+}
+
+.card-date {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--muted-foreground);
+}
+
+.card-concepto {
+	font-weight: 600;
+	color: var(--foreground);
+}
+
+.card-categoria {
+	font-size: 0.875rem;
+	color: var(--muted-foreground);
+}
+
+.card-amount {
+	font-size: 1.125rem;
+	font-weight: 700;
+	color: var(--foreground);
+}
+
+.stock-low {
+    background: var(--warning);
+	border: 1px solid var(--warning-border);
+	color: var(--warning-foreground);
+}
+
+.stock-ok {
+	background: var(--success);
+	border: 1px solid var(--success-border);
+	color: var(--success-foreground);
+}
+
+.bg-destructive {
+	background: var(--destructive);
+	border: 1px solid var(--destructive-border);
+}
+
+.text-destructive-foreground {
+	color: var(--destructive-foreground);
+}

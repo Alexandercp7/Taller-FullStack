@@ -1,0 +1,70 @@
+<section class="activities-kanban-page">
+	<div class="header-row">
+		<div>
+			<h1 class="text-xl font-semibold">Actividades por Rol</h1>
+			<p class="text-muted-foreground text-sm">Organiza las actividades de tu equipo por rol. Arrastra las tarjetas entre columnas para reasignarlas.</p>
+		</div>
+	</div>
+
+	<section class="kanban-grid">
+		@for (column of kanbanColumns(); track column.role) {
+			<hlm-card class="kanban-column">
+				<hlm-card-header>
+					<div class="flex items-center justify-between gap-2">
+						<h3 hlmCardTitle class="text-sm">{{ column.role }}</h3>
+						<span hlmBadge [ngClass]="['activity-chip', 'activity-chip-role']" variant="outline">
+							{{ column.activities.length }}
+						</span>
+					</div>
+				</hlm-card-header>
+				<div
+					hlmCardContent
+					class="kanban-drop-zone"
+					cdkDropList
+					[id]="getKanbanDropListId(column.role)"
+					[cdkDropListData]="column.activities"
+					[cdkDropListConnectedTo]="kanbanDropListIds()"
+					(cdkDropListDropped)="onKanbanDrop($event, column.role)"
+				>
+					@for (activity of column.activities; track activity.id) {
+						<div class="kanban-card-wrapper" cdkDrag [cdkDragData]="activity" [cdkDragStartDelay]="{ touch: 140, mouse: 0 }">
+							<div class="kanban-card">
+								<div class="card-content">
+									<span class="font-medium">{{ activity.id }}</span>
+									<span class="text-muted-foreground text-xs">{{ activity.titulo }}</span>
+									@if (activity.descripcion) {
+										<span class="text-muted-foreground text-xs line-clamp-1">{{ activity.descripcion }}</span>
+									}
+									<span hlmBadge [ngClass]="['activity-chip', getStatusVariant(activity.status) + '-chip']" [variant]="getStatusVariant(activity.status)">
+										{{ activity.status }}
+									</span>
+									<span hlmBadge [ngClass]="['activity-chip', 'activity-chip-priority-' + activity.prioridad.toLowerCase()]" [variant]="'default'">
+										{{ activity.prioridad }}
+									</span>
+									@if (activity.fechaVencimiento) {
+										<span class="text-muted-foreground text-xs">{{ activity.fechaVencimiento }}</span>
+									}
+								</div>
+
+								<div class="card-actions">
+									<button hlmBtn type="button" size="sm" variant="outline" (click)="onEditActivity(activity)">
+										<ng-icon name="lucidePencil" class="w-4 h-4"></ng-icon>
+									</button>
+									<button hlmBtn type="button" size="sm" variant="outline" (click)="onDeleteActivity(activity)">
+										<ng-icon name="lucideTrash2" class="w-4 h-4"></ng-icon>
+									</button>
+								</div>
+							</div>
+						</div>
+					}
+				</div>
+
+				<div class="kanban-footer">
+					<button hlmBtn type="button" variant="ghost" class="w-full justify-start" (click)="onAddActivity(column.role)">
+						+ Agregar actividad
+					</button>
+				</div>
+			</hlm-card>
+		}
+	</section>
+</section>

@@ -1,0 +1,41 @@
+{
+  "/api": {
+    "target": "http://127.0.0.1:3000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/storage": {
+    "target": "http://127.0.0.1:3000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/carquery": {
+    "target": "https://www.carqueryapi.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/carquery": ""
+    },
+    "logLevel": "debug"
+  },
+  "/vpic": {
+    "target": "https://vpic.nhtsa.dot.gov",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/vpic": ""
+    },
+    "logLevel": "debug"
+  },
+  "/nhtsa": {
+    "target": "https://api.nhtsa.gov",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/nhtsa": ""
+    },
+    "logLevel": "debug"
+  }
+}

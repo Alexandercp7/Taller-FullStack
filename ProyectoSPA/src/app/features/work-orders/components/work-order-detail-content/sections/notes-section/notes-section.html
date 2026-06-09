@@ -1,0 +1,33 @@
+@if (order(); as ot) {
+	<div class="space-y-4">
+		<section class="grid gap-4 xl:grid-cols-2">
+			<hlm-card>
+				<hlm-card-header><h3 hlmCardTitle>Notas internas (solo personal)</h3></hlm-card-header>
+				<div hlmCardContent class="space-y-3">
+					<textarea hlmTextarea rows="3" placeholder="Agregar nota interna" [value]="nuevaNotaInterna()" (input)="nuevaNotaInterna.set(($any($event.target)).value)"></textarea>
+					<button hlmBtn type="button" variant="outline" (click)="agregarNotaInterna()">Guardar nota interna</button>
+					@for (note of ot.notasInternas; track note.id) {
+						<div class="note-item">
+							<p class="text-sm">{{ note.texto }}</p>
+							<p class="text-muted-foreground text-xs">{{ note.timestamp }} - {{ note.usuario }}</p>
+						</div>
+					}
+				</div>
+			</hlm-card>
+
+			<hlm-card>
+				<hlm-card-header><h3 hlmCardTitle>Notas visibles para el cliente</h3></hlm-card-header>
+				<div hlmCardContent class="space-y-3">
+					<textarea hlmTextarea rows="3" placeholder="Agregar nota para cliente" [value]="nuevaNotaCliente()" (input)="nuevaNotaCliente.set(($any($event.target)).value)"></textarea>
+					<button hlmBtn type="button" variant="outline" (click)="agregarNotaCliente()">Guardar nota cliente</button>
+					@for (note of ot.notasCliente; track note.id) {
+						<div class="note-item">
+							<p class="text-sm">{{ note.texto }}</p>
+							<p class="text-muted-foreground text-xs">{{ note.timestamp }} - {{ note.usuario }}</p>
+						</div>
+					}
+				</div>
+			</hlm-card>
+		</section>
+	</div>
+}

@@ -1,0 +1,61 @@
+<div class="header-container">
+  <div class="header-top">
+    <div>
+      <h1 class="text-xl font-semibold">Mis Actividades</h1>
+      <p class="text-muted-foreground text-sm">Administra tus tareas, seguimiento de actividades y colaboración en equipo.</p>
+    </div>
+    <div class="header-buttons">
+      <button hlmBtn size="sm" [variant]="viewMode() === 'list' ? 'default' : 'outline'" type="button" (click)="onToggleView()">
+        Lista
+      </button>
+      <button hlmBtn size="sm" [variant]="viewMode() === 'kanban' ? 'default' : 'outline'" type="button" (click)="onToggleView()">
+        Kanban
+      </button>
+      <button hlmBtn type="button" (click)="onCreateNew()">
+        <ng-icon name="lucidePlus" />
+        Nueva Actividad
+      </button>
+    </div>
+  </div>
+
+  <div class="filters-row">
+    <div class="filter-group">
+      <label class="text-sm font-medium">Buscar</label>
+      <input
+        hlmInput
+        type="text"
+        placeholder="Buscar actividades..."
+        [value]="searchText()"
+        (input)="updateSearch.emit(($any($event.target)).value)"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label class="text-sm font-medium">Etiqueta</label>
+      <select
+        hlmSelectInput
+        [value]="selectedTag()"
+        (change)="updateTag.emit(($any($event.target)).value)"
+      >
+        <option value="">Todas</option>
+        @for (tag of tags; track tag) {
+          <option [value]="tag">{{ tag }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="text-sm font-medium">Prioridad</label>
+      <select
+        hlmSelectInput
+        [value]="selectedPriority()"
+        (change)="updatePriority.emit(($any($event.target)).value)"
+      >
+        <option value="">Todas</option>
+        @for (priority of priorities; track priority) {
+          <option [value]="priority">{{ priority }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</div>

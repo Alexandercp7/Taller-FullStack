@@ -1,0 +1,25 @@
+<div class="date-field-row">
+	<hlm-popover [state]="popoverState()" (stateChanged)="popoverState.set($event)">
+		<button
+			hlmBtn
+			type="button"
+			variant="outline"
+			class="date-trigger"
+			hlmPopoverTrigger
+		>
+			{{ displayValue() }}
+		</button>
+		<hlm-popover-content class="w-fit p-0" *hlmPopoverPortal>
+			<hlm-calendar
+				calendarClass="border-0 rounded-none"
+				captionLayout="dropdown"
+				[date]="selectedDate()"
+				(dateChange)="onDateChange($event)"
+			/>
+		</hlm-popover-content>
+	</hlm-popover>
+
+	@if (allowClear() && value()) {
+		<button hlmBtn type="button" variant="ghost" size="sm" (click)="clearDate($event)">Limpiar</button>
+	}
+</div>

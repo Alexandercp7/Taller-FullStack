@@ -1,0 +1,25 @@
+:host { display: block; }
+
+.check-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.6rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+}
+
+.add-row {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.5rem;
+	padding-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+	.add-row {
+		grid-template-columns: 1.4fr 1fr auto;
+		align-items: end;
+	}
+}

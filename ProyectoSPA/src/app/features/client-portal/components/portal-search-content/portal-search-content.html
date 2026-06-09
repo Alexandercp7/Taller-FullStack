@@ -1,0 +1,65 @@
+<section class="portal-search-page">
+	<hlm-card>
+		<hlm-card-header>
+			<h3 hlmCardTitle>Consulta tu servicio</h3>
+			<p hlmCardDescription>Ingresa tu numero de telefono o nombre para encontrar tus ordenes de servicio.</p>
+		</hlm-card-header>
+		<div hlmCardContent class="search-form">
+			<input
+				hlmInput
+				type="text"
+				placeholder="Numero de telefono o nombre..."
+				[value]="searchTerm()"
+				(input)="searchTerm.set($any($event.target).value)"
+				(keydown.enter)="search()"
+			/>
+			<button hlmBtn type="button" (click)="search()">Buscar</button>
+		</div>
+	</hlm-card>
+
+	@if (hasSearched()) {
+		@if (results().length > 0) {
+			<hlm-card>
+				<hlm-card-header>
+					<p hlmCardDescription>{{ results().length }} {{ results().length === 1 ? 'orden encontrada' : 'ordenes encontradas' }}</p>
+				</hlm-card-header>
+				<div hlmCardContent>
+					<div hlmTableContainer>
+						<table hlmTable>
+							<thead hlmTHead>
+								<tr hlmTr>
+									<th hlmTh>OT</th>
+									<th hlmTh>Vehiculo</th>
+									<th hlmTh>Fecha programada</th>
+									<th hlmTh>Estatus</th>
+									<th hlmTh>Acciones</th>
+								</tr>
+							</thead>
+							<tbody hlmTBody>
+								@for (order of results(); track order.id) {
+									<tr hlmTr>
+										<td hlmTd class="font-medium">{{ order.id }}</td>
+										<td hlmTd>{{ order.vehicle.marca }} {{ order.vehicle.modelo }} {{ order.vehicle.anio }}</td>
+										<td hlmTd>{{ order.fechaProgramada }}</td>
+										<td hlmTd>
+											<span hlmBadge [ngClass]="['wo-chip', statusChipClass(order.status)]">{{ order.status }}</span>
+										</td>
+										<td hlmTd>
+											<button hlmBtn size="sm" variant="outline" type="button" (click)="openOrder(order.id)">Ver detalle</button>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</hlm-card>
+		} @else {
+			<hlm-card>
+				<div hlmCardContent class="empty-results">
+					<p class="text-sm text-muted-foreground">No se encontraron ordenes con ese dato. Verifica que el numero de telefono o nombre sea correcto.</p>
+				</div>
+			</hlm-card>
+		}
+	}
+</section>

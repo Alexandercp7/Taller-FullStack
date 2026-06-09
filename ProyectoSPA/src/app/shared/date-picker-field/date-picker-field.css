@@ -1,0 +1,17 @@
+:host {
+	display: block;
+	width: 100%;
+}
+
+.date-field-row {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	width: 100%;
+}
+
+.date-trigger {
+	width: 100%;
+	justify-content: space-between;
+	font-weight: 400;
+}

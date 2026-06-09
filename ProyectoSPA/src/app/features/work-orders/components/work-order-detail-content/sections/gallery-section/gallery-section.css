@@ -1,0 +1,73 @@
+:host { display: block; }
+
+.add-photo-row {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.5rem;
+}
+
+.photo-placeholder {
+	border: 1px solid var(--border);
+	background: color-mix(in oklab, var(--muted) 65%, transparent);
+	border-radius: 1rem;
+	padding: 0;
+	min-height: 150px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	cursor: pointer;
+	overflow: hidden;
+}
+
+.photo-placeholder .label {
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.photo-thumb {
+	width: 100%;
+	height: 140px;
+	object-fit: cover;
+	border-radius: 0.5rem;
+}
+
+.photo-viewer-backdrop {
+	position: fixed;
+	inset: 0;
+	background: color-mix(in oklab, var(--background) 40%, black);
+	display: grid;
+	place-items: center;
+	padding: 1rem;
+	z-index: 50;
+}
+
+.photo-viewer-dialog {
+	width: min(100%, 980px);
+	max-height: 90vh;
+	background: var(--card);
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+	padding: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.photo-full {
+	width: 100%;
+	max-height: calc(90vh - 72px);
+	object-fit: contain;
+	border-radius: 0.5rem;
+}
+
+@media (min-width: 768px) {
+	.add-photo-row {
+		grid-template-columns: 1fr auto auto;
+		align-items: center;
+	}
+}
+
+@media (min-width: 1280px) {
+	.photo-placeholder { min-height: 170px; }
+	.photo-thumb { height: 160px; }
+}

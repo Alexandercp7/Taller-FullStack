@@ -1,0 +1,10 @@
+<section class="dashboard-layout">
+	<spartan-financial-summary [items]="data().financialSummary" />
+
+	<div class="dashboard-main-grid">
+		<spartan-recent-work-orders [orders]="data().recentWorkOrders" />
+		<spartan-notifications-alerts [items]="data().notifications" />
+	</div>
+
+	<spartan-quick-access [items]="data().quickAccess" />
+</section>

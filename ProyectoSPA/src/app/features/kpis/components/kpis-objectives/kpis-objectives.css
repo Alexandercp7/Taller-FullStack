@@ -1,0 +1,86 @@
+:host {
+	display: block;
+}
+
+.kpi-meta-card {
+	border-radius: 0.5rem;
+    border: 1px solid;
+	padding: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.kpi-info {
+	background: var(--info);
+    border-color: var(--info-border);
+}
+
+.kpi-success {
+	background-color: var(--success);
+	border-color: var(--success-border);
+}
+
+.kpi-special {
+	background-color: var(--special);
+	border-color: var(--special-border);
+}
+
+.kpi-meta-label {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--secondary-foreground);
+}
+
+.kpi-meta-value {
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.kpi-info .kpi-meta-value {
+	color: var(--info-foreground);
+}
+
+.kpi-success .kpi-meta-value {
+	color: var(--success-foreground);
+}
+
+.kpi-special .kpi-meta-value {
+	color: var(--special-foreground);
+}
+
+.kpi-stats {
+	font-size: 0.75rem;
+	padding: 0.5rem;
+	border-radius: 0.375rem;
+	border: 1px solid;
+	background-color: var(--special) / 0.1;
+	border-color: var(--special-border);
+	color: var(--special-foreground);
+}
+
+.kpi-progress-bar {
+	height: 0.75rem;
+	border-radius: 9999px;
+	overflow: hidden;
+	background-color: var(--border);
+}
+
+.kpi-progress-fill {
+	height: 100%;
+	background: linear-gradient(to right, var(--success-foreground), var(--info-foreground));
+	transition: width 300ms;
+}
+
+.kpi-status-success {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--success-foreground);
+	display: block;
+}
+
+.kpi-status-warning {
+	font-size: 0.75rem;
+	color: var(--warning-foreground);
+	display: block;
+}

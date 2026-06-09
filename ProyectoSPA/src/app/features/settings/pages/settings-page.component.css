@@ -1,0 +1,54 @@
+:host {
+	display: block;
+}
+
+.settings-page {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+.settings-header h1 {
+	margin: 0;
+	font-size: 1.25rem;
+}
+
+.settings-header p {
+	margin: 0.25rem 0 0;
+	font-size: 0.875rem;
+}
+
+.settings-tabs {
+	display: flex;
+	flex-direction: row;
+	gap: 0.75rem;
+	align-items: flex-start;
+}
+
+.settings-tabs-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	width: 220px;
+	flex-shrink: 0;
+}
+
+.settings-tabs-list button {
+	width: 100%;
+	text-align: left;
+}
+
+.settings-content {
+	flex: 1;
+}
+
+@media (max-width: 960px) {
+	.settings-tabs {
+		flex-direction: column;
+	}
+
+	.settings-tabs-list {
+		width: 100%;
+	}
+}

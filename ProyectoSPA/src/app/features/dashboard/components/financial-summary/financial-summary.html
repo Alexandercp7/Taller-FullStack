@@ -1,0 +1,14 @@
+<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+	@for (item of items(); track item.id) {
+		<hlm-card>
+			<hlm-card-header>
+				<p hlmCardDescription>{{ item.title }}</p>
+				<h3 hlmCardTitle class="text-2xl">{{ item.amount }}</h3>
+			</hlm-card-header>
+			<div hlmCardContent class="space-y-2">
+				<span hlmBadge [variant]="item.changeVariant">{{ item.changeLabel }}</span>
+				<p class="text-muted-foreground text-xs">{{ item.footnote }}</p>
+			</div>
+		</hlm-card>
+	}
+</section>

@@ -1,0 +1,231 @@
+<hlm-card>
+	<hlm-card-header class="header-wrap">
+		<div>
+			<h3 hlmCardTitle>Herramientas, consumibles y equipos</h3>
+			<p hlmCardDescription>Gestion de stock, responsable, estado y movimientos.</p>
+		</div>
+		<button hlmBtn size="sm" type="button" variant="outline" (click)="showCreateForm() ? resetForm() : showCreateForm.set(true)">
+			{{ showCreateForm() ? 'Cancelar' : 'Agregar item' }}
+		</button>
+	</hlm-card-header>
+
+	<div hlmCardContent class="space-y-4">
+		@if (showCreateForm()) {
+			<hlm-card>
+				<hlm-card-header class="pb-2">
+					<h4 class="text-base font-semibold">{{ editingItemId() ? 'Editar' : 'Agregar' }} item</h4>
+				</hlm-card-header>
+				<div hlmCardContent class="space-y-3 pt-4">
+					<div class="edit-grid">
+						<label class="field">
+							<span>Nombre</span>
+							<input hlmInput class="w-full" [value]="createNombre()" (input)="createNombre.set(($any($event.target)).value)" />
+						</label>
+						<label class="field">
+							<span>Tipo</span>
+							<hlm-select [value]="createTipo()" (valueChange)="onCreateTypeChange(($event ?? '') + '')">
+								<hlm-select-trigger class="w-full"><hlm-select-value /></hlm-select-trigger>
+								<hlm-select-content *hlmSelectPortal>
+									<hlm-select-group>
+										@for (type of createTypes; track type) {
+											<hlm-select-item [value]="type">{{ type }}</hlm-select-item>
+										}
+									</hlm-select-group>
+								</hlm-select-content>
+							</hlm-select>
+						</label>
+						<label class="field">
+							<span>Estado</span>
+							<hlm-select [value]="createEstado()" (valueChange)="onCreateConditionChange(($event ?? '') + '')">
+								<hlm-select-trigger class="w-full"><hlm-select-value /></hlm-select-trigger>
+								<hlm-select-content *hlmSelectPortal>
+									<hlm-select-group>
+										@for (condition of conditions; track condition) {
+											<hlm-select-item [value]="condition">{{ condition }}</hlm-select-item>
+										}
+									</hlm-select-group>
+								</hlm-select-content>
+							</hlm-select>
+						</label>
+						<label class="field">
+							<span>Stock minimo</span>
+							<input hlmInput class="w-full" type="number" [value]="createStockMinimo()" (input)="createStockMinimo.set(+($any($event.target)).value || 0)" />
+						</label>
+						<label class="field">
+							<span>Precio</span>
+							<input hlmInput class="w-full" type="number" [value]="createPrecio()" (input)="createPrecio.set(+($any($event.target)).value || 0)" placeholder="Precio del item" />
+						</label>
+						<label class="field md:col-span-2">
+							<span>Descripcion</span>
+							<input hlmInput class="w-full" [value]="createDescripcion()" (input)="createDescripcion.set(($any($event.target)).value)" />
+						</label>
+						<label class="field md:col-span-2">
+							<span>Foto</span>
+						<input hlmInput type="file" accept="image/*" (change)="onPhotoSelected($event)" />
+						</label>
+					</div>
+				<div class="flex justify-end">
+						<button hlmBtn size="sm" type="button" (click)="createItem()">{{ editingItemId() ? 'Actualizar' : 'Guardar' }} item</button>
+					</div>
+				</div>
+			</hlm-card>
+		}
+
+		<div hlmAccordion type="single" class="w-full">
+			@for (group of groupedItems(); track group.type) {
+				<div hlmAccordionItem [isOpened]="group.type === 'Herramienta'">
+					<h4 class="text-base font-semibold">
+						<button hlmAccordionTrigger class="w-full">
+							<span class="inline-flex items-center gap-2">
+								<ng-icon [name]="group.icon" hlmIcon />
+								{{ group.type }}
+							</span>
+							<span hlmBadge>{{ group.items.length }}</span>
+						</button>
+					</h4>
+
+					<hlm-accordion-content>
+						<div hlmTableContainer>
+							<table hlmTable>
+								<thead hlmTHead>
+									<tr hlmTr>
+										<th hlmTh>Foto</th>
+										<th hlmTh>Item</th>
+										<th hlmTh>Estado</th>
+										<th hlmTh>Responsable</th>
+										<th hlmTh>Stock</th>
+										<th hlmTh>Minimo</th>
+										<th hlmTh>Precio</th>
+										<th hlmTh>Acciones</th>
+									</tr>
+								</thead>
+								<tbody hlmTBody>
+									@for (item of group.items; track item.id) {
+										<tr hlmTr>
+											<td hlmTd>@if (item.fotoUrl) { <img class="thumb" [src]="item.fotoUrl" [alt]="item.nombre" /> }</td>
+											<td hlmTd>
+												<div class="font-medium">{{ item.nombre }}</div>
+												<div class="text-muted-foreground text-xs">{{ item.descripcion }}</div>
+											</td>
+											<td hlmTd>{{ item.estado }}</td>
+											<td hlmTd>{{ item.responsable }}</td>
+											<td hlmTd><span hlmBadge [ngClass]="stockClass(item.stockActual, item.stockMinimo)">{{ item.stockActual }}</span></td>
+											<td hlmTd>{{ item.stockMinimo }}</td>
+											<td hlmTd>{{ item.precio ? ('$' + (item.precio | number : '1.0-0')) : '-' }}</td>
+											<td hlmTd>
+												<div class="row-actions">
+													<button hlmBtn size="sm" variant="outline" type="button" (click)="selectItem(item.id)">Gestionar</button>
+													<button hlmBtn size="icon" variant="outline" type="button" (click)="editItem(item)" aria-label="Editar item">
+														<ng-icon name="lucidePencil" class="size-4" />
+													</button>
+													<hlm-alert-dialog>
+														<button hlmBtn hlmAlertDialogTrigger size="icon" variant="destructive" type="button" aria-label="Eliminar item">
+															<ng-icon name="lucideTrash2" class="size-4" />
+														</button>
+														<div hlmAlertDialogContent *hlmAlertDialogPortal="let ctx">
+															<div hlmAlertDialogHeader>
+																<h4 hlmAlertDialogTitle>Eliminar item</h4>
+																<p hlmAlertDialogDescription>Se eliminara <strong>{{ item.nombre }}</strong> y su historial.</p>
+															</div>
+															<div hlmAlertDialogFooter>
+																<button hlmAlertDialogCancel (click)="ctx.close()">Cancelar</button>
+																<button hlmAlertDialogAction variant="destructive" (click)="deleteItem(item.id); ctx.close()">Si, eliminar</button>
+															</div>
+														</div>
+													</hlm-alert-dialog>
+												</div>
+											</td>
+										</tr>
+
+										@if (selectedItemId() === item.id) {
+											<tr hlmTr>
+												<td hlmTd colspan="8">
+													<hlm-card class="mt-3">
+													<div hlmCardContent class="space-y-3 pt-4 px-4">
+														<div class="manage-header">
+																<h4 class="text-base font-semibold">Gestion de {{ item.nombre }}</h4>
+																<button hlmBtn size="sm" variant="ghost" type="button" (click)="closeManagePanel()">Cerrar</button>
+															</div>
+
+															<div class="edit-grid">
+															<label class="field">
+																<span>Estado</span>
+																<hlm-select [value]="conditionEdit()" (valueChange)="onConditionChange(($event ?? '') + '')">
+																	<hlm-select-trigger class="w-full"><hlm-select-value /></hlm-select-trigger>
+																	<hlm-select-content *hlmSelectPortal>
+																		<hlm-select-group>
+																			@for (condition of conditions; track condition) {
+																				<hlm-select-item [value]="condition">{{ condition }}</hlm-select-item>
+																			}
+																		</hlm-select-group>
+																	</hlm-select-content>
+																</hlm-select>
+															</label>
+															<label class="field">
+
+																<span>Stock minimo</span>
+																<input hlmInput class="w-full" type="number" [value]="stockMinEdit()" (input)="stockMinEdit.set(+($any($event.target)).value || 0)" />
+															</label>
+															<div class="self-end"><button hlmBtn size="sm" type="button" (click)="saveItemMeta()">Guardar datos</button></div>
+														</div>
+
+														<div class="edit-grid">
+															<label class="field">
+																<span>Cantidad</span>
+																<input hlmInput class="w-full" type="number" [value]="qtyEdit()" (input)="qtyEdit.set(+($any($event.target)).value || 0)" placeholder="Cantidad a registrar" />
+															</label>
+															<label class="field">
+																<span>Motivo</span>
+																<input hlmInput class="w-full" [value]="reasonEdit()" (input)="reasonEdit.set(($any($event.target)).value)" />
+															</label>
+															<div class="movement-actions">
+															<button hlmBtn size="sm" type="button" variant="outline" (click)="addEntry()">Entrada +</button>
+															<button hlmBtn size="sm" type="button" (click)="adjustManual()">Salida -</button>
+															</div>
+														</div>
+
+														<div>
+															<h5 class="text-sm font-semibold">Historial de movimientos</h5>
+															<div hlmTableContainer>
+																<table hlmTable>
+																	<thead hlmTHead>
+																		<tr hlmTr>
+																			<th hlmTh>Fecha</th>
+																			<th hlmTh>Tipo</th>
+																			<th hlmTh>Cantidad</th>
+																			<th hlmTh>Stock resultante</th>
+																			<th hlmTh>OT</th>
+																			<th hlmTh>Motivo</th>
+																			<th hlmTh>Usuario</th>
+																		</tr>
+																	</thead>
+																	<tbody hlmTBody>
+																		@for (movement of selectedMovements(); track movement.id) {
+																			<tr hlmTr>
+																				<td hlmTd>{{ movement.timestamp }}</td>
+																				<td hlmTd>{{ movement.type }}</td>
+																				<td hlmTd>{{ movement.cantidad }}</td>
+																				<td hlmTd>{{ movement.stockResultante }}</td>
+																				<td hlmTd>{{ movement.relatedOtId || '-' }}</td>
+																				<td hlmTd>{{ movement.motivo }}</td>
+																				<td hlmTd>{{ movement.usuario }}</td>
+																			</tr>
+																		}
+																	</tbody>
+																</table>
+															</div>
+														</div>
+													</div>
+												</hlm-card>
+												</td>
+											</tr>
+										}
+									}
+								</tbody>
+							</table>
+						</div>
+					</hlm-accordion-content>
+				</div>
+			}
+		</div>
+	</div>

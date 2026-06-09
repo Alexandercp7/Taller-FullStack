@@ -1,0 +1,42 @@
+<hlm-card class="h-full">
+	<hlm-card-header>
+		<h3 hlmCardTitle>Ordenes de Trabajo Recientes</h3>
+		<p hlmCardDescription>Ultimas ordenes asignadas, activas y finalizadas.</p>
+	</hlm-card-header>
+	<div hlmCardContent>
+		<div hlmTableContainer>
+			<table hlmTable>
+				<thead hlmTHead>
+					<tr hlmTr>
+						<th hlmTh>Orden</th>
+						<th hlmTh>Cliente</th>
+						<th hlmTh>Responsable</th>
+						<th hlmTh>Fecha Limite</th>
+						<th hlmTh>Prioridad</th>
+						<th hlmTh>Estatus</th>
+					</tr>
+				</thead>
+				<tbody hlmTBody>
+					@for (order of orders(); track order.id) {
+						<tr hlmTr class="cursor-pointer" (click)="goToDetail(order.id)">
+							<td hlmTd class="font-medium">{{ order.id }}</td>
+							<td hlmTd>{{ order.client }}</td>
+							<td hlmTd>{{ order.assignee }}</td>
+							<td hlmTd>{{ order.dueDate }}</td>
+							<td hlmTd>
+								<span hlmBadge [variant]="order.priorityVariant" [ngClass]="['wo-chip', priorityChipClass(order.priorityLabel)]">
+									{{ order.priorityLabel }}
+								</span>
+							</td>
+							<td hlmTd>
+								<span hlmBadge [variant]="order.statusVariant" [ngClass]="['wo-chip', statusChipClass(order.statusLabel)]">
+									{{ order.statusLabel }}
+								</span>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</hlm-card>

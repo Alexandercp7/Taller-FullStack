@@ -1,0 +1,45 @@
+@if (order(); as ot) {
+	<section class="detail-page">
+		<div class="detail-header">
+			<div>
+				<div class="flex items-center gap-2">
+					<h1 class="text-xl font-semibold">{{ ot.id }}</h1>
+					<span hlmBadge [variant]="statusVariant(ot.status)" [ngClass]="['wo-chip', statusChipClass(ot.status)]">{{ ot.status }}</span>
+					<span hlmBadge [variant]="priorityVariant(ot.priority)" [ngClass]="['wo-chip', priorityChipClass(ot.priority)]">{{ ot.priority }}</span>
+				</div>
+				<p class="text-muted-foreground text-sm">{{ ot.cliente }} - Tecnico asignado: {{ ot.tecnico }}</p>
+				@if (isDeliveryDay()) {
+					<p class="text-xs text-muted-foreground">Hoy coincide con la fecha estimada de entrega. Puedes avisar al cliente por WhatsApp.</p>
+				}
+			</div>
+			<div class="flex items-center gap-2">
+				<button hlmBtn variant="outline" type="button" (click)="goBack()">Volver al listado</button>
+				<button hlmBtn type="button" (click)="cerrarOrden()">Cerrar OT</button>
+				<button hlmBtn variant="outline" type="button" (click)="shareWithClient(ot.id)">Compartir OT con cliente</button>
+				<button hlmBtn variant="secondary" type="button" [disabled]="!canSendWhatsApp() || sendingWhatsApp()" (click)="sendWhatsApp(ot.id)">{{ sendingWhatsApp() ? 'Enviando...' : whatsappActionLabel() }}</button>
+			</div>
+		</div>
+
+		<section hlmTabs tab="detalles" class="w-full">
+			<div hlmTabsList class="tabs-grid">
+				<button hlmTabsTrigger="detalles">Detalles</button>
+				<button hlmTabsTrigger="checklist">Checklist</button>
+				<button hlmTabsTrigger="galeria">Galeria de fotos</button>
+				<button hlmTabsTrigger="timeline">Timeline</button>
+				<button hlmTabsTrigger="notas">Notas</button>
+				<button hlmTabsTrigger="cotizaciones">Cotizaciones</button>
+			</div>
+
+			<div hlmTabsContent="detalles" class="space-y-4 pt-4"><spartan-wo-details-section /></div>
+			<div hlmTabsContent="checklist" class="space-y-4 pt-4"><spartan-wo-checklist-section /></div>
+			<div hlmTabsContent="galeria" class="space-y-4 pt-4"><spartan-wo-gallery-section /></div>
+			<div hlmTabsContent="timeline" class="space-y-4 pt-4"><spartan-wo-timeline-section /></div>
+			<div hlmTabsContent="notas" class="space-y-4 pt-4"><spartan-wo-notes-section /></div>
+			<div hlmTabsContent="cotizaciones" class="space-y-4 pt-4"><spartan-wo-quotations-section /></div>
+		</section>
+	</section>
+} @else {
+	<section class="detail-page">
+		<p class="text-sm text-muted-foreground">Orden no encontrada.</p>
+	</section>
+}

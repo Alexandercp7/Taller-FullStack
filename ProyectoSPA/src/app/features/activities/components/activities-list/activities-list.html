@@ -1,0 +1,67 @@
+<div hlmTableContainer>
+  <table hlmTable>
+    <thead hlmTHead>
+      <tr hlmTr>
+        <th hlmTh>Título</th>
+        <th hlmTh>Asignado a</th>
+        <th hlmTh>Etiqueta</th>
+        <th hlmTh>Prioridad</th>
+        <th hlmTh>Vencimiento</th>
+        <th hlmTh>Estado</th>
+        <th hlmTh>Acciones</th>
+      </tr>
+    </thead>
+    <tbody hlmTBody>
+      @for (activity of filteredActivities(); track activity.id) {
+        <tr hlmTr>
+          <td hlmTd class="font-medium">{{ activity.titulo }}</td>
+          <td hlmTd>{{ activity.asignadoA }}</td>
+          <td hlmTd>
+            <span hlmBadge [ngClass]="tagStyle(activity.etiqueta)">{{ activity.etiqueta }}</span>
+          </td>
+          <td hlmTd>
+            <span hlmBadge [ngClass]="priorityClass(activity.prioridad)">{{ activity.prioridad }}</span>
+          </td>
+          <td hlmTd>{{ activity.fechaLimite }}</td>
+          <td hlmTd>
+            <select
+              hlmSelectInput
+              [value]="activity.estado"
+              (change)="onStatusChange(activity, $any($event.target).value)"
+              [ngClass]="statusClass(activity.estado)"
+              class="w-full min-w-[120px]"
+            >
+              @for (estado of estados; track estado) {
+                <option [value]="estado">{{ estado }}</option>
+              }
+            </select>
+          </td>
+          <td hlmTd>
+            <div class="actions-cell">
+              <button
+                hlmBtn
+                size="icon"
+                variant="outline"
+                type="button"
+                (click)="onViewDetails(activity)"
+                title="Ver detalles"
+              >
+                <ng-icon name="lucideEye" class="size-4" />
+              </button>
+              <button
+                hlmBtn
+                size="icon"
+                variant="destructive"
+                type="button"
+                (click)="onDeleteActivity(activity.id)"
+                title="Eliminar"
+              >
+                <ng-icon name="lucideTrash2" class="size-4" />
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

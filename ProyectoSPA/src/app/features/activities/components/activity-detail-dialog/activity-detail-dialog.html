@@ -1,0 +1,90 @@
+<div class="detail-container">
+  <div class="detail-header">
+    <div class="title-section">
+      <h2 class="activity-title">{{ activity().titulo }}</h2>
+    </div>
+    <button hlmBtn size="sm" variant="outline" (click)="close()">Cerrar</button>
+  </div>
+
+  <div class="detail-body">
+    <div class="info-grid">
+      <div class="info-item">
+        <label class="info-label">Descripción</label>
+        <p class="info-value">{{ activity().descripcion }}</p>
+      </div>
+
+      <div class="info-row">
+        <div class="info-item">
+          <label class="info-label">Asignado a</label>
+          <p class="info-value">{{ activity().asignadoA }}</p>
+        </div>
+        <div class="info-item">
+          <label class="info-label">Vencimiento</label>
+          <p class="info-value">{{ activity().fechaLimite }}</p>
+        </div>
+      </div>
+
+      <div class="info-row-3">
+        <div class="info-item">
+          <label class="info-label">Etiqueta</label>
+          <span hlmBadge [ngClass]="tagStyle(activity().etiqueta)">{{ activity().etiqueta }}</span>
+        </div>
+        <div class="info-item">
+          <label class="info-label">Prioridad</label>
+          <span hlmBadge [ngClass]="priorityClass(activity().prioridad)">
+            {{ activity().prioridad }}
+          </span>
+        </div>
+        <div class="info-item">
+          <label class="info-label">Estado</label>
+          <span hlmBadge>{{ activity().estado }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="comments-section">
+      <h3 class="comments-title">Comentarios ({{ activity().comentarios.length }})</h3>
+
+      <div class="comments-list">
+        @if (activity().comentarios.length === 0) {
+          <p class="no-comments">Sin comentarios. ¡Sé el primero en comentar!</p>
+        }
+
+        @for (comment of activity().comentarios; track comment.id) {
+          <div class="comment-item">
+            <div class="comment-header">
+              <span class="comment-user">{{ comment.usuario }}</span>
+              <span class="comment-time">{{ formatDate(comment.timestamp) }}</span>
+              <button
+                hlmBtn
+                size="icon"
+                variant="ghost"
+                type="button"
+                (click)="onDeleteComment(comment.id)"
+                class="comment-delete"
+                title="Eliminar comentario"
+              >
+                <ng-icon name="lucideTrash2" class="size-3" />
+              </button>
+            </div>
+            <p class="comment-text">{{ comment.texto }}</p>
+          </div>
+        }
+      </div>
+
+      <div class="comment-input-group">
+        <input
+          hlmInput
+          type="text"
+          placeholder="Agregar comentario..."
+          [(ngModel)]="newComment"
+          (keyup.enter)="onAddComment()"
+        />
+        <button hlmBtn type="button" (click)="onAddComment()" [disabled]="!newComment().trim()">
+          <ng-icon name="lucideSend" class="size-4" />
+          Enviar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

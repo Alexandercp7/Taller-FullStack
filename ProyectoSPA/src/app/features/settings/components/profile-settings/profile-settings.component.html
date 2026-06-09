@@ -1,0 +1,26 @@
+<section hlmCard>
+	<div hlmCardHeader>
+		<h2 hlmCardTitle>Mi Perfil</h2>
+		<p hlmCardDescription>Actualiza tus datos personales.</p>
+	</div>
+
+	<form (ngSubmit)="saveProfile()">
+		<div hlmCardContent>
+			<label hlmLabel class="settings-field" for="profile-name">
+				Nombre
+				<input hlmInput id="profile-name" name="name" type="text" [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Nombre completo" />
+			</label>
+
+			<label hlmLabel class="settings-field" for="profile-email">
+				Correo
+				<input hlmInput id="profile-email" name="email" type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" placeholder="correo@empresa.com" />
+			</label>
+		</div>
+
+		<div hlmCardFooter>
+			<button hlmBtn type="submit" [disabled]="!canSave() || isSaving()">
+				{{ isSaving() ? 'Guardando...' : 'Guardar' }}
+			</button>
+		</div>
+	</form>
+</section>

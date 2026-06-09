@@ -1,0 +1,36 @@
+<div class="kanban-container">
+  @for (status of estados; track status) {
+    <div class="kanban-column">
+      <div class="column-header">
+        <h3 class="column-title">{{ getColumnTitle(status) }}</h3>
+        <span class="column-count">{{ getActivitiesByStatus(status).length }}</span>
+      </div>
+
+      <div
+        class="column-content"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, status)"
+      >
+        @if (getActivitiesByStatus(status).length === 0) {
+          <div class="empty-column">
+            <p>Sin actividades</p>
+          </div>
+        } @else {
+          @for (activity of getActivitiesByStatus(status); track activity.id) {
+            <div
+              class="card-wrapper"
+              draggable="true"
+              (dragstart)="onDragStart($event, activity)"
+            >
+              <spartan-activity-card
+                [activity]="activity"
+                (viewDetails)="onViewDetails($event)"
+                (deleteActivity)="onDeleteActivity($event)"
+              />
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+</div>

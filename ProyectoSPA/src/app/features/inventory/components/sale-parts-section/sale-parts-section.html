@@ -1,0 +1,197 @@
+<hlm-card>
+	<hlm-card-header class="header-wrap">
+		<div>
+			<h3 hlmCardTitle>Partes en venta</h3>
+			<p hlmCardDescription>Control de stock de refacciones para venta y uso en OT.</p>
+		</div>
+		<button hlmBtn size="sm" type="button" variant="outline" (click)="showCreateForm() ? resetForm() : showCreateForm.set(true)">
+			{{ showCreateForm() ? 'Cancelar' : 'Agregar parte en venta' }}
+		</button>
+	</hlm-card-header>
+	<div hlmCardContent class="space-y-4">
+		@if (showCreateForm()) {
+			<hlm-card>
+				<hlm-card-header class="pb-2">
+					<h4 class="text-base font-semibold">{{ editingItemId() ? 'Editar' : 'Agregar' }} parte en venta</h4>
+				</hlm-card-header>
+				<div hlmCardContent class="space-y-3 pt-4">
+					<div class="edit-grid">
+						<label class="field">
+							<span>Nombre</span>
+							<input hlmInput class="w-full" [value]="createNombre()" (input)="createNombre.set(($any($event.target)).value)" />
+						</label>
+						<label class="field">
+							<span>Estado</span>
+							<hlm-select [value]="createEstado()" (valueChange)="onCreateConditionChange(($event ?? '') + '')">
+								<hlm-select-trigger class="w-full"><hlm-select-value /></hlm-select-trigger>
+								<hlm-select-content *hlmSelectPortal>
+									<hlm-select-group>
+										@for (condition of conditions; track condition) {
+											<hlm-select-item [value]="condition">{{ condition }}</hlm-select-item>
+										}
+									</hlm-select-group>
+								</hlm-select-content>
+							</hlm-select>
+						</label>
+						<label class="field">
+							<span>Stock minimo</span>
+							<input hlmInput class="w-full" type="number" [value]="createStockMinimo()" (input)="createStockMinimo.set(+($any($event.target)).value || 0)" />
+						</label>
+						<label class="field">
+							<span>Precio venta</span>
+							<input hlmInput class="w-full" type="number" [value]="createPrecio()" (input)="createPrecio.set(+($any($event.target)).value || 0)" />
+						</label>
+						<label class="field md:col-span-2">
+							<span>linkedPartId (opcional para OT)</span>
+							<input hlmInput class="w-full" [value]="createLinkedPartId()" (input)="createLinkedPartId.set(($any($event.target)).value)" />
+						</label>
+						<label class="field md:col-span-2">
+							<span>Descripcion</span>
+							<input hlmInput class="w-full" [value]="createDescripcion()" (input)="createDescripcion.set(($any($event.target)).value)" />
+						</label>
+						<label class="field md:col-span-2">
+							<span>Foto</span>
+							<input hlmInput type="file" accept="image/*" (change)="onPhotoSelected($event)" />
+						</label>
+					</div>
+				<div class="flex justify-end">
+					<button hlmBtn size="sm" type="button" (click)="createSaleItem()">{{ editingItemId() ? 'Actualizar' : 'Guardar' }} parte</button>
+					</div>
+				</div>
+			</hlm-card>
+		}
+
+		<div hlmTableContainer>
+			<table hlmTable>
+				<thead hlmTHead>
+					<tr hlmTr>
+						<th hlmTh>Foto</th>
+						<th hlmTh>Item</th>
+						<th hlmTh>Precio</th>
+						<th hlmTh>Stock</th>
+						<th hlmTh>Minimo</th>
+						<th hlmTh>Acciones</th>
+					</tr>
+				</thead>
+				<tbody hlmTBody>
+					@for (item of items(); track item.id) {
+						<tr hlmTr>
+							<td hlmTd>@if (item.fotoUrl) { <img class="thumb" [src]="item.fotoUrl" [alt]="item.nombre" /> }</td>
+							<td hlmTd>
+								<div class="font-medium">{{ item.nombre }}</div>
+								<div class="text-muted-foreground text-xs">{{ item.descripcion }}</div>
+							</td>
+							<td hlmTd>${{ item.precioVenta || 0 | number : '1.0-0' }}</td>
+							<td hlmTd><span hlmBadge [ngClass]="stockClass(item.stockActual, item.stockMinimo)">{{ item.stockActual }}</span></td>
+							<td hlmTd>{{ item.stockMinimo }}</td>
+							<td hlmTd>
+								<div class="row-actions">
+									<button hlmBtn size="sm" variant="outline" type="button" (click)="selectItem(item.id)">Gestionar</button>
+								<button hlmBtn size="icon" variant="outline" type="button" (click)="editItem(item)" aria-label="Editar parte">
+									<ng-icon name="lucidePencil" class="size-4" />
+								</button>
+									<hlm-alert-dialog>
+										<button hlmBtn hlmAlertDialogTrigger size="icon" variant="destructive" type="button" aria-label="Eliminar parte">
+											<ng-icon name="lucideTrash2" class="size-4" />
+										</button>
+										<div hlmAlertDialogContent *hlmAlertDialogPortal="let ctx">
+											<div hlmAlertDialogHeader>
+												<h4 hlmAlertDialogTitle>Eliminar parte</h4>
+												<p hlmAlertDialogDescription>Se eliminara <strong>{{ item.nombre }}</strong> y su historial.</p>
+											</div>
+											<div hlmAlertDialogFooter>
+												<button hlmAlertDialogCancel (click)="ctx.close()">Cancelar</button>
+												<button hlmAlertDialogAction variant="destructive" (click)="deleteItem(item.id); ctx.close()">Si, eliminar</button>
+											</div>
+										</div>
+									</hlm-alert-dialog>
+								</div>
+							</td>
+						</tr>
+
+						@if (selectedItemId() === item.id) {
+							<tr hlmTr>
+								<td hlmTd colspan="6">
+									<hlm-card class="mt-3">
+										<div hlmCardContent class="space-y-3 pt-4 px-4">
+											<div class="manage-header">
+												<h4 class="text-base font-semibold">Gestion de {{ item.nombre }}</h4>
+												<button hlmBtn size="sm" variant="ghost" type="button" (click)="closeManagePanel()">Cerrar</button>
+											</div>
+
+											<div class="edit-grid">
+											<label class="field">
+												<span>Estado</span>
+												<hlm-select [value]="conditionEdit()" (valueChange)="onConditionChange(($event ?? '') + '')">
+													<hlm-select-trigger class="w-full"><hlm-select-value /></hlm-select-trigger>
+													<hlm-select-content *hlmSelectPortal>
+														<hlm-select-group>
+															@for (condition of conditions; track condition) {
+																<hlm-select-item [value]="condition">{{ condition }}</hlm-select-item>
+															}
+														</hlm-select-group>
+													</hlm-select-content>
+												</hlm-select>
+											</label>
+											<label class="field">
+
+												<span>Stock minimo</span>
+												<input hlmInput class="w-full" type="number" [value]="stockMinEdit()" (input)="stockMinEdit.set(+($any($event.target)).value || 0)" />
+											</label>
+											<div class="self-end"><button hlmBtn size="sm" type="button" (click)="saveItemMeta()">Guardar datos</button></div>
+										</div>
+
+										<div class="edit-grid">
+											<label class="field">
+												<span>Cantidad</span>
+												<input hlmInput class="w-full" type="number" [value]="qtyEdit()" (input)="qtyEdit.set(+($any($event.target)).value || 0)" placeholder="Cantidad a registrar" />
+											</label>
+											<label class="field">
+												<span>Motivo</span>
+												<input hlmInput class="w-full" [value]="reasonEdit()" (input)="reasonEdit.set(($any($event.target)).value)" />
+											</label>
+											<div class="movement-actions">
+												<button hlmBtn size="sm" type="button" variant="outline" (click)="registerEntry()">Entrada +</button>
+												<button hlmBtn size="sm" type="button" (click)="registerManualAdjust()">Salida -</button>
+											</div>
+										</div>
+
+										<div>
+											<h5 class="text-sm font-semibold">Historial de movimientos</h5>
+											<div hlmTableContainer>
+												<table hlmTable>
+													<thead hlmTHead>
+														<tr hlmTr>
+															<th hlmTh>Fecha</th>
+															<th hlmTh>Tipo</th>
+															<th hlmTh>Cantidad</th>
+															<th hlmTh>Stock resultante</th>
+															<th hlmTh>OT</th>
+															<th hlmTh>Motivo</th>
+														</tr>
+													</thead>
+													<tbody hlmTBody>
+														@for (movement of selectedMovements(); track movement.id) {
+															<tr hlmTr>
+																<td hlmTd>{{ movement.timestamp }}</td>
+																<td hlmTd>{{ movement.type }}</td>
+																<td hlmTd>{{ movement.cantidad }}</td>
+																<td hlmTd>{{ movement.stockResultante }}</td>
+																<td hlmTd>{{ movement.relatedOtId || '-' }}</td>
+																<td hlmTd>{{ movement.motivo }}</td>
+															</tr>
+														}
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</div>
+								</hlm-card>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>

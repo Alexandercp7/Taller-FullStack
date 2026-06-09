@@ -1,0 +1,282 @@
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css';
+
+
+@import "@spartan-ng/brain/hlm-tailwind-preset.css";
+
+:root {
+  	--radius: 0.625rem;
+  	--background: oklch(1 0 0);
+  	--foreground: oklch(0.141 0.005 285.823);
+  	--card: oklch(1 0 0);
+  	--card-foreground: oklch(0.141 0.005 285.823);
+  	--popover: oklch(1 0 0);
+  	--popover-foreground: oklch(0.141 0.005 285.823);
+  	--primary: oklch(0.21 0.006 285.885);
+  	--primary-foreground: oklch(0.985 0 0);
+  	--secondary: oklch(0.967 0.001 286.375);
+  	--secondary-foreground: oklch(0.21 0.006 285.885);
+  	--muted: oklch(0.967 0.001 286.375);
+  	--muted-foreground: oklch(0.552 0.016 285.938);
+  	--accent: oklch(0.967 0.001 286.375);
+  	--accent-foreground: oklch(0.21 0.006 285.885);
+  	--destructive: oklch(0.577 0.245 27.325);
+  	--border: oklch(0.92 0.004 286.32);
+  	--input: oklch(0.92 0.004 286.32);
+  	--ring: oklch(0.705 0.015 286.067);
+  	--sidebar: oklch(0.985 0 0);
+  	--sidebar-foreground: oklch(0.141 0.005 285.823);
+  	--sidebar-primary: oklch(0.21 0.006 285.885);
+  	--sidebar-primary-foreground: oklch(0.985 0 0);
+  	--sidebar-accent: oklch(0.967 0.001 286.375);
+  	--sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  	--sidebar-border: oklch(0.92 0.004 286.32);
+  	--sidebar-ring: oklch(0.705 0.015 286.067);
+  	--scrollbar-track: var(--muted);
+  	--scrollbar-thumb: var(--border);
+  	--scrollbar-thumb-hover: var(--ring);
+
+	--destructive-foreground: oklch(0.45 0.16 20); 
+	--destructive-border: oklch(0.85 0.08 20);
+	
+	--warning: oklch(0.96 0.05 75);         
+	--warning-foreground: oklch(0.45 0.14 75); 
+	--warning-border: oklch(0.85 0.08 75);
+	
+	--success: oklch(0.96 0.04 150);         
+	--success-foreground: oklch(0.40 0.12 150);
+	--success-border: oklch(0.85 0.08 150);
+
+	--info: oklch(0.96 0.03 250);          
+	--info-foreground: oklch(0.45 0.12 250);
+	--info-border: oklch(0.85 0.06 250);
+
+	--special: oklch(0.96 0.04 300);         
+	--special-foreground: oklch(0.45 0.14 300);
+	--special-border: oklch(0.85 0.08 300);
+
+}
+
+:root.dark {
+	--background: oklch(0.141 0.005 285.823);
+	--foreground: oklch(0.985 0 0);
+	--card: oklch(0.21 0.006 285.885);
+	--card-foreground: oklch(0.985 0 0);
+	--popover: oklch(0.21 0.006 285.885);
+	--popover-foreground: oklch(0.985 0 0);
+	--primary: oklch(0.92 0.004 286.32);
+	--primary-foreground: oklch(0.21 0.006 285.885);
+	--secondary: oklch(0.274 0.006 286.033);
+	--secondary-foreground: oklch(0.985 0 0);
+	--muted: oklch(0.274 0.006 286.033);
+	--muted-foreground: oklch(0.705 0.015 286.067);
+	--accent: oklch(0.274 0.006 286.033);
+	--accent-foreground: oklch(0.985 0 0);
+	--destructive: oklch(0.704 0.191 22.216);
+	--border: oklch(1 0 0 / 10%);
+	--input: oklch(1 0 0 / 15%);
+	--ring: oklch(0.552 0.016 285.938);
+	--sidebar: oklch(0.21 0.006 285.885);
+	--sidebar-foreground: oklch(0.985 0 0);
+	--sidebar-primary: oklch(0.985 0 0);
+	--sidebar-primary-foreground: oklch(0.21 0.006 285.885);
+	--sidebar-accent: oklch(0.274 0.006 286.033);
+	--sidebar-accent-foreground: oklch(0.985 0 0);
+	--sidebar-border: oklch(1 0 0 / 10%);
+	--sidebar-ring: oklch(0.552 0.016 285.938);
+ 
+	--destructive-foreground: oklch(0.85 0.15 20); 
+	--destructive-border: oklch(0.65 0.20 20 / 0.3);
+	
+	--warning: oklch(0.70 0.15 75 / 0.15);    
+	--warning-foreground: oklch(0.85 0.15 75); 
+	--warning-border: oklch(0.70 0.15 75 / 0.3);
+
+	--success: oklch(0.65 0.15 150 / 0.15);   
+	--success-foreground: oklch(0.85 0.12 150);
+	--success-border: oklch(0.65 0.15 150 / 0.3);
+
+	--info: oklch(0.65 0.15 250 / 0.15);      
+	--info-foreground: oklch(0.85 0.12 250);
+	--info-border: oklch(0.65 0.15 250 / 0.3);
+
+	--special: oklch(0.65 0.18 300 / 0.15);   
+	--special-foreground: oklch(0.85 0.12 300);
+	--special-border: oklch(0.65 0.18 300 / 0.3);
+}
+
+@layer base {
+* {
+  border-color: var(--border);
+  outline-color: var(--ring);
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 2px solid var(--scrollbar-track);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+[data-slot='dialog-content'].work-order-dialog-content {
+	width: min(96vw, 1200px) !important;
+	max-width: min(96vw, 1200px) !important;
+}
+
+[data-slot='dialog-content'].client-dialog-content {
+	width: min(94vw, 720px) !important;
+	max-width: min(94vw, 720px) !important;
+}
+
+[data-slot='dialog-content'].payment-dialog-content {
+	width: min(92vw, 800px) !important;
+	max-width: min(92vw, 800px) !important;
+}
+
+[data-slot='dialog-content'].photo-dialog-content {
+	width: min(90vw, 700px) !important;
+	max-width: min(90vw, 700px) !important;
+}
+
+[data-slot='dialog-content'].kpis-dialog-content {
+	width: min(95vw, 900px) !important;
+	max-width: min(95vw, 900px) !important;
+}
+}
+
+.wo-chip {
+	border-width: 1px !important;
+}
+
+.wo-chip-status-agendado {
+	background: var(--info) !important;
+	border-color: var(--info-border) !important;
+	color: var(--info-foreground) !important;
+}
+
+.wo-chip-status-espera {
+	background: var(--warning) !important;
+	border-color: var(--warning-border) !important;
+	color: var(--warning-foreground) !important;
+}
+
+.wo-chip-status-proceso {
+	background: var(--special) !important;
+	border-color: var(--special-border) !important;
+	color: var(--special-foreground) !important;
+}
+
+.wo-chip-status-terminado {
+	background: var(--success) !important;
+	border-color: var(--success-border) !important;
+	color: var(--success-foreground) !important;
+}
+
+.wo-chip-status-garantia {
+	background: var(--muted) !important;
+	border-color: var(--border) !important;
+	color: var(--muted-foreground) !important;
+}
+
+.wo-chip-status-rezagado {
+	background: var(--destructive) !important;
+	border-color: var(--destructive-border) !important;
+	color: var(--destructive-foreground) !important;
+}
+
+.wo-chip-status-entregado {
+	background: var(--secondary) !important;
+	border-color: var(--border) !important;
+	color: var(--secondary-foreground) !important;
+}
+
+.wo-chip-priority-baja {
+	background: var(--info) !important;
+	border-color: var(--info-border) !important;
+	color: var(--info-foreground) !important;
+}
+
+.wo-chip-priority-media {
+	background: var(--warning) !important;
+	border-color: var(--warning-border) !important;
+	color: var(--warning-foreground) !important;
+}
+
+.wo-chip-priority-alta {
+	background: var(--destructive-border) !important;
+	border-color: var(--destructive) !important;
+	color: var(--destructive-foreground) !important;
+}
+ 
+.activity-chip {
+	border-width: 1px !important;
+}
+
+.activity-chip-role {
+	background: var(--muted) !important;
+	border-color: var(--border) !important;
+	color: var(--muted-foreground) !important;
+}
+
+.activity-chip-default-chip {
+	background: var(--special) !important;
+	border-color: var(--special-border) !important;
+	color: var(--special-foreground) !important;
+}
+
+.activity-chip-secondary-chip {
+	background: var(--secondary) !important;
+	border-color: var(--border) !important;
+	color: var(--secondary-foreground) !important;
+}
+
+.activity-chip-destructive-chip {
+	background: var(--destructive) !important;
+	border-color: var(--destructive-border) !important;
+	color: var(--destructive-foreground) !important;
+}
+
+.activity-chip-priority-baja {
+	background: var(--info) !important;
+	border-color: var(--info-border) !important;
+	color: var(--info-foreground) !important;
+}
+
+.activity-chip-priority-media {
+	background: var(--warning) !important;
+	border-color: var(--warning-border) !important;
+	color: var(--warning-foreground) !important;
+}
+
+.activity-chip-priority-normal {
+	background: var(--warning) !important;
+	border-color: var(--warning-border) !important;
+	color: var(--warning-foreground) !important;
+}
+
+.activity-chip-priority-alta {
+	background: var(--destructive-border) !important;
+	border-color: var(--destructive-foreground) !important;
+	color: var(--destructive) !important;
+}

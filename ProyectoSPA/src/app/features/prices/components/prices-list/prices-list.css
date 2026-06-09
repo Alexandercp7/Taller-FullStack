@@ -1,0 +1,210 @@
+:host {
+  display: block;
+}
+
+.prices-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.price-create-dialog-content {
+  width: 90vw !important;
+  max-width: 90vw !important;
+  min-width: 90vw !important;
+}
+
+.price-detail-dialog-content {
+  width: 90vw !important;
+  max-width: 90vw !important;
+  min-width: 90vw !important;
+}
+
+:host {
+  display: block;
+}
+
+.prices-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.header-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-section h1 {
+  margin-bottom: 0.25rem;
+}
+
+.search-section {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.category-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.category-filters label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-group button {
+  padding: 0.5rem 1rem;
+}
+
+.sistema-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sistema-filter label {
+  white-space: nowrap;
+}
+
+.sistema-filter hlm-select {
+  min-width: 200px;
+}
+
+.table-card {
+  overflow: auto;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pagination-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  background-color: var(--muted);
+  border-radius: 0.5rem;
+}
+
+.pagination-info {
+  display: flex;
+  justify-content: center;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-size-selector label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.page-size-selector hlm-select {
+  min-width: 80px;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.page-numbers button {
+  min-width: 2.5rem;
+  padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .prices-page {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-section {
+    flex-direction: column;
+  }
+
+  .category-filters {
+    gap: 0.5rem;
+  }
+
+  .btn-group {
+    width: 100%;
+  }
+
+  .pagination-controls {
+    gap: 1rem;
+    flex-direction: column;
+  }
+
+  .pagination-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .page-numbers {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

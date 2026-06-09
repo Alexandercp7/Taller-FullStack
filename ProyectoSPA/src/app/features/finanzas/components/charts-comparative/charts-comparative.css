@@ -1,0 +1,407 @@
+
+.charts-container {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding: 0;
+}
+
+.header-section h2 {
+	font-size: 1.5rem;
+	font-weight: bold;
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.section h3 {
+	margin: 0;
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.w-full {
+	width: 100%;
+}
+
+.text-sm {
+	font-size: 0.875rem;
+}
+
+.overflow-x-auto {
+	overflow-x: auto;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+thead {
+	border-bottom: 1px solid var(--border);
+	background-color: var(--muted);
+}
+
+th {
+	padding: 0.75rem;
+	text-align: left;
+	font-weight: 600;
+}
+
+th.text-right {
+	text-align: right;
+}
+
+th.text-center {
+	text-align: center;
+}
+
+tbody tr {
+	border-bottom: 1px solid var(--border);
+	transition: background-color 0.2s;
+}
+
+tbody tr:hover {
+	background-color: var(--muted);
+}
+
+td {
+	padding: 0.75rem;
+}
+
+.p-3 {
+	padding: 0.75rem;
+}
+
+td.text-right {
+	text-align: right;
+}
+
+td.text-center {
+	text-align: center;
+}
+
+td.font-medium {
+	font-weight: 500;
+}
+
+td.font-semibold {
+	font-weight: 600;
+}
+
+.inline-flex {
+	display: inline-flex;
+}
+
+.items-center {
+	align-items: center;
+}
+
+.gap-1 {
+	gap: 0.25rem;
+}
+
+.text-xs {
+	font-size: 0.75rem;
+}
+
+.w-4 {
+	width: 1rem;
+}
+
+.h-4 {
+	height: 1rem;
+}
+
+.services-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 1rem;
+}
+
+.service-card {
+	padding: 1.25rem;
+	transition: all 0.2s ease;
+}
+
+.service-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.service-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.service-header h4 {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	flex: 1;
+}
+
+.trend-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.375rem 0.75rem;
+	border-radius: 0.25rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.trend-badge.trend-up {
+	background-color: rgba(46, 204, 113, 0.2);
+	color: #2ecc71;
+}
+
+.trend-badge.trend-down {
+	background-color: rgba(231, 76, 60, 0.2);
+	color: #e74c3c;
+}
+
+.trend-badge.trend-stable {
+	background-color: rgba(52, 152, 219, 0.2);
+	color: #3498db;
+}
+
+.service-stats {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.stat-item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.stat-label {
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	font-weight: 5 00;
+	text-transform: uppercase;
+}
+
+.stat-value {
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.progress-bar {
+	height: 6px;
+	background-color: var(--bg-hover);
+	border-radius: 3px;
+	overflow: hidden;
+}
+
+.progress-fill {
+	height: 100%;
+	background: var(--success-foreground);
+	border-radius: 3px;
+	transition: width 0.3s ease;
+}
+
+.highlights-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 1rem;
+}
+
+.highlight-card {
+	padding: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	transition: all 0.2s ease;
+}
+
+.highlight-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.highlight-label {
+	font-size: 0.8rem;
+	color: var(--text-secondary);
+	font-weight: 500;
+	text-transform: uppercase;
+}
+
+.highlight-value {
+	font-size: 1.5rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.highlight-value.positive {
+	color: var(--success-foreground);
+}
+
+.highlight-trend,
+.highlight-detail {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--text-secondary);
+}
+
+.highlight-trend.positive {
+	color: var(--success-foreground);
+	font-weight: 600;
+}
+
+.highlight-trend ng-icon {
+	font-size: 1rem;
+}
+
+.chart-container {
+	display: flex;
+	gap: 1rem;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	overflow-x: auto;
+	align-items: center;
+	min-height: 300px;
+}
+
+.chart-bar-group {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+	flex: 0 0 auto;
+	min-width: 120px;
+}
+
+.chart-label {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	white-space: nowrap;
+}
+
+.chart-bars {
+	display: flex;
+	gap: 0.5rem;
+	height: 250px;
+	align-items: flex-end;
+}
+
+.bar-item {
+	width: 30px;
+	min-height: 20px;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	border-radius: 0.375rem 0.375rem 0 0;
+	transition: all 0.2s ease;
+	position: relative;
+}
+
+.bar-item:hover {
+	opacity: 0.8;
+}
+
+.income-bar {
+	background-color: #2ecc71;
+}
+
+.expense-bar {
+	background-color: #e74c3c;
+}
+
+.bar-value {
+	font-size: 0.7rem;
+	font-weight: 600;
+	padding: 0.25rem 0.375rem;
+	text-align: center;
+	white-space: nowrap;
+	position: absolute;
+	top: -25px;
+}
+
+.chart-legend {
+	display: flex;
+	justify-content: center;
+	gap: 2rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--border-color);
+	margin-top: 1rem;
+}
+
+.legend-item {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}
+
+.legend-color {
+	width: 16px;
+	height: 16px;
+	border-radius: 0.25rem;
+}
+
+.legend-color.income-bar {
+	background-color: #2ecc71;
+}
+
+.legend-color.expense-bar {
+	background-color: #e74c3c;
+}
+
+@media (max-width: 1024px) {
+	.table-header-row,
+	.table-data-row {
+		grid-template-columns: 1fr 1.5fr 1.5fr 1.5fr 1fr 1fr;
+		padding: 0.75rem;
+		font-size: 0.85rem;
+	}
+
+	.services-grid {
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	}
+}
+
+@media (max-width: 768px) {
+	.table-header-row,
+	.table-data-row {
+		grid-template-columns: 1fr 1fr 1fr;
+		padding: 0.75rem 0.5rem;
+		font-size: 0.75rem;
+	}
+
+	.services-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.highlights-grid {
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	}
+
+	.chart-container {
+		min-height: 200px;
+	}
+
+	.chart-bars {
+		height: 150px;
+	}
+}

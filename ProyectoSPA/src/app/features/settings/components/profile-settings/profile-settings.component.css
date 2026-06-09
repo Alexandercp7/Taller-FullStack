@@ -1,0 +1,14 @@
+:host {
+	display: block;
+}
+
+.settings-field {
+	display: block;
+	margin-bottom: 0.75rem;
+}
+
+.settings-field input {
+	display: block;
+	width: 100%;
+	margin-top: 0.35rem;
+}

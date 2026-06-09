@@ -1,0 +1,544 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  SCHEDULED
+  ON_HOLD
+  IN_PROGRESS
+  COMPLETED
+  WARRANTY
+  DELAYED
+  DELIVERED
+  ARCHIVED
+}
+
+enum OrderPhase {
+  DIAGNOSIS
+  PARTS
+  APPROVAL
+  REPAIR
+  QUALITY_CONTROL
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum OrderType {
+  EXPRESS
+  NORMAL
+}
+
+enum VehicleType {
+  CAR
+  TRUCK
+  HEAVY_TRUCK
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum MovementType {
+  ENTRY
+  EXIT
+  ADJUSTMENT
+}
+
+enum InventoryType {
+  TOOL
+  CONSUMABLE
+  EQUIPMENT
+  SALE_PART
+}
+
+enum CashType {
+  INCOME
+  EXPENSE
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskTag {
+  ADMINISTRATIVE
+  TECHNICAL
+  COMMERCIAL
+  FINANCIAL
+  OTHER
+}
+
+enum PhotoPhase {
+  INTAKE
+  DIAGNOSIS
+  REPAIR
+  QUALITY
+}
+
+enum ClientTag {
+  NEW
+  FREQUENT
+  WITH_DEBT
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  RECEPTIONIST
+}
+
+// ─── User ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(TECHNICIAN)
+  permissions  String[] @default([])
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdOrders    WorkOrder[] @relation("CreatedBy")
+  assignedOrders   WorkOrder[] @relation("AssignedTo")
+  timelineEntries  TimelineEntry[]
+  tasks            Task[]      @relation("AssignedTasks")
+  createdTasks     Task[]      @relation("CreatedTasks")
+
+  @@map("users")
+}
+
+// ─── Client ───────────────────────────────────────────────────────────────────
+
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String    @unique
+  email     String?
+  tag       ClientTag @default(NEW)
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  vehicles          Vehicle[]
+  orders            WorkOrder[]
+  accountsReceivable AccountReceivable[]
+
+  @@map("clients")
+}
+
+// ─── Vehicle ──────────────────────────────────────────────────────────────────
+
+model Vehicle {
+  id        String      @id @default(cuid())
+  clientId  String
+  plates    String      @unique
+  vin       String?
+  brand     String
+  model     String
+  year      Int
+  color     String?
+  type      VehicleType @default(CAR)
+  mileage   Int?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  client    Client      @relation(fields: [clientId], references: [id])
+  orders    WorkOrder[]
+
+  @@map("vehicles")
+}
+
+// ─── WorkOrder ────────────────────────────────────────────────────────────────
+
+model WorkOrder {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  clientId      String
+  vehicleId     String
+  technicianId  String
+  createdById   String
+  status        OrderStatus  @default(SCHEDULED)
+  phase         OrderPhase?
+  priority      Priority     @default(MEDIUM)
+  type          OrderType    @default(NORMAL)
+  problem       String
+  mileageIn     Int?
+  mileageOut    Int?
+  portalToken   String       @unique @default(cuid())
+  scheduledAt   DateTime
+  closedAt      DateTime?
+  needsDiagnosis Boolean     @default(false)
+  intakeCauses  String[]     @default([])
+  discoveredFaults String[]  @default([])
+  repairNotes   String?
+  exitKm        Int?
+  exitDate      DateTime?
+  fuelLevel     String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  client        Client        @relation(fields: [clientId], references: [id])
+  vehicle       Vehicle       @relation(fields: [vehicleId], references: [id])
+  technician    User          @relation("AssignedTo", fields: [technicianId], references: [id])
+  createdBy     User          @relation("CreatedBy", fields: [createdById], references: [id])
+  quotes        Quote[]
+  assignedParts AssignedPart[]
+  photos        Photo[]
+  timeline      TimelineEntry[]
+  checklist     Checklist[]
+  notes         Note[]
+  accountReceivable AccountReceivable?
+  survey        Survey?
+
+  @@map("work_orders")
+}
+
+// ─── Inventory ────────────────────────────────────────────────────────────────
+
+model InventoryItem {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  sku          String?       @unique
+  type         InventoryType @default(SALE_PART)
+  stock        Int           @default(0)
+  minStock     Int           @default(0)
+  purchasePrice Decimal      @db.Decimal(12, 2)
+  salePrice    Decimal       @db.Decimal(12, 2)
+  supplierId   String?
+  location     String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  supplier       Supplier?      @relation(fields: [supplierId], references: [id])
+  movements      StockMovement[]
+  assignedParts  AssignedPart[]
+  custodyPieces  CustodyPiece[]
+
+  @@map("inventory_items")
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  itemId    String
+  type      MovementType
+  quantity  Int
+  reason    String?
+  orderId   String?
+  userId    String
+  createdAt DateTime     @default(now())
+
+  item      InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@map("stock_movements")
+}
+
+model AssignedPart {
+  id        String   @id @default(cuid())
+  orderId   String
+  itemId    String
+  quantity  Int
+  unitPrice Decimal  @db.Decimal(12, 2)
+  notes     String?
+  createdAt DateTime @default(now())
+
+  order  WorkOrder     @relation(fields: [orderId], references: [id])
+  item   InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@map("assigned_parts")
+}
+
+model CustodyPiece {
+  id          String   @id @default(cuid())
+  orderId     String
+  itemId      String?
+  description String
+  quantity    Int      @default(1)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  item  InventoryItem? @relation(fields: [itemId], references: [id])
+
+  @@map("custody_pieces")
+}
+
+// ─── Price List ───────────────────────────────────────────────────────────────
+
+model PriceList {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  vehicleType VehicleType
+  price       Decimal     @db.Decimal(12, 2)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  quotes Quote[]
+
+  @@map("price_lists")
+}
+
+// ─── Quote ────────────────────────────────────────────────────────────────────
+
+model Quote {
+  id          String   @id @default(cuid())
+  orderId     String
+  serviceId   String?
+  subtotal    Decimal  @db.Decimal(12, 2)
+  tax         Decimal  @db.Decimal(12, 2)
+  total       Decimal  @db.Decimal(12, 2)
+  isApproved  Boolean  @default(false)
+  approvedAt  DateTime?
+  pdfUrl      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  order   WorkOrder  @relation(fields: [orderId], references: [id])
+  service PriceList? @relation(fields: [serviceId], references: [id])
+
+  @@map("quotes")
+}
+
+// ─── Finance ──────────────────────────────────────────────────────────────────
+
+model CashEntry {
+  id          String        @id @default(cuid())
+  type        CashType
+  amount      Decimal       @db.Decimal(12, 2)
+  description String
+  method      PaymentMethod @default(CASH)
+  orderId     String?
+  userId      String
+  date        DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+
+  @@map("cash_entries")
+}
+
+model AccountReceivable {
+  id        String        @id @default(cuid())
+  orderId   String        @unique
+  clientId  String
+  total     Decimal       @db.Decimal(12, 2)
+  paid      Decimal       @db.Decimal(12, 2) @default(0)
+  balance   Decimal       @db.Decimal(12, 2)
+  status    PaymentStatus @default(PENDING)
+  dueDate   DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  order    WorkOrder @relation(fields: [orderId], references: [id])
+  client   Client    @relation(fields: [clientId], references: [id])
+  payments Payment[]
+
+  @@map("accounts_receivable")
+}
+
+model AccountPayable {
+  id          String        @id @default(cuid())
+  supplierId  String
+  description String
+  total       Decimal       @db.Decimal(12, 2)
+  paid        Decimal       @db.Decimal(12, 2) @default(0)
+  balance     Decimal       @db.Decimal(12, 2)
+  status      PaymentStatus @default(PENDING)
+  dueDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  supplier Supplier  @relation(fields: [supplierId], references: [id])
+  payments Payment[]
+
+  @@map("accounts_payable")
+}
+
+model Payment {
+  id                  String   @id @default(cuid())
+  accountReceivableId String?
+  accountPayableId    String?
+  amount              Decimal  @db.Decimal(12, 2)
+  method              PaymentMethod
+  notes               String?
+  userId              String
+  createdAt           DateTime @default(now())
+
+  accountReceivable AccountReceivable? @relation(fields: [accountReceivableId], references: [id])
+  accountPayable    AccountPayable?    @relation(fields: [accountPayableId], references: [id])
+
+  @@map("payments")
+}
+
+model ScheduledPayment {
+  id          String        @id @default(cuid())
+  description String
+  amount      Decimal       @db.Decimal(12, 2)
+  dueDate     DateTime
+  status      PaymentStatus @default(PENDING)
+  type        CashType
+  supplierId  String?
+  clientId    String?
+  calendarEventId String?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("scheduled_payments")
+}
+
+// ─── Supplier ─────────────────────────────────────────────────────────────────
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  contact   String?
+  phone     String?
+  email     String?
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inventory      InventoryItem[]
+  accountsPayable AccountPayable[]
+
+  @@map("suppliers")
+}
+
+// ─── Appointments ─────────────────────────────────────────────────────────────
+
+model Appointment {
+  id          String   @id @default(cuid())
+  clientId    String?
+  vehicleId   String?
+  technicianId String?
+  title       String
+  description String?
+  scheduledAt DateTime
+  duration    Int      @default(60)
+  isConfirmed Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("appointments")
+}
+
+// ─── Tasks ────────────────────────────────────────────────────────────────────
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(PENDING)
+  tag         TaskTag    @default(OTHER)
+  priority    Priority   @default(MEDIUM)
+  assignedTo  String?
+  createdById String
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  assignee    User? @relation("AssignedTasks", fields: [assignedTo], references: [id])
+  creator     User  @relation("CreatedTasks", fields: [createdById], references: [id])
+
+  @@map("tasks")
+}
+
+// ─── Order Extras ─────────────────────────────────────────────────────────────
+
+model Photo {
+  id        String     @id @default(cuid())
+  orderId   String
+  phase     PhotoPhase
+  url       String
+  key       String
+  caption   String?
+  uploadedBy String
+  createdAt DateTime   @default(now())
+
+  order WorkOrder @relation(fields: [orderId], references: [id])
+
+  @@map("photos")
+}
+
+model TimelineEntry {
+  id        String   @id @default(cuid())
+  orderId   String
+  userId    String
+  event     String
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  order WorkOrder @relation(fields: [orderId], references: [id])
+  user  User      @relation(fields: [userId], references: [id])
+
+  @@map("timeline_entries")
+}
+
+model Checklist {
+  id        String   @id @default(cuid())
+  orderId   String
+  label     String
+  checked   Boolean  @default(false)
+  phase     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order WorkOrder @relation(fields: [orderId], references: [id])
+
+  @@map("checklists")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  orderId   String
+  content   String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order WorkOrder @relation(fields: [orderId], references: [id])
+
+  @@map("notes")
+}
+
+model Survey {
+  id               String   @id @default(cuid())
+  orderId          String   @unique
+  rating           Int
+  wouldRecommend   Boolean
+  comment          String?
+  submittedAt      DateTime @default(now())
+
+  order WorkOrder @relation(fields: [orderId], references: [id])
+
+  @@map("surveys")
+}

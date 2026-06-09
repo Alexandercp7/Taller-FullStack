@@ -1,0 +1,115 @@
+<div class="quoter-container">
+  <hlm-card>
+    <div hlmCardContent>
+      <h3 class="text-lg font-semibold mb-4">Generador de Cotizaciones</h3>
+
+      <div class="selection-grid">
+        <div class="form-group">
+          <label class="text-sm font-medium">Selecciona un Servicio</label>
+          <hlm-select
+            [value]="selectedService()"
+            [itemToString]="serviceItemToString"
+            [isItemEqualToValue]="isSameService"
+            (valueChange)="onServiceSelected($event)"
+          >
+            <hlm-select-trigger>
+              <hlm-select-value placeholder="Elige un servicio..." />
+            </hlm-select-trigger>
+            <hlm-select-content *hlmSelectPortal>
+              <hlm-select-group>
+                @for (servicio of servicios(); track servicio.id) {
+                  <hlm-select-item [value]="servicio">{{ ($any(servicio)).concepto || ($any(servicio)).tamano }}</hlm-select-item>
+                }
+              </hlm-select-group>
+            </hlm-select-content>
+          </hlm-select>
+        </div>
+
+        <div class="form-group">
+          <label class="text-sm font-medium">Cantidad</label>
+          <input
+            hlmInput
+            type="number"
+            [value]="selectedQuantity()"
+            (input)="onQuantityChange($event)"
+            min="1"
+            placeholder="1"
+          />
+        </div>
+
+        <div class="form-group flex items-end">
+          <button hlmBtn type="button" (click)="addServiceToQuote()" class="w-full">
+            <ng-icon name="lucidePlus" class="size-4 mr-2" />
+            Agregar
+          </button>
+        </div>
+      </div>
+
+      @if (quoteItems().length > 0) {
+        <div class="mt-6">
+          <h4 class="font-semibold mb-3">Artículos en la Cotización</h4>
+          <div hlmTableContainer>
+            <table hlmTable>
+              <thead hlmTHead>
+                <tr hlmTr>
+                  <th hlmTh>Descripción</th>
+                  <th hlmTh>Cantidad</th>
+                  <th hlmTh>Precio Unitario</th>
+                  <th hlmTh>Subtotal</th>
+                  <th hlmTh></th>
+                </tr>
+              </thead>
+              <tbody hlmTBody>
+                @for (item of quoteItems(); track item.id) {
+                  <tr hlmTr>
+                    <td hlmTd class="font-medium">{{ item.nombre }}</td>
+                    <td hlmTd class="text-center">{{ item.cantidad }}</td>
+                    <td hlmTd>${{ item.precioUnitario | number : '1.2-2' }}</td>
+                    <td hlmTd class="font-semibold">${{ item.subtotal | number : '1.2-2' }}</td>
+                    <td hlmTd>
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="ghost"
+                        type="button"
+                        (click)="removeItem(item.id)"
+                      >
+                        <ng-icon name="lucideTrash2" class="size-4 text-destructive" />
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="totals-section">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>${{ subtotal() | number : '1.2-2' }}</span>
+            </div>
+            <div class="total-row">
+              <span>Impuesto (20%):</span>
+              <span class="text-green-600">${{ taxAmount() | number : '1.2-2' }}</span>
+            </div>
+            <div class="total-row final">
+              <span>TOTAL:</span>
+              <span>${{ total() | number : '1.2-2' }}</span>
+            </div>
+
+            <button hlmBtn (click)="generatePDF()" class="w-full mt-4">
+              <ng-icon name="lucideDownload" class="size-4 mr-2" />
+              Descargar Cotización (PDF)
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (quoteItems().length === 0) {
+        <div class="empty-state">
+          <p class="text-muted-foreground text-center">Selecciona servicios para comenzar la cotización</p>
+        </div>
+      }
+    </div>
+  </hlm-card>
+</div>

@@ -1,0 +1,7 @@
+export enum OrderPhase {
+  DIAGNOSIS = 'DIAGNOSIS',
+  PARTS = 'PARTS',
+  APPROVAL = 'APPROVAL',
+  REPAIR = 'REPAIR',
+  QUALITY_CONTROL = 'QUALITY_CONTROL',
+}

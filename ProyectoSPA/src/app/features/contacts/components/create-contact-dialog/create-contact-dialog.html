@@ -1,0 +1,132 @@
+<div class="dialog-shell">
+  <div>
+    <h2 class="text-lg font-semibold">{{ isEditMode ? 'Editar Contacto' : 'Nuevo Contacto' }}</h2>
+    <p class="text-muted-foreground text-sm">Completa los detalles del contacto/proveedor.</p>
+  </div>
+
+  <form class="form-grid">
+    <div class="form-grid-row">
+      <div class="form-group">
+        <label hlmLabel for="nombre">Nombre</label>
+        <input
+          hlmInput
+          id="nombre"
+          type="text"
+          [(ngModel)]="nombre"
+          name="nombre"
+          placeholder="Nombre de la empresa"
+        />
+      </div>
+
+      <div class="form-group">
+        <label hlmLabel for="rfc">RFC</label>
+        <input
+          hlmInput
+          id="rfc"
+          type="text"
+          [(ngModel)]="rfc"
+          name="rfc"
+          placeholder="Ej: ABC123456XYZ"
+        />
+      </div>
+
+      <div class="form-group">
+        <label hlmLabel for="empresa">Razón Social</label>
+        <input
+          hlmInput
+          id="empresa"
+          type="text"
+          [(ngModel)]="empresa"
+          name="empresa"
+          placeholder="Razón social"
+        />
+      </div>
+    </div>
+
+    <div class="form-grid-row">
+      <div class="form-group">
+        <label hlmLabel for="telefono">Teléfono</label>
+        <input
+          hlmInput
+          id="telefono"
+          type="tel"
+          [(ngModel)]="telefono"
+          name="telefono"
+          placeholder="+52-55-1234-5678"
+        />
+      </div>
+
+      <div class="form-group">
+        <label hlmLabel for="correo">Correo</label>
+        <input
+          hlmInput
+          id="correo"
+          type="email"
+          [(ngModel)]="correo"
+          name="correo"
+          placeholder="contacto@empresa.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label hlmLabel for="etiquetas">Etiqueta</label>
+        <hlm-select [value]="etiqueta()" (valueChange)="onEtiquetaChange(($event ?? '') + '')">
+          <hlm-select-trigger>
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            <hlm-select-group>
+              @for (e of availableTags; track e) {
+                <hlm-select-item [value]="e">{{ e }}</hlm-select-item>
+              }
+            </hlm-select-group>
+          </hlm-select-content>
+        </hlm-select>
+      </div>
+    </div>
+
+    <div class="form-grid-row">
+      <div class="form-group">
+        <label hlmLabel for="diasPago">Días de Pago</label>
+        <input
+          hlmInput
+          id="diasPago"
+          type="number"
+          [(ngModel)]="diasPago"
+          name="diasPago"
+          placeholder="30"
+        />
+      </div>
+
+      <div class="form-group">
+        <label hlmLabel for="limiteCredito">Límite de Crédito ($)</label>
+        <input
+          hlmInput
+          id="limiteCredito"
+          type="number"
+          [(ngModel)]="limiteCredito"
+          name="limiteCredito"
+          placeholder="0"
+        />
+      </div>
+
+      <div class="form-group">
+        <label hlmLabel for="politicaDescuentos">Política de Descuentos</label>
+        <input
+          hlmInput
+          id="politicaDescuentos"
+          type="text"
+          [(ngModel)]="politicaDescuentos"
+          name="politicaDescuentos"
+          placeholder="Ej: 5% compras mayores a $100,000"
+        />
+      </div>
+    </div>
+
+  </form>
+
+  <div class="flex justify-end gap-2 pt-4">
+    <button hlmBtn variant="outline" (click)="close()">Cancelar</button>
+    <button hlmBtn (click)="save()">{{ isEditMode ? 'Actualizar' : 'Crear' }}</button>
+  </div>
+</div>

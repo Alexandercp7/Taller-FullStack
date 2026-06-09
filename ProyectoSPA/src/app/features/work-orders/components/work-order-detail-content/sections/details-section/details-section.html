@@ -1,0 +1,236 @@
+@if (order(); as ot) {
+	<div class="space-y-4">
+		<hlm-card>
+			<hlm-card-header><h3 hlmCardTitle>Control de OT</h3></hlm-card-header>
+			<div hlmCardContent class="grid gap-3 md:grid-cols-2">
+				<label class="field">
+					<span>Estado</span>
+					<hlm-select [value]="ot.status" (valueChange)="updateStatus(($event ?? '') + '')">
+						<hlm-select-trigger><hlm-select-value /></hlm-select-trigger>
+						<hlm-select-content *hlmSelectPortal>
+							<hlm-select-group>
+								@for (status of statuses; track status) {
+									<hlm-select-item [value]="status">{{ status }}</hlm-select-item>
+								}
+							</hlm-select-group>
+						</hlm-select-content>
+					</hlm-select>
+				</label>
+				<label class="field">
+					<span>Prioridad</span>
+					<hlm-select [value]="ot.priority" (valueChange)="updatePriority(($event ?? '') + '')">
+						<hlm-select-trigger><hlm-select-value /></hlm-select-trigger>
+						<hlm-select-content *hlmSelectPortal>
+							<hlm-select-group>
+								@for (priority of priorities; track priority) {
+									<hlm-select-item [value]="priority">{{ priority }}</hlm-select-item>
+								}
+							</hlm-select-group>
+						</hlm-select-content>
+					</hlm-select>
+				</label>
+				<label class="field md:col-span-2">
+					<span>Fecha programada / estimada</span>
+					<spartan-date-picker-field
+						[value]="fechaProgramadaEdit()"
+						placeholder="Seleccionar fecha"
+						(valueChange)="updateScheduledDate($event)"
+					/>
+				</label>
+			</div>
+		</hlm-card>
+
+		<section class="grid gap-4 xl:grid-cols-2">
+			<hlm-card>
+				<hlm-card-header>
+					<div class="card-head-row">
+						<h3 hlmCardTitle>Datos del cliente</h3>
+						<button hlmBtn size="sm" variant="outline" type="button" (click)="editClient.set(!editClient())">{{ editClient() ? 'Cancelar' : 'Editar' }}</button>
+					</div>
+				</hlm-card-header>
+				<div hlmCardContent class="space-y-3">
+					@if (!editClient()) {
+						<p><strong>Nombre:</strong> {{ ot.clientData.nombre }}</p>
+						<p><strong>Telefono:</strong> {{ ot.clientData.telefono || '-' }}</p>
+						<p><strong>Correo:</strong> {{ ot.clientData.correo || '-' }}</p>
+					} @else {
+						<label class="field">
+							<span>Cliente</span>
+							<hlm-combobox [value]="selectedClient()" (valueChange)="selectedClient.set(($event ?? '') + '')">
+								<hlm-combobox-trigger class="w-full"><hlm-combobox-value placeholder="Selecciona cliente" /></hlm-combobox-trigger>
+								<hlm-combobox-content *hlmComboboxPortal>
+									<hlm-combobox-input placeholder="Buscar cliente..." />
+									<div hlmComboboxList>
+										<hlm-combobox-empty>Sin resultados</hlm-combobox-empty>
+										<div hlmComboboxGroup>
+											@for (client of clients(); track client) {
+												<hlm-combobox-item [value]="client">{{ client }}</hlm-combobox-item>
+											}
+										</div>
+									</div>
+								</hlm-combobox-content>
+							</hlm-combobox>
+						</label>
+						<div class="new-client-row">
+							<input hlmInput type="text" placeholder="Nuevo cliente" [value]="newClientName()" (input)="newClientName.set(($any($event.target)).value)" />
+							<button hlmBtn size="sm" type="button" variant="outline" (click)="createClient()">Crear cliente</button>
+						</div>
+						<label class="field"><span>Telefono</span><input hlmInput [value]="clientPhone()" (input)="clientPhone.set(($any($event.target)).value)" /></label>
+						<label class="field"><span>Correo</span><input hlmInput [value]="clientEmail()" (input)="clientEmail.set(($any($event.target)).value)" /></label>
+						<div class="flex justify-end"><button hlmBtn size="sm" type="button" (click)="saveClientCard()">Guardar</button></div>
+					}
+				</div>
+			</hlm-card>
+
+			<hlm-card>
+				<hlm-card-header>
+					<div class="card-head-row">
+						<h3 hlmCardTitle>Datos del vehiculo</h3>
+						<button hlmBtn size="sm" variant="outline" type="button" (click)="editVehicle.set(!editVehicle())">{{ editVehicle() ? 'Cancelar' : 'Editar' }}</button>
+					</div>
+				</hlm-card-header>
+				<div hlmCardContent>
+					@if (!editVehicle()) {
+						<div class="vehicle-grid">
+							<p><strong>Marca:</strong> {{ ot.vehicle.marca }}</p>
+							<p><strong>Modelo:</strong> {{ ot.vehicle.modelo }}</p>
+							<p><strong>Anio:</strong> {{ ot.vehicle.anio }}</p>
+							<p><strong>Placas:</strong> {{ ot.vehicle.placas }}</p>
+							<p><strong>VIN:</strong> {{ ot.vehicle.vin }}</p>
+							<p><strong>Kilometraje:</strong> {{ ot.vehicle.kilometraje | number }} km</p>
+						</div>
+					} @else {
+						<p class="text-muted-foreground text-xs">Busca por VIN o escribe para filtrar marca, modelo y anio desde CarQuery.</p>
+						<div class="vehicle-grid">
+							<label class="field vin-field">
+								<span>VIN</span>
+								<div class="vin-row">
+									<input hlmInput [value]="vehicleVin()" (input)="onVehicleVinInput(($any($event.target)).value)" />
+									<button hlmBtn type="button" variant="outline" size="sm" [disabled]="isVehicleVinLookupLoading()" (click)="lookupVehicleByVin()">Buscar VIN</button>
+								</div>
+							</label>
+							<label class="field">
+								<span>Marca</span>
+								<hlm-combobox [value]="vehicleMarca()" (valueChange)="onVehicleMakeSelected(($event ?? '') + '')">
+									<hlm-combobox-input placeholder="Escribe y selecciona marca" (input)="onVehicleMakeInputChange(($any($event.target)).value)" />
+									<hlm-combobox-content *hlmComboboxPortal>
+										<div hlmComboboxList>
+											<hlm-combobox-empty>@if (isVehicleLookupLoading()) { Cargando marcas... } @else { Sin resultados }</hlm-combobox-empty>
+											<div hlmComboboxGroup>
+												@for (make of vehicleMakes(); track make) {
+													<hlm-combobox-item [value]="make" (click)="onVehicleMakeSelected(make)">{{ make }}</hlm-combobox-item>
+												}
+											</div>
+										</div>
+									</hlm-combobox-content>
+								</hlm-combobox>
+							</label>
+							<label class="field">
+								<span>Modelo</span>
+								<hlm-combobox [value]="vehicleModelo()" (valueChange)="onVehicleModelSelected(($event ?? '') + '')">
+									<hlm-combobox-input placeholder="Escribe y selecciona modelo" (input)="onVehicleModelInputChange(($any($event.target)).value)" />
+									<hlm-combobox-content *hlmComboboxPortal>
+										<div hlmComboboxList>
+											<hlm-combobox-empty>@if (!vehicleMarca()) { Selecciona una marca primero } @else if (isVehicleLookupLoading()) { Cargando modelos... } @else { Sin resultados }</hlm-combobox-empty>
+											<div hlmComboboxGroup>
+												@for (model of vehicleModels(); track model) {
+													<hlm-combobox-item [value]="model" (click)="onVehicleModelSelected(model)">{{ model }}</hlm-combobox-item>
+												}
+											</div>
+										</div>
+									</hlm-combobox-content>
+								</hlm-combobox>
+							</label>
+							<label class="field">
+								<span>Anio</span>
+								<hlm-combobox [value]="vehicleAnio().toString()" (valueChange)="onVehicleYearSelected(($event ?? '') + '')">
+									<hlm-combobox-input placeholder="Selecciona anio" (input)="onVehicleYearInputChange(($any($event.target)).value)" />
+									<hlm-combobox-content *hlmComboboxPortal>
+										<div hlmComboboxList>
+											<hlm-combobox-empty>@if (!vehicleModelo()) { Selecciona un modelo primero } @else { Sin resultados }</hlm-combobox-empty>
+											<div hlmComboboxGroup>
+												@for (year of filteredVehicleYears(); track year) {
+													<hlm-combobox-item [value]="year.toString()" (click)="onVehicleYearSelected(year.toString())">{{ year }}</hlm-combobox-item>
+												}
+											</div>
+										</div>
+									</hlm-combobox-content>
+								</hlm-combobox>
+							</label>
+							<label class="field"><span>Placas</span><input hlmInput [value]="vehiclePlacas()" (input)="vehiclePlacas.set(($any($event.target)).value)" /></label>
+							<label class="field"><span>Kilometraje</span><input hlmInput type="number" [value]="vehicleKm()" (input)="vehicleKm.set(+($any($event.target)).value || 0)" /></label>
+						</div>
+						<div class="flex justify-end pt-2"><button hlmBtn size="sm" type="button" (click)="saveVehicleCard()">Guardar</button></div>
+					}
+				</div>
+			</hlm-card>
+		</section>
+
+		<hlm-card>
+			<hlm-card-header>
+				<div class="card-head-row">
+					<h3 hlmCardTitle>Problema y diagnostico tecnico</h3>
+					<button hlmBtn size="sm" variant="outline" type="button" (click)="editIssue.set(!editIssue())">{{ editIssue() ? 'Cancelar' : 'Editar' }}</button>
+				</div>
+			</hlm-card-header>
+			<div hlmCardContent class="space-y-2 text-sm">
+				@if (!editIssue()) {
+					<p><strong>Problema reportado:</strong> {{ ot.problema }}</p>
+					<p><strong>Diagnostico:</strong> {{ ot.diagnostico }}</p>
+					<p><strong>Mecanico asignado:</strong> {{ ot.tecnico }}</p>
+				} @else {
+					<label class="field"><span>Problema</span><textarea hlmTextarea rows="3" [value]="problemaEdit()" (input)="problemaEdit.set(($any($event.target)).value)"></textarea></label>
+					<label class="field">
+						<div class="field-header">
+							<span>Diagnostico</span>
+							<button hlmBtn type="button" size="sm" variant="outline" [disabled]="recallsLoading() || !canSearchRecalls()" (click)="searchRecalls()">Buscar retiros</button>
+						</div>
+						<textarea hlmTextarea rows="3" [value]="diagnosticoEdit()" (input)="diagnosticoEdit.set(($any($event.target)).value)"></textarea>
+						@if (recallsLoading()) {
+							<p class="text-muted-foreground text-xs">Consultando retiros de seguridad en NHTSA...</p>
+						}
+						@if (recallsError() && !recallsLoading()) {
+							<p class="recalls-error">{{ recallsError() }}</p>
+						}
+						@if (recalls().length > 0) {
+							<div class="recalls-list">
+								@for (recall of recalls(); track recall.campaignNumber) {
+									<article class="recall-item">
+										<p class="recall-title">Retiro {{ recall.campaignNumber || 'N/D' }} · {{ recall.component || 'Componente no especificado' }}</p>
+										@if (recall.summary) {
+											<p class="recall-text"><strong>Resumen:</strong> {{ recall.summary }}</p>
+										}
+										@if (recall.consequence) {
+											<p class="recall-text"><strong>Riesgo:</strong> {{ recall.consequence }}</p>
+										}
+										@if (recall.remedy) {
+											<p class="recall-text"><strong>Remedio:</strong> {{ recall.remedy }}</p>
+										}
+									</article>
+								}
+							</div>
+						}
+					</label>
+					<label class="field"><span>Mecanico asignado</span><input hlmInput [value]="tecnicoEdit()" (input)="tecnicoEdit.set(($any($event.target)).value)" /></label>
+					<div class="flex justify-end"><button hlmBtn size="sm" type="button" (click)="saveIssueCard()">Guardar</button></div>
+				}
+			</div>
+		</hlm-card>
+
+		<hlm-card>
+			<hlm-card-header>
+				<h3 hlmCardTitle>Zona de peligro</h3>
+				<p hlmCardDescription>Para eliminar esta OT, escribe el nombre de la OT (<strong>{{ ot.id }}</strong>) y confirma.</p>
+			</hlm-card-header>
+			<div hlmCardContent class="space-y-3">
+				<label class="field">
+					<span>Confirmar nombre de OT</span>
+					<input hlmInput type="text" placeholder="Escribe exactamente el nombre de la OT" [value]="deleteConfirmInput()" (input)="deleteConfirmInput.set(($any($event.target)).value)" />
+				</label>
+				<div class="flex justify-end">
+					<button hlmBtn type="button" variant="destructive" [disabled]="!canDeleteOrder()" (click)="confirmDeleteOrder()">Borrar OT</button>
+				</div>
+			</div>
+		</hlm-card>
+	</div>
+}

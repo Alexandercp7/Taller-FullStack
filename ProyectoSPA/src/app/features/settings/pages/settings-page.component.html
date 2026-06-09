@@ -1,0 +1,32 @@
+<section class="settings-page">
+	<header class="settings-header">
+		<h1>Configuración</h1>
+		<p>Administra tu perfil, seguridad y permisos del sistema.</p>
+	</header>
+
+	<section hlmTabs [tab]="selectedTab()" orientation="vertical" class="settings-tabs">
+		<div hlmTabsList class="settings-tabs-list" aria-label="Secciones de configuracion">
+			<button hlmTabsTrigger="mi-perfil" type="button" (click)="selectTab('mi-perfil')">Mi Perfil</button>
+			<button hlmTabsTrigger="cambiar-contrasena" type="button" (click)="selectTab('cambiar-contrasena')">
+				Cambiar Contraseña
+			</button>
+			@if (isAdmin()) {
+				<button hlmTabsTrigger="roles-usuarios" type="button" (click)="selectTab('roles-usuarios')">
+					Roles y Usuarios
+				</button>
+			}
+		</div>
+
+		<div hlmTabsContent="mi-perfil" class="settings-content">
+			<spartan-profile-settings />
+		</div>
+		<div hlmTabsContent="cambiar-contrasena" class="settings-content">
+			<spartan-change-password-settings />
+		</div>
+		@if (isAdmin()) {
+			<div hlmTabsContent="roles-usuarios" class="settings-content">
+				<spartan-roles-users-settings />
+			</div>
+		}
+	</section>
+</section>

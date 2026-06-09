@@ -1,0 +1,17 @@
+<hlm-card>
+	<hlm-card-header>
+		<h3 hlmCardTitle>Accesos Rapidos</h3>
+		<p hlmCardDescription>Atajos para acciones frecuentes.</p>
+	</hlm-card-header>
+	<div hlmCardContent class="grid gap-3 md:grid-cols-2">
+		@for (item of items(); track item.id) {
+			<a hlmBtn variant="outline" class="h-auto justify-start gap-3 py-3 text-left" [routerLink]="item.route">
+				<ng-icon [name]="item.icon" class="text-muted-foreground size-4 shrink-0" />
+				<span class="flex flex-col">
+					<span class="text-sm font-medium">{{ item.title }}</span>
+					<span class="text-muted-foreground text-xs">{{ item.description }}</span>
+				</span>
+			</a>
+		}
+	</div>
+</hlm-card>

@@ -1,0 +1,110 @@
+<div class="dialog-shell">
+  <div>
+    <h2 class="text-lg font-semibold">
+      {{ isEditing() ? 'Editar Actividad' : 'Nueva Actividad' }}
+    </h2>
+    <p class="text-muted-foreground text-sm">Completa los detalles de la actividad.</p>
+  </div>
+
+  <div class="form-grid">
+    <label class="field">
+      <span>Título</span>
+      <input
+        hlmInput
+        type="text"
+        placeholder="Título de la actividad"
+        [value]="titulo()"
+        (input)="titulo.set(($any($event.target)).value)"
+      />
+    </label>
+
+    <label class="field">
+      <span>Descripción</span>
+      <textarea
+        hlmTextarea
+        rows="3"
+        placeholder="Describe la actividad"
+        [value]="descripcion()"
+        (input)="descripcion.set(($any($event.target)).value)"
+      ></textarea>
+    </label>
+
+    <label class="field">
+      <span>Asignado a</span>
+      <input
+        hlmInput
+        type="text"
+        placeholder="Nombre de la persona"
+        [value]="asignadoA()"
+        (input)="asignadoA.set(($any($event.target)).value)"
+      />
+    </label>
+
+    <label class="field">
+      <span>Fecha Límite</span>
+      <spartan-date-picker-field
+        [value]="fechaLimite()"
+        placeholder="Selecciona fecha límite"
+        [allowClear]="false"
+        (valueChange)="fechaLimite.set($event)"
+      />
+    </label>
+
+    <div class="form-grid-row">
+      <label class="field">
+        <span>Etiqueta</span>
+        <hlm-select [value]="etiqueta()" (valueChange)="onEtiquetaChange(($event ?? 'Administrativa') + '')">
+          <hlm-select-trigger>
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            <hlm-select-group>
+              @for (e of etiquetas; track e) {
+                <hlm-select-item [value]="e">{{ e }}</hlm-select-item>
+              }
+            </hlm-select-group>
+          </hlm-select-content>
+        </hlm-select>
+      </label>
+
+      <label class="field">
+        <span>Prioridad</span>
+        <hlm-select [value]="prioridad()" (valueChange)="onPrioridadChange(($event ?? 'Media') + '')">
+          <hlm-select-trigger>
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            <hlm-select-group>
+              @for (p of prioridades; track p) {
+                <hlm-select-item [value]="p">{{ p }}</hlm-select-item>
+              }
+            </hlm-select-group>
+          </hlm-select-content>
+        </hlm-select>
+      </label>
+
+      <label class="field">
+        <span>Estado</span>
+        <hlm-select [value]="estado()" (valueChange)="onEstadoChange(($event ?? 'Pendiente') + '')">
+          <hlm-select-trigger>
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            <hlm-select-group>
+              @for (s of estados; track s) {
+                <hlm-select-item [value]="s">{{ s }}</hlm-select-item>
+              }
+            </hlm-select-group>
+          </hlm-select-content>
+        </hlm-select>
+      </label>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-2 pt-4">
+    <button hlmBtn variant="outline" (click)="cancel()">Cancelar</button>
+    <button hlmBtn [disabled]="!canCreate()" (click)="submit()">
+      {{ isEditing() ? 'Actualizar' : 'Crear' }}
+    </button>
+  </div>
+</div>

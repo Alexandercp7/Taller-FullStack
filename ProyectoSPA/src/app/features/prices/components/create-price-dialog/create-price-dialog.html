@@ -1,0 +1,177 @@
+<div class="dialog-shell">
+  <div>
+    <h2 class="text-lg font-semibold">{{ isEditMode ? 'Editar Servicio' : 'Nuevo Servicio' }}</h2>
+    <p class="text-muted-foreground text-sm">Completa los detalles del servicio</p>
+  </div>
+
+  <div class="category-selector" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    @for (cat of ['Afinación y Otros', 'Mecánica Rápida', 'Mecánica General', 'Servicio de Torno']; track cat) {
+      <button
+        hlmBtn
+        type="button"
+        [variant]="selectedCategoria() === cat ? 'default' : 'outline'"
+        (click)="setCategoria(cat)"
+        class="text-xs"
+      >
+        {{ cat }}
+      </button>
+    }
+  </div>
+
+  <form class="form-grid">
+    @if (!isTorno()) {
+      <div class="form-group full">
+        <label hlmLabel for="concepto">Concepto *</label>
+        <input
+          hlmInput
+          id="concepto"
+          type="text"
+          [value]="concepto()"
+          (input)="concepto.set($any($event.target).value)"
+          placeholder="Ej: Cambio de aceite y filtro"
+        />
+      </div>
+
+      <div class="form-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label hlmLabel for="sistema">Sistema *</label>
+          <input
+            hlmInput
+            id="sistema"
+            type="text"
+            list="sistema-options"
+            [value]="sistema()"
+            (input)="setSistema($any($event.target).value)"
+            placeholder="Ej: Eléctrico, Frenos..."
+          />
+          <datalist id="sistema-options">
+            @for (s of sistemaOptions(); track s) {
+              <option [value]="s"></option>
+            }
+          </datalist>
+        </div>
+
+        <div class="form-group">
+          <label hlmLabel for="familia">Familia</label>
+          <input
+            hlmInput
+            id="familia"
+            type="text"
+            list="familia-options"
+            [value]="familia()"
+            (input)="familia.set($any($event.target).value)"
+            placeholder="Ej: Bobinas (opcional)"
+          />
+          <datalist id="familia-options">
+            @for (f of familiaOptions(); track f) {
+              <option [value]="f"></option>
+            }
+          </datalist>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+        <div class="form-group">
+          <label hlmLabel for="precioAuto">Precio Auto ($) *</label>
+          <input
+            hlmInput
+            id="precioAuto"
+            type="number"
+            min="0"
+            step="1"
+            [value]="precioAuto()"
+            (input)="setNumeric(precioAuto, $event)"
+            placeholder="450"
+          />
+        </div>
+
+        <div class="form-group">
+          <label hlmLabel for="precioCamioneta">Precio Camioneta ($) *</label>
+          <input
+            hlmInput
+            id="precioCamioneta"
+            type="number"
+            min="0"
+            step="1"
+            [value]="precioCamioneta()"
+            (input)="setNumeric(precioCamioneta, $event)"
+            placeholder="550"
+          />
+        </div>
+
+        <div class="form-group">
+          <label hlmLabel for="precioCamion">Precio Camión ($) *</label>
+          <input
+            hlmInput
+            id="precioCamion"
+            type="number"
+            min="0"
+            step="1"
+            [value]="precioCamion()"
+            (input)="setNumeric(precioCamion, $event)"
+            placeholder="750"
+          />
+        </div>
+      </div>
+
+      <div class="form-group full">
+        <label hlmLabel for="observacion">Observación</label>
+        <input
+          hlmInput
+          id="observacion"
+          type="text"
+          [value]="observacion()"
+          (input)="observacion.set($any($event.target).value)"
+          placeholder="Notas adicionales"
+        />
+      </div>
+    }
+
+    @if (isTorno()) {
+      <div class="form-group full">
+        <label hlmLabel for="tamano">Tamaño *</label>
+        <input
+          hlmInput
+          id="tamano"
+          type="text"
+          [value]="tamano()"
+          (input)="tamano.set($any($event.target).value)"
+          placeholder="Ej: Pequeño, Mediano"
+        />
+      </div>
+
+      <div class="form-group full">
+        <label hlmLabel for="diametro">Diámetro *</label>
+        <input
+          hlmInput
+          id="diametro"
+          type="text"
+          [value]="diametro()"
+          (input)="diametro.set($any($event.target).value)"
+          placeholder="Ej: Hasta 50mm"
+        />
+      </div>
+
+      <div class="form-group full">
+        <label hlmLabel for="precio">Precio ($) *</label>
+        <input
+          hlmInput
+          id="precio"
+          type="number"
+          min="0"
+          step="1"
+          [value]="precio()"
+          (input)="setNumeric(precio, $event)"
+          placeholder="180"
+        />
+      </div>
+    }
+  </form>
+
+  <div class="dialog-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+    <button hlmBtn variant="outline" (click)="close()">Cancelar</button>
+    <button hlmBtn (click)="save()">{{ isEditMode ? 'Actualizar' : 'Crear' }}</button>
+  </div>
+</div>
+
+

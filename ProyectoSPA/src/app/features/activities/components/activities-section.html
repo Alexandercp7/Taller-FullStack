@@ -1,0 +1,302 @@
+<section class="activities-page">
+  <div class="header-row">
+    <div>
+      <h1 class="text-xl font-semibold">Mis Actividades</h1>
+      <p class="text-muted-foreground text-sm">Administra tus tareas, seguimiento de actividades y colaboración en equipo.</p>
+    </div>
+    <button hlmBtn type="button" (click)="createActivity()">
+      Nueva Actividad
+    </button>
+  </div>
+
+  <hlm-card>
+    <div hlmCardContent class="filters-grid">
+      <input
+        class="search-field"
+        hlmInput
+        type="text"
+        placeholder="Buscar por título, descripción o asignado..."
+        [value]="searchText()"
+        (input)="updateSearch(($any($event.target)).value)"
+      />
+
+      <hlm-select-multiple>
+        <hlm-select-trigger class="w-full">
+          <hlm-select-placeholder>{{ selectedTagsLabel() }}</hlm-select-placeholder>
+          <ng-template hlmSelectValues let-values>
+            <hlm-select-values-content>
+              {{ selectedTagsLabel() }}
+            </hlm-select-values-content>
+          </ng-template>
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          <hlm-select-group>
+            <div class="py-2 px-2 border-b">
+              <input
+                hlmInput
+                type="text"
+                placeholder="Crear nueva etiqueta..."
+                (keyup.enter)="addNewTag(newTagInput.value); newTagInput.value = ''"
+                #newTagInput
+              />
+            </div>
+            <hlm-select-label>Etiquetas</hlm-select-label>
+            @for (tag of getAvailableTags(); track tag) {
+              <hlm-select-item [value]="tag" (click)="toggleTag(tag)">
+                @if (selectedTags().includes(tag)) {
+                  <span>{{ tag }}</span>
+                } @else {
+                  <span>{{ tag }}</span>
+                }
+              </hlm-select-item>
+            }
+          </hlm-select-group>
+        </hlm-select-content>
+      </hlm-select-multiple>
+
+      <hlm-select-multiple>
+        <hlm-select-trigger class="w-full">
+          <hlm-select-placeholder>{{ selectedPrioritiesLabel() }}</hlm-select-placeholder>
+          <ng-template hlmSelectValues let-values>
+            <hlm-select-values-content>
+              {{ selectedPrioritiesLabel() }}
+            </hlm-select-values-content>
+          </ng-template>
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          <hlm-select-group>
+            <hlm-select-label>Prioridades</hlm-select-label>
+            @for (priority of prioridades; track priority) {
+              <hlm-select-item [value]="priority" (click)="togglePriority(priority)">
+                @if (selectedPriorities().includes(priority)) {
+                  <span>{{ priority }}</span>
+                } @else {
+                  <span>{{ priority }}</span>
+                }
+              </hlm-select-item>
+            }
+          </hlm-select-group>
+        </hlm-select-content>
+      </hlm-select-multiple>
+    </div>
+  </hlm-card>
+
+  <div class="view-switch">
+    <button hlmBtn type="button" [variant]="viewMode() === 'list' ? 'default' : 'outline'" (click)="setView('list')">
+      Lista
+    </button>
+    <button hlmBtn type="button" [variant]="viewMode() === 'kanban' ? 'default' : 'outline'" (click)="setView('kanban')">
+      Kanban (Por Estado)
+    </button>
+    <button hlmBtn type="button" [variant]="viewMode() === 'kanban-tags' ? 'default' : 'outline'" (click)="setView('kanban-tags')">
+      Kanban (Por Etiqueta)
+    </button>
+  </div>
+
+  @if (viewMode() === 'list') {
+    <hlm-card>
+      <div hlmCardContent>
+        <div hlmTableContainer>
+          <table hlmTable>
+            <thead hlmTHead>
+              <tr hlmTr>
+                <th hlmTh>Título</th>
+                <th hlmTh>Asignado</th>
+                <th hlmTh>Etiqueta</th>
+                <th hlmTh>Prioridad</th>
+                <th hlmTh>Estado</th>
+                <th hlmTh>Acciones</th>
+              </tr>
+            </thead>
+            <tbody hlmTBody>
+              @for (activity of filteredActivities(); track activity.id) {
+                <tr hlmTr>
+                  <td hlmTd class="font-medium">{{ activity.titulo }}</td>
+                  <td hlmTd>{{ activity.asignadoA }}</td>
+                  
+                  <td hlmTd>
+                    <hlm-select [value]="activity.etiqueta" (valueChange)="updateActivityTag(activity.id, ($event ?? activity.etiqueta) + '')">
+                      <hlm-select-trigger size="sm" class="w-full">
+                        <hlm-select-value />
+                      </hlm-select-trigger>
+                      <hlm-select-content *hlmSelectPortal>
+                        <hlm-select-group>
+                          @for (tag of getAvailableTags(); track tag) {
+                            <hlm-select-item [value]="tag">{{ tag }}</hlm-select-item>
+                          }
+                        </hlm-select-group>
+                      </hlm-select-content>
+                    </hlm-select>
+                  </td>
+
+                  <td hlmTd>
+                    <hlm-select 
+                      [value]="activity.prioridad" 
+                      (valueChange)="updateActivityPriority(activity.id, $event)"
+                    >
+                      <hlm-select-trigger size="sm" class="w-full">
+                        <hlm-select-value />
+                      </hlm-select-trigger>
+                      <hlm-select-content *hlmSelectPortal>
+                        <hlm-select-group>
+                          @for (priority of prioridades; track priority) {
+                            <hlm-select-item [value]="priority">{{ priority }}</hlm-select-item>
+                          }
+                        </hlm-select-group>
+                      </hlm-select-content>
+                    </hlm-select>
+                  </td>
+
+                  <td hlmTd>
+                    <hlm-select 
+                      [value]="activity.estado" 
+                      (valueChange)="updateActivityStatus(activity.id, $event)"
+                    >
+                      <hlm-select-trigger size="sm" class="w-full">
+                        <hlm-select-value />
+                      </hlm-select-trigger>
+                      <hlm-select-content *hlmSelectPortal>
+                        <hlm-select-group>
+                          @for (estado of estados; track estado) {
+                            <hlm-select-item [value]="estado">{{ estado }}</hlm-select-item>
+                          }
+                        </hlm-select-group>
+                      </hlm-select-content>
+                    </hlm-select>
+                  </td>
+
+                  <td hlmTd>
+                    <div class="actions-cell">
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="outline"
+                        type="button"
+                        (click)="viewDetails(activity)"
+                        title="Ver detalles"
+                      >
+                        <ng-icon name="lucideEye" class="size-4" />
+                      </button>
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="outline"
+                        type="button"
+                        (click)="editActivity(activity)"
+                        title="Editar"
+                      >
+                        <ng-icon name="lucidePencil" class="size-4" />
+                      </button>
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="destructive"
+                        type="button"
+                        (click)="deleteActivity(activity.id)"
+                        title="Eliminar"
+                      >
+                        <ng-icon name="lucideTrash2" class="size-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </hlm-card>
+  }
+
+  @if (viewMode() === 'kanban') {
+    <section class="kanban-grid">
+      @for (column of kanbanColumns(); track column.estado) {
+        <hlm-card class="kanban-column">
+          <hlm-card-header>
+            <div class="flex items-center justify-between gap-2">
+              <h3 hlmCardTitle class="text-sm">{{ column.estado }}</h3>
+              <span hlmBadge [ngClass]="['act-chip', estadoChipClass(column.estado)]" [variant]="estadoVariant(column.estado)">
+                {{ column.activities.length }}
+              </span>
+            </div>
+          </hlm-card-header>
+          <div
+            hlmCardContent
+            class="kanban-drop-zone"
+            cdkDropList
+            [id]="getKanbanDropListId(column.estado)"
+            [cdkDropListData]="column.activities"
+            [cdkDropListConnectedTo]="getKanbanDropListIds()"
+            [cdkDropListSortingDisabled]="true"
+            (cdkDropListDropped)="onKanbanDrop($event, column.estado)"
+          >
+            @for (activity of column.activities; track activity.id) {
+              <button
+                hlmBtn
+                type="button"
+                variant="outline"
+                class="kanban-card"
+                cdkDrag
+                [cdkDragData]="activity"
+                [cdkDragStartDelay]="{ touch: 140, mouse: 0 }"
+              >
+                <span class="font-medium">{{ activity.titulo }}</span>
+                <span class="text-muted-foreground text-xs">{{ activity.asignadoA }}</span>
+                <span class="text-muted-foreground text-xs">{{ activity.etiqueta }}</span>
+                <span hlmBadge [ngClass]="['act-chip', priorityChipClass(activity.prioridad)]" [variant]="priorityVariant(activity.prioridad)">
+                  {{ activity.prioridad }}
+                </span>
+              </button>
+            }
+          </div>
+        </hlm-card>
+      }
+    </section>
+  }
+
+  @if (viewMode() === 'kanban-tags') {
+    <section class="kanban-grid">
+      @for (column of kanbanColumnsByTag(); track column.tag) {
+        <hlm-card class="kanban-column">
+          <hlm-card-header>
+            <div class="flex items-center justify-between gap-2">
+              <h3 hlmCardTitle class="text-sm">{{ column.tag }}</h3>
+              <span hlmBadge variant="secondary">
+                {{ column.activities.length }}
+              </span>
+            </div>
+          </hlm-card-header>
+          <div
+            hlmCardContent
+            class="kanban-drop-zone"
+            cdkDropList
+            [id]="getKanbanDropListIdForTag(column.tag)"
+            [cdkDropListData]="column.activities"
+            [cdkDropListConnectedTo]="getKanbanDropListIds()"
+            [cdkDropListSortingDisabled]="true"
+            (cdkDropListDropped)="onTagKanbanDrop($event, column.tag)"
+          >
+            @for (activity of column.activities; track activity.id) {
+              <button
+                hlmBtn
+                type="button"
+                variant="outline"
+                class="kanban-card"
+                cdkDrag
+                [cdkDragData]="activity"
+                [cdkDragStartDelay]="{ touch: 140, mouse: 0 }"
+              >
+                <span class="font-medium">{{ activity.titulo }}</span>
+                <span class="text-muted-foreground text-xs">{{ activity.asignadoA }}</span>
+                <span class="text-muted-foreground text-xs">{{ activity.estado }}</span>
+                <span hlmBadge [ngClass]="['act-chip', priorityChipClass(activity.prioridad)]" [variant]="priorityVariant(activity.prioridad)">
+                  {{ activity.prioridad }}
+                </span>
+              </button>
+            }
+          </div>
+        </hlm-card>
+      }
+    </section>
+  }
+</section>

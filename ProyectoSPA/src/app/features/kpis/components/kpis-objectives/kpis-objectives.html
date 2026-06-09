@@ -1,0 +1,115 @@
+<div class="space-y-6">
+	<div class="flex items-center justify-between">
+		<h2 class="text-2xl font-semibold">Objetivos (KPIs)</h2>
+		<button hlmBtn size="sm" (click)="toggleAddMode()">
+			{{ isAddingKPI() ? 'Cancelar' : '+ Nuevo KPI' }}
+		</button>
+	</div>
+
+	@if (isAddingKPI()) {
+		<div hlmCard>
+			<div class="flex flex-col gap-4 p-6">
+				<h3 class="font-semibold">Crear Nuevo KPI</h3>
+				<input hlmInput type="text" placeholder="Nombre del KPI" [(ngModel)]="newKPI.nombre" />
+				<textarea hlmTextarea rows="2" placeholder="Descripción" [(ngModel)]="newKPI.descripcion"></textarea>
+				<select hlmInput [(ngModel)]="newKPI.roleResponsable" class="rounded-md border border-input px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+					<option value="">Selecciona rol responsable</option>
+					@for (role of roles; track role) {
+						<option [value]="role">{{ role }}</option>
+					}
+				</select>
+				<input hlmInput type="number" placeholder="Meta (%)" [(ngModel)]="newKPI.meta" min="0" max="100" />
+				<input hlmInput type="text" placeholder="Período (e.g., Q1 2026)" [(ngModel)]="newKPI.periodo" />
+				<button hlmBtn class="w-full" (click)="saveNewKPI()">Crear KPI</button>
+			</div>
+		</div>
+	}
+
+	<div class="grid gap-4">
+		@if (kpisService.kpisWithCalculatedProgress().length > 0) {
+			@for (kpi of kpisService.kpisWithCalculatedProgress(); track kpi.id) {
+				@if (editingKpiId() === kpi.id) {
+					<div hlmCard>
+						<div class="flex flex-col gap-4 p-6">
+							<h3 class="font-semibold">Editar KPI</h3>
+							<input hlmInput type="text" [(ngModel)]="editingKpi.nombre" />
+							<textarea hlmTextarea rows="2" [(ngModel)]="editingKpi.descripcion"></textarea>
+							<select hlmInput [(ngModel)]="editingKpi.roleResponsable" class="px-3 py-2 text-sm">
+								@for (role of roles; track role) {
+									<option [value]="role">{{ role }}</option>
+								}
+							</select>
+							<input hlmInput type="number" placeholder="Meta (%)" [(ngModel)]="editingKpi.meta" min="0" max="100" />
+							<input hlmInput type="text" placeholder="Período" [(ngModel)]="editingKpi.periodo" />
+							<div class="flex gap-2">
+								<button hlmBtn class="flex-1" (click)="saveEditarKPI(kpi.id)">Guardar</button>
+								<button hlmBtn variant="outline" class="flex-1" (click)="cancelEdit()">Cancelar</button>
+							</div>
+						</div>
+					</div>
+				} @else {
+					<div hlmCard>
+						<div class="flex flex-col gap-4 p-6">
+							<div class="flex items-start justify-between gap-4">
+								<div class="flex-1 min-w-0">
+									<h3 class="font-semibold text-lg">{{ kpi.nombre }}</h3>
+									<p class="text-sm">{{ kpi.descripcion }}</p>
+								</div>
+								<div class="flex gap-2">
+									<span hlmBadge variant="secondary">{{ kpi.periodo }}</span>
+								<button hlmBtn size="sm" variant="outline" (click)="editKPI(kpi)">
+									<ng-icon name="lucidePencil" class="w-4 h-4"></ng-icon>
+								</button>
+								<button hlmBtn size="sm" variant="destructive" (click)="deleteKPI(kpi.id)">
+									<ng-icon name="lucideX" class="w-4 h-4"></ng-icon>
+								</button>
+								</div>
+							</div>
+
+							<div class="grid grid-cols-3 gap-4 text-sm">
+								<div class="kpi-meta-card kpi-info">
+									<p class="kpi-meta-label">Meta</p>
+									<p class="kpi-meta-value">{{ kpi.meta }}%</p>
+								</div>
+								<div class="kpi-meta-card kpi-success">
+									<p class="kpi-meta-label">Progreso (Calculado)</p>
+									<p class="kpi-meta-value">{{ kpi.calculatedProgress }}%</p>
+								</div>
+								<div class="kpi-meta-card kpi-special">
+									<p class="kpi-meta-label">Responsable</p>
+									<p class="kpi-meta-value truncate">{{ getRoleShort(kpi.roleResponsable) }}</p>
+								</div>
+							</div>
+
+							<div class="kpi-stats">
+								Actividades del rol: {{ kpi.roleCompletedCount }} completadas de {{ kpi.rolActivityCount }} total
+							</div>
+
+							<div class="space-y-2">
+								<div class="flex justify-between text-xs">
+									<span class="font-medium">Progreso</span>
+									<span>{{ kpi.calculatedProgress }}%</span>
+								</div>
+								<div class="kpi-progress-bar">
+									<div
+										class="kpi-progress-fill"
+										[style.width.%]="kpi.calculatedProgress"
+									></div>
+								</div>
+								@if (kpi.calculatedProgress >= kpi.meta) {
+									<span class="kpi-status-success">Meta alcanzada</span>
+								} @else {
+									<span class="kpi-status-warning">{{ kpi.meta - kpi.calculatedProgress }}% faltante</span>
+								}
+							</div>
+						</div>
+					</div>
+				}
+			}
+		} @else {
+			<div class="text-center p-12" style="border-color: var(--border)">
+				<p>No hay KPIs configurados</p>
+			</div>
+		}
+	</div>
+</div>

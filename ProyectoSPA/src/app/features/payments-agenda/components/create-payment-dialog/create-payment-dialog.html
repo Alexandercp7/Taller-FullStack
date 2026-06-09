@@ -1,0 +1,109 @@
+<div class="space-y-4">
+  <h2 class="text-lg font-semibold">Crear Pago</h2>
+
+  <div class="space-y-2">
+    <label class="text-sm font-medium">Concepto</label>
+    <input
+      hlmInput
+      type="text"
+      placeholder="Ej: Renta de oficina"
+      [value]="concepto()"
+      (input)="concepto.set(($any($event.target)).value)"
+    />
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Tipo</label>
+      <hlm-select [value]="tipo()" (valueChange)="onTipoChange($event ?? '')">
+        <hlm-select-trigger class="w-full"><hlm-select-value /></hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          <hlm-select-group>
+            @for (t of tipos; track t) {
+              <hlm-select-item [value]="t">{{ t }}</hlm-select-item>
+            }
+          </hlm-select-group>
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Categoría</label>
+      <hlm-select [value]="categoria()" (valueChange)="onCategoriaChange($event ?? '')">
+        <hlm-select-trigger class="w-full"><hlm-select-value /></hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          <hlm-select-group>
+            @for (cat of categorias; track cat) {
+              <hlm-select-item [value]="cat">{{ cat }}</hlm-select-item>
+            }
+          </hlm-select-group>
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Fecha de Vencimiento</label>
+      <spartan-date-picker-field
+        [value]="fechaVencimiento()"
+        (valueChange)="fechaVencimiento.set($event)"
+        placeholder="Seleccionar fecha"
+      />
+    </div>
+
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Estado</label>
+      <hlm-select [value]="estado()" (valueChange)="onEstadoChange($event ?? '')">
+        <hlm-select-trigger class="w-full"><hlm-select-value /></hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          <hlm-select-group>
+            @for (est of estados; track est) {
+              <hlm-select-item [value]="est">{{ est }}</hlm-select-item>
+            }
+          </hlm-select-group>
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Monto Presupuestado</label>
+      <input
+        hlmInput
+        type="number"
+        placeholder="0.00"
+        [value]="montoPresupuestado()"
+        (input)="montoPresupuestado.set(+($any($event.target)).value || 0)"
+      />
+    </div>
+
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Monto Pagado</label>
+      <input
+        hlmInput
+        type="number"
+        placeholder="0.00"
+        [value]="montoPagado()"
+        (input)="montoPagado.set(+($any($event.target)).value || 0)"
+      />
+    </div>
+  </div>
+
+  <div class="space-y-2">
+    <label class="text-sm font-medium">Notas</label>
+    <input
+      hlmInput
+      type="text"
+      placeholder="Notas adicionales..."
+      [value]="notas()"
+      (input)="notas.set(($any($event.target)).value)"
+    />
+  </div>
+
+  <div class="flex justify-end gap-2 pt-4">
+    <button hlmBtn variant="outline" (click)="cancel()">Cancelar</button>
+    <button hlmBtn [disabled]="!canCreate()" (click)="submit()">Crear Pago</button>
+  </div>
+</div>

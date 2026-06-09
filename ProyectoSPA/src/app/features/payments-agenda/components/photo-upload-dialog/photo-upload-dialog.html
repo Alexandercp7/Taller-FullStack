@@ -1,0 +1,43 @@
+<div class="dialog-container space-y-4">
+  <h2 class="text-lg font-semibold">Gestionar Comprobante</h2>
+
+  <div class="photo-container">
+    @if (currentPhoto()) {
+      <img [src]="currentPhoto()" alt="Comprobante" class="uploaded-photo" />
+    } @else {
+      <div class="empty-state">
+        <ng-icon name="lucideCamera" class="icon" />
+        <p>No hay comprobante adjunto. Selecciona un archivo.</p>
+      </div>
+    }
+  </div>
+
+  <div class="space-y-2">
+    <label class="block">
+      <input
+        #fileInput
+        type="file"
+        accept="image/*,application/pdf"
+        (change)="onPhotoSelected($event)"
+        class="hidden-input"
+      />
+      <button hlmBtn type="button" class="w-full" (click)="fileInput.click()">
+        <ng-icon name="lucideCamera" />
+        Seleccionar Archivo
+      </button>
+    </label>
+  </div>
+
+  <div class="flex justify-end gap-2 pt-4">
+    <button hlmBtn variant="outline" (click)="cancel()">Cerrar</button>
+    @if (currentPhoto()) {
+      <button hlmBtn variant="destructive" (click)="delete()">
+        <ng-icon name="lucideTrash2" />
+        Eliminar
+      </button>
+    }
+    @if (currentPhoto()) {
+      <button hlmBtn (click)="save()">Guardar</button>
+    }
+  </div>
+</div>

@@ -1,0 +1,4 @@
+:host { display: block; }
+
+.timeline-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.timeline-item { border-left: 2px solid var(--border); padding-left: 0.65rem; }

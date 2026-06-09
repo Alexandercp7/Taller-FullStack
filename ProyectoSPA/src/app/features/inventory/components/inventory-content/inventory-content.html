@@ -1,0 +1,34 @@
+<section class="inventory-page">
+	<div class="header-row">
+		<div>
+			<h1 class="text-xl font-semibold">Inventario</h1>
+			<p class="text-muted-foreground text-sm">Control integrado de herramientas, resguardos y partes en venta.</p>
+		</div>
+		<span hlmBadge class="alert-badge">Alertas de stock: {{ lowStock().length }}</span>
+	</div>
+	<input
+		hlmInput
+		type="text"
+		placeholder="Buscar por item, tipo, responsable, OT o cliente..."
+		[value]="search()"
+		(input)="updateSearch(($any($event.target)).value)"
+	/>
+
+	<section hlmTabs tab="operativo" class="w-full">
+		<div hlmTabsList class="tabs-grid">
+			<button hlmTabsTrigger="operativo">Herramientas/Consumibles/Equipos</button>
+			<button hlmTabsTrigger="resguardo">Resguardo cliente</button>
+			<button hlmTabsTrigger="venta">Partes en venta</button>
+		</div>
+
+		<div hlmTabsContent="operativo" class="space-y-4 pt-4">
+			<spartan-stock-items-section [query]="search()"></spartan-stock-items-section>
+		</div>
+		<div hlmTabsContent="resguardo" class="space-y-4 pt-4">
+			<spartan-client-custody-section [query]="search()"></spartan-client-custody-section>
+		</div>
+		<div hlmTabsContent="venta" class="space-y-4 pt-4">
+			<spartan-sale-parts-section [query]="search()"></spartan-sale-parts-section>
+		</div>
+	</section>
+</section>

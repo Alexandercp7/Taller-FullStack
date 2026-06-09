@@ -1,0 +1,80 @@
+:host {
+	display: block;
+}
+
+.header-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.thumb {
+	width: 3rem;
+	height: 3rem;
+	object-fit: cover;
+	border-radius: 0.5rem;
+	border: 1px solid var(--border);
+	background: var(--muted);
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.field > span {
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.adjust-row {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 0.75rem;
+}
+
+.edit-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 0.75rem;
+}
+
+.movement-actions {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.75rem;
+}
+
+.row-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.actions {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.75rem;
+}
+
+.stock-low {
+	background: var(--warning);
+	border: 1px solid var(--warning-border);
+	color: var(--warning-foreground);
+}
+
+.stock-ok {
+	background: var(--success);
+	border: 1px solid var(--success-border);
+	color: var(--success-foreground);
+}
+
+.manage-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}

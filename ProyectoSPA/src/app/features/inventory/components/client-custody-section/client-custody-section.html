@@ -1,0 +1,133 @@
+<hlm-card>
+	<hlm-card-header class="header-wrap">
+		<div>
+			<h3 hlmCardTitle>Resguardo de pertenencias del cliente</h3>
+			<p hlmCardDescription>Bateria, llave y accesorios vinculados a la OT.</p>
+		</div>
+		<button hlmBtn size="sm" type="button" variant="outline" (click)="showCreateForm() ? resetForm() : showCreateForm.set(true)">
+			{{ showCreateForm() ? 'Cancelar' : 'Agregar resguardo' }}
+		</button>
+	</hlm-card-header>
+	<div hlmCardContent class="space-y-4 px-6">
+		@if (showCreateForm()) {
+			<hlm-card>
+				<hlm-card-header class="pb-2">
+					<h4 class="text-base font-semibold">{{ editingEntryId() ? 'Editar' : 'Agregar' }} resguardo</h4>
+				</hlm-card-header>
+				<div hlmCardContent class="space-y-3 pt-4">
+					<div class="form-grid">
+				<label class="field">
+					<span>OT vinculada</span>
+					<hlm-combobox [value]="otId()" (valueChange)="onOtChange(($event ?? '') + '')" [itemToString]="otItemToString">
+						<hlm-combobox-trigger class="w-full"><hlm-combobox-value placeholder="Selecciona OT" /></hlm-combobox-trigger>
+						<hlm-combobox-content *hlmComboboxPortal>
+							<hlm-combobox-input placeholder="Buscar OT..." />
+							<div hlmComboboxList>
+								<hlm-combobox-empty>Sin coincidencias</hlm-combobox-empty>
+								<div hlmComboboxGroup>
+									@for (order of orders(); track order.id) {
+										<hlm-combobox-item [value]="order.id">{{ order.id }} - {{ order.cliente }}</hlm-combobox-item>
+									}
+								</div>
+							</div>
+						</hlm-combobox-content>
+					</hlm-combobox>
+				</label>
+				<label class="field">
+					<span>Cliente</span>
+					<hlm-combobox [value]="cliente()" (valueChange)="cliente.set(($event ?? '') + '')" [itemToString]="clientItemToString">
+						<hlm-combobox-trigger class="w-full"><hlm-combobox-value placeholder="Selecciona cliente" /></hlm-combobox-trigger>
+						<hlm-combobox-content *hlmComboboxPortal>
+							<hlm-combobox-input placeholder="Buscar cliente..." />
+							<div hlmComboboxList>
+								<hlm-combobox-empty>Sin coincidencias</hlm-combobox-empty>
+								<div hlmComboboxGroup>
+									@for (client of clients(); track client) {
+										<hlm-combobox-item [value]="client">{{ client }}</hlm-combobox-item>
+									}
+								</div>
+							</div>
+						</hlm-combobox-content>
+					</hlm-combobox>
+				</label>
+				<label class="field">
+					<span>Pertenencia</span>
+					<input hlmInput placeholder="Ej. Llave, bateria, accesorio" [value]="item()" (input)="item.set(($any($event.target)).value)" />
+				</label>
+				<label class="field">
+					<span>Responsable</span>
+					<input hlmInput [value]="responsable()" (input)="responsable.set(($any($event.target)).value)" />
+				</label>
+				<label class="field md:col-span-2">
+					<span>Subir foto</span>
+					<input hlmInput type="file" accept="image/*" (change)="onPhotoSelected($event)" />
+				</label>
+				@if (photoPreview()) {
+					<div class="md:col-span-2">
+						<img class="preview" [src]="photoPreview()" alt="Vista previa de resguardo" />
+					</div>
+				}
+			<div class="col-span-full flex justify-end">
+				<button hlmBtn size="sm" type="button" (click)="createEntry()">{{ editingEntryId() ? 'Actualizar' : 'Registrar' }} resguardo</button>
+			</div>
+				</div>
+			</div>
+			</hlm-card>
+		}
+
+		<div hlmTableContainer class="px-6">
+			<table hlmTable>
+				<thead hlmTHead>
+					<tr hlmTr>
+						<th hlmTh>Foto</th>
+						<th hlmTh>OT</th>
+						<th hlmTh>Cliente</th>
+						<th hlmTh>Pertenencia</th>
+						<th hlmTh>Responsable</th>
+						<th hlmTh>Estado</th>
+						<th hlmTh>Fecha</th>
+						<th hlmTh>Acciones</th>
+					</tr>
+				</thead>
+				<tbody hlmTBody>
+					@for (entry of entries(); track entry.id) {
+						<tr hlmTr>
+							<td hlmTd><img class="thumb" [src]="entry.fotoUrl" [alt]="entry.item" /></td>
+							<td hlmTd>{{ entry.otId }}</td>
+							<td hlmTd>{{ entry.cliente }}</td>
+							<td hlmTd>{{ entry.item }}</td>
+							<td hlmTd>{{ entry.responsable }}</td>
+							<td hlmTd><span hlmBadge [ngClass]="stateClass(entry.estado)">{{ entry.estado }}</span></td>
+							<td hlmTd>{{ entry.fechaIngreso }}</td>
+							<td hlmTd>
+							<div class="row-actions">
+								<button hlmBtn size="sm" variant="outline" type="button" [disabled]="entry.estado === 'Entregado'" (click)="markDelivered(entry.id)">
+									Marcar entregado
+								</button>
+								<button hlmBtn size="sm" variant="outline" type="button" (click)="editEntry(entry.id)">
+									<ng-icon name="lucidePencil" class="size-4" />
+								</button>
+								<hlm-alert-dialog>
+									<button hlmBtn hlmAlertDialogTrigger size="icon" variant="destructive" type="button" aria-label="Eliminar resguardo">
+										<ng-icon name="lucideTrash2" class="size-4" />
+									</button>
+									<div hlmAlertDialogContent *hlmAlertDialogPortal="let ctx">
+										<div hlmAlertDialogHeader>
+											<h4 hlmAlertDialogTitle>Eliminar resguardo</h4>
+											<p hlmAlertDialogDescription>Se eliminará el resguardo de <strong>{{ entry.item }}</strong>.</p>
+										</div>
+										<div hlmAlertDialogFooter>
+											<button hlmAlertDialogCancel (click)="ctx.close()">Cancelar</button>
+											<button hlmAlertDialogAction variant="destructive" (click)="deleteEntry(entry.id); ctx.close()">Si, eliminar</button>
+										</div>
+									</div>
+								</hlm-alert-dialog>
+							</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</hlm-card>

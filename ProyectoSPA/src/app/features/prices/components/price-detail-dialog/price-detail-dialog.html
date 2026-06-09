@@ -1,0 +1,93 @@
+<div class="dialog-shell">
+  @if (isAutomotriz(servicio)) {
+    <div>
+      <h2 class="text-lg font-semibold">{{ ($any(servicio)).concepto }}</h2>
+      <p class="text-muted-foreground text-sm">{{ ($any(servicio)).familia }}</p>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-row">
+        <span class="label">Categoría:</span>
+        <span
+          hlmBadge
+          variant="outline"
+          class="w-fit"
+          [ngClass]="getCategoryColor(servicio.categoriaPrincipal)"
+        >
+          {{ servicio.categoriaPrincipal }}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="label">Sistema:</span>
+        <span class="value">{{ ($any(servicio)).sistema }}</span>
+      </div>
+      @if (($any(servicio)).observacion) {
+        <div class="info-row">
+          <span class="label">Observación:</span>
+          <span class="value">{{ ($any(servicio)).observacion }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="section">
+      <h3 class="text-sm font-semibold mb-3">Información de Precios</h3>
+      <div class="price-breakdown">
+        <div class="price-item">
+          <span class="label">Precio Auto:</span>
+          <span class="value">${{ ($any(servicio)).precioAuto | number : '1.2-2' }}</span>
+        </div>
+        <div class="price-item">
+          <span class="label">Precio Camioneta:</span>
+          <span class="value">${{ ($any(servicio)).precioCamioneta | number : '1.2-2' }}</span>
+        </div>
+        <div class="price-item">
+          <span class="label">Precio Camión:</span>
+          <span class="value">${{ ($any(servicio)).precioCamion | number : '1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (isTorno(servicio)) {
+    <div>
+      <h2 class="text-lg font-semibold">Servicio de Torno - {{ ($any(servicio)).tamano }}</h2>
+      <p class="text-muted-foreground text-sm">Diámetro: {{ ($any(servicio)).diametro }}</p>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-row">
+        <span class="label">Categoría:</span>
+        <span
+          hlmBadge
+          variant="outline"
+          class="w-fit"
+          [ngClass]="getCategoryColor(servicio.categoriaPrincipal)"
+        >
+          {{ servicio.categoriaPrincipal }}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="label">Tamaño:</span>
+        <span class="value">{{ ($any(servicio)).tamano }}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Diámetro:</span>
+        <span class="value">{{ ($any(servicio)).diametro }}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="text-sm font-semibold mb-3">Información de Precio</h3>
+      <div class="price-breakdown">
+        <div class="price-item border-t-2 border-dashed pt-2 font-semibold">
+          <span class="label">Precio:</span>
+          <span class="value text-lg">${{ ($any(servicio)).precio | number : '1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="flex justify-end gap-2 pt-4">
+    <button hlmBtn (click)="close()">Cerrar</button>
+  </div>
+</div>

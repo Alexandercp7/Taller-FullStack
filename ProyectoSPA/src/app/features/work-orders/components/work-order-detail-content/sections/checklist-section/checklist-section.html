@@ -1,0 +1,47 @@
+@if (order(); as ot) {
+	<section class="grid gap-4 xl:grid-cols-2">
+		<hlm-card>
+			<hlm-card-header><h3 hlmCardTitle>Checklist inicial</h3></hlm-card-header>
+			<div hlmCardContent class="space-y-3">
+				<hlm-progress [value]="checklistInicialProgress()" [max]="100"><div hlmProgressIndicator></div></hlm-progress>
+				<p class="text-muted-foreground text-xs">Avance: {{ checklistInicialProgress() }}%</p>
+				@for (item of ot.checklistInicial; track item.id) {
+					<div class="check-item">
+						<div>
+							<p class="text-sm font-medium">{{ item.tarea }}</p>
+							<p class="text-muted-foreground text-xs">Responsable: {{ item.responsable }}</p>
+						</div>
+						<hlm-checkbox [checked]="item.completada" (checkedChange)="toggleChecklist('checklistInicial', item.id)" />
+					</div>
+				}
+				<div class="add-row">
+					<input hlmInput type="text" placeholder="Nueva tarea" [value]="newChecklistInicialTask()" (input)="newChecklistInicialTask.set(($any($event.target)).value)" />
+					<input hlmInput type="text" placeholder="Responsable" [value]="newChecklistInicialOwner()" (input)="newChecklistInicialOwner.set(($any($event.target)).value)" />
+					<button hlmBtn type="button" size="sm" (click)="addChecklistItem('checklistInicial')">Agregar</button>
+				</div>
+			</div>
+		</hlm-card>
+
+		<hlm-card>
+			<hlm-card-header><h3 hlmCardTitle>Checklist de trabajos</h3></hlm-card-header>
+			<div hlmCardContent class="space-y-3">
+				<hlm-progress [value]="checklistTrabajoProgress()" [max]="100"><div hlmProgressIndicator></div></hlm-progress>
+				<p class="text-muted-foreground text-xs">Avance: {{ checklistTrabajoProgress() }}%</p>
+				@for (item of ot.checklistTrabajo; track item.id) {
+					<div class="check-item">
+						<div>
+							<p class="text-sm font-medium">{{ item.tarea }}</p>
+							<p class="text-muted-foreground text-xs">Responsable: {{ item.responsable }}</p>
+						</div>
+						<hlm-checkbox [checked]="item.completada" (checkedChange)="toggleChecklist('checklistTrabajo', item.id)" />
+					</div>
+				}
+				<div class="add-row">
+					<input hlmInput type="text" placeholder="Nueva tarea" [value]="newChecklistTrabajoTask()" (input)="newChecklistTrabajoTask.set(($any($event.target)).value)" />
+					<input hlmInput type="text" placeholder="Responsable" [value]="newChecklistTrabajoOwner()" (input)="newChecklistTrabajoOwner.set(($any($event.target)).value)" />
+					<button hlmBtn type="button" size="sm" (click)="addChecklistItem('checklistTrabajo')">Agregar</button>
+				</div>
+			</div>
+		</hlm-card>
+	</section>
+}

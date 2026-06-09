@@ -1,0 +1,265 @@
+<section class="prices-page">
+  <div class="header-section">
+    <div>
+      <h1 class="text-2xl font-bold">Gestión de Servicios y Cotizaciones</h1>
+      <p class="text-muted-foreground text-sm">Catálogo de precios y generador de cotizaciones</p>
+    </div>
+    <div class="flex gap-2">
+      <button hlmBtn (click)="createServicio()">
+        <ng-icon name="lucidePlus" class="mr-2 size-4" />
+        Nuevo Servicio
+      </button>
+      <button hlmBtn variant="outline" (click)="showQuoter.set(!showQuoter())">
+        Cotizador
+      </button>
+    </div>
+  </div>
+
+  @if (!showQuoter()) {
+
+  <div class="search-section">
+    <input
+      hlmInput
+      type="text"
+      placeholder="Buscar por concepto, tamaño o descripción..."
+      [value]="searchText()"
+      (input)="onSearch($any($event.target).value)"
+      class="flex-1"
+    />
+  </div>
+
+  <div class="category-filters">
+    <label hlmLabel class="text-sm font-medium">Categoría:</label>
+    <div class="btn-group">
+      @for (cat of categorias; track cat) {
+        <button
+          hlmBtn
+          type="button"
+          [variant]="selectedCategoria() === cat ? 'default' : 'outline'"
+          (click)="selectCategoria(cat)"
+          class="text-xs"
+        >
+          {{ cat }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (selectedCategoria() !== 'Servicio de Torno' && selectedCategoria() !== 'Todas' && sistemaOptions().length > 0) {
+    <div class="sistema-filter" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; margin-top: 1.5rem;">
+      <div style="flex: 1; min-width: 200px;">
+        <label hlmLabel for="sistema-select" class="text-sm font-medium mb-2">Sistema:</label>
+        <hlm-select [value]="selectedSistema()" (valueChange)="selectSistema($event || '')">
+          <hlm-select-trigger id="sistema-select">
+            <hlm-select-value placeholder="Todos los sistemas" />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            <hlm-select-group>
+              <hlm-select-item value="">Todos los sistemas</hlm-select-item>
+              @for (sistema of sistemaOptions(); track sistema) {
+                <hlm-select-item [value]="sistema">{{ sistema }}</hlm-select-item>
+              }
+            </hlm-select-group>
+          </hlm-select-content>
+        </hlm-select>
+      </div>
+
+      @if (selectedSistema() && familiaOptions().length > 0) {
+        <div style="flex: 1; min-width: 200px;">
+          <label hlmLabel for="familia-select" class="text-sm font-medium">Familia:</label>
+          <hlm-select [value]="selectedFamilia()" (valueChange)="selectFamilia($event || '')">
+            <hlm-select-trigger id="familia-select">
+              <hlm-select-value placeholder="Todas las familias" />
+            </hlm-select-trigger>
+            <hlm-select-content *hlmSelectPortal>
+              <hlm-select-group>
+                <hlm-select-item value="">Todas las familias</hlm-select-item>
+                @for (familia of familiaOptions(); track familia) {
+                  <hlm-select-item [value]="familia">{{ familia }}</hlm-select-item>
+                }
+              </hlm-select-group>
+            </hlm-select-content>
+          </hlm-select>
+        </div>
+      }
+    </div>
+  }
+
+  <hlm-card class="table-card">
+    <div hlmCardContent class="p-0">
+      <div hlmTableContainer>
+        <table hlmTable>
+          @if (selectedCategoria() !== 'Servicio de Torno' && servicios().length > 0) {
+            <thead hlmTHead>
+              <tr hlmTr>
+                <th hlmTh class="max-w-xs">Concepto</th>
+                <th hlmTh>Sistema</th>
+                <th hlmTh>Auto</th>
+                <th hlmTh>Camioneta</th>
+                <th hlmTh>Camión</th>
+                <th hlmTh>Observación</th>
+                <th hlmTh>Acciones</th>
+              </tr>
+            </thead>
+            <tbody hlmTBody>
+              @for (servicio of servicios(); track servicio.id) {
+                @if (!isTorno(servicio)) {
+                  <tr hlmTr>
+                    <td hlmTd class="font-medium">{{ ($any(servicio)).concepto }}</td>
+                    <td hlmTd class="text-sm">{{ ($any(servicio)).sistema }}</td>
+                    <td hlmTd class="text-sm">{{ ($any(servicio)).precioAuto }}</td>
+                    <td hlmTd class="text-sm">{{ ($any(servicio)).precioCamioneta }}</td>
+                    <td hlmTd class="text-sm">{{ ($any(servicio)).precioCamion }}</td>
+                    <td hlmTd class="text-sm">
+                      @if (($any(servicio)).observacion) {
+                        <hlm-popover [state]="getPopoverState(servicio.id)()" (stateChanged)="getPopoverState(servicio.id).set($event)">
+                          <button
+                            hlmBtn
+                            size="sm"
+                            variant="ghost"
+                            hlmPopoverTrigger
+                            type="button"
+                            title="Ver observación"
+                            class="p-1 h-6 w-6"
+                          >
+                            <ng-icon name="lucideEye" class="size-4" />
+                          </button>
+                          <hlm-popover-content class="w-fit" *hlmPopoverPortal>
+                            <p class="text-sm">{{ ($any(servicio)).observacion }}</p>
+                          </hlm-popover-content>
+                        </hlm-popover>
+                      } @else {
+                        <span class="text-muted-foreground text-xs">—</span>
+                      }
+                    </td>
+                    <td hlmTd>
+                      <div class="actions-cell">
+                        <button hlmBtn size="icon" variant="outline" type="button" (click)="editServicio(servicio)" title="Editar">
+                          <ng-icon name="lucidePencil" class="size-4" />
+                        </button>
+                        <button hlmBtn size="icon" variant="outline" type="button" (click)="deleteServicio(servicio.id)" title="Eliminar">
+                          <ng-icon name="lucideTrash2" class="size-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          }
+
+          @if (selectedCategoria() === 'Servicio de Torno' && servicios().length > 0) {
+            <thead hlmTHead>
+              <tr hlmTr>
+                <th hlmTh>Tamaño</th>
+                <th hlmTh>Diámetro</th>
+                <th hlmTh>Precio</th>
+                <th hlmTh>Acciones</th>
+              </tr>
+            </thead>
+            <tbody hlmTBody>
+              @for (servicio of servicios(); track servicio.id) {
+                @if (isTorno(servicio)) {
+                  <tr hlmTr>
+                    <td hlmTd class="font-medium">{{ ($any(servicio)).tamano }}</td>
+                    <td hlmTd>{{ ($any(servicio)).diametro }}</td>
+                    <td hlmTd class="font-semibold">{{ ($any(servicio)).precio }}</td>
+                    <td hlmTd>
+                      <div class="actions-cell">
+                        <button hlmBtn size="icon" variant="outline" type="button" (click)="editServicio(servicio)" title="Editar">
+                          <ng-icon name="lucidePencil" class="size-4" />
+                        </button>
+                        <button hlmBtn size="icon" variant="outline" type="button" (click)="deleteServicio(servicio.id)" title="Eliminar">
+                          <ng-icon name="lucideTrash2" class="size-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          }
+        </table>
+      </div>
+
+      @if (servicios().length === 0) {
+        <div class="empty-state">
+          <p class="text-muted-foreground">No hay servicios que coincidan con los filtros</p>
+        </div>
+      }
+    </div>
+  </hlm-card>
+
+      @if (totalItems() > 0) {
+        <div class="pagination-section">
+          <div class="pagination-info">
+            <span class="text-sm text-muted-foreground">
+              Mostrando {{ pageNumber() * pageSize() + 1 }} - {{ Math.min((pageNumber() + 1) * pageSize(), totalItems()) }} de {{ totalItems() }} servicios
+            </span>
+          </div>
+
+          <div class="pagination-controls">
+            <div class="page-size-selector">
+              <label hlmLabel for="page-size" class="text-xs font-medium">Por página:</label>
+              <hlm-select [value]="pageSize().toString()" (valueChange)="changePageSize(+($event || '10'))">
+                <hlm-select-trigger id="page-size">
+                  <hlm-select-value />
+                </hlm-select-trigger>
+                <hlm-select-content *hlmSelectPortal>
+                  <hlm-select-group>
+                    <hlm-select-item [value]="'5'">5</hlm-select-item>
+                    <hlm-select-item [value]="'10'">10</hlm-select-item>
+                    <hlm-select-item [value]="'20'">20</hlm-select-item>
+                    <hlm-select-item [value]="'50'">50</hlm-select-item>
+                  </hlm-select-group>
+                </hlm-select-content>
+              </hlm-select>
+            </div>
+
+            <div class="pagination-buttons">
+              <button
+                hlmBtn
+                size="sm"
+                variant="outline"
+                type="button"
+                [disabled]="pageNumber() === 0"
+                (click)="goToPage(pageNumber() - 1)"
+              >
+                Anterior
+              </button>
+
+              <div class="page-numbers">
+                @for (page of getPageNumbers(); track page) {
+                  <button
+                    hlmBtn
+                    size="sm"
+                    [variant]="pageNumber() === page ? 'default' : 'outline'"
+                    type="button"
+                    (click)="goToPage(page)"
+                  >
+                    {{ page + 1 }}
+                  </button>
+                }
+              </div>
+
+              <button
+                hlmBtn
+                size="sm"
+                variant="outline"
+                type="button"
+                [disabled]="pageNumber() >= totalPages() - 1"
+                (click)="goToPage(pageNumber() + 1)"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    }
+    @if (showQuoter()) {
+      <div class="mt-6">
+        <spartan-price-quoter />
+      </div>
+    }
+  </section>

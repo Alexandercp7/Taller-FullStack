@@ -1,0 +1,162 @@
+@if (isLoading()) {
+	<section class="portal-order-page">
+		<hlm-card>
+			<div hlmCardContent class="empty-state">
+				<p class="text-sm text-muted-foreground">Cargando orden...</p>
+			</div>
+		</hlm-card>
+	</section>
+} @else if (order(); as ot) {
+	<section class="portal-order-page">
+		<div class="portal-order-header">
+			<div>
+				<div class="flex items-center gap-2 flex-wrap">
+					<h1 class="text-xl font-semibold">{{ ot.id }}</h1>
+					<span hlmBadge [ngClass]="['wo-chip', statusChipClass(ot.status)]">{{ ot.status }}</span>
+					<span hlmBadge [ngClass]="['wo-chip', priorityChipClass(ot.priority)]">{{ ot.priority }}</span>
+				</div>
+				<p class="text-muted-foreground text-sm">{{ ot.vehiculo?.marca }} {{ ot.vehiculo?.modelo }} {{ ot.vehiculo?.anio }}</p>
+			</div>
+			<button hlmBtn variant="outline" type="button" (click)="goBack()">Volver</button>
+		</div>
+
+		<hlm-card>
+			<hlm-card-header>
+				<h3 hlmCardTitle>Informacion del servicio</h3>
+			</hlm-card-header>
+			<div hlmCardContent class="info-grid">
+				<p><strong>Cliente:</strong> {{ ot.cliente?.nombre }}</p>
+				<p><strong>Tecnico asignado:</strong> {{ ot.tecnico?.nombre ?? 'Sin asignar' }}</p>
+				<p><strong>Fecha de ingreso:</strong> {{ ot.fecha_ingreso }}</p>
+				<p><strong>Fecha programada:</strong> {{ ot.fecha_programada }}</p>
+				<p class="full-width"><strong>Problema reportado:</strong> {{ ot.problema }}</p>
+				<p class="full-width"><strong>Diagnostico:</strong> {{ ot.diagnostico }}</p>
+			</div>
+		</hlm-card>
+
+		<hlm-card>
+			<hlm-card-header>
+				<h3 hlmCardTitle>Datos del vehiculo</h3>
+			</hlm-card-header>
+			<div hlmCardContent class="info-grid">
+				<p><strong>Marca:</strong> {{ ot.vehiculo?.marca }}</p>
+				<p><strong>Modelo:</strong> {{ ot.vehiculo?.modelo }}</p>
+				<p><strong>Anio:</strong> {{ ot.vehiculo?.anio }}</p>
+				<p><strong>Placas:</strong> {{ ot.vehiculo?.placas }}</p>
+				<p><strong>Kilometraje:</strong> {{ ot.vehiculo?.kilometraje_actual | number }} km</p>
+			</div>
+		</hlm-card>
+
+		@if (ot.servicios.length > 0 || ot.refacciones.length > 0) {
+			<hlm-card>
+				<hlm-card-header>
+					<h3 hlmCardTitle>Detalle del servicio</h3>
+				</hlm-card-header>
+				<div hlmCardContent>
+					@if (ot.servicios.length > 0) {
+						<p class="text-sm font-medium mb-2">Servicios</p>
+						<div hlmTableContainer>
+							<table hlmTable>
+								<thead hlmTHead>
+									<tr hlmTr>
+										<th hlmTh>Servicio</th>
+										<th hlmTh>Precio</th>
+									</tr>
+								</thead>
+								<tbody hlmTBody>
+									@for (s of ot.servicios; track s.nombre) {
+										<tr hlmTr>
+											<td hlmTd>{{ s.nombre }}</td>
+											<td hlmTd>${{ s.precio | number: '1.2-2' }}</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					}
+					@if (ot.refacciones.length > 0) {
+						<p class="text-sm font-medium mt-4 mb-2">Refacciones</p>
+						<div hlmTableContainer>
+							<table hlmTable>
+								<thead hlmTHead>
+									<tr hlmTr>
+										<th hlmTh>Refaccion</th>
+										<th hlmTh>Cant.</th>
+										<th hlmTh>Subtotal</th>
+									</tr>
+								</thead>
+								<tbody hlmTBody>
+									@for (r of ot.refacciones; track r.nombre) {
+										<tr hlmTr>
+											<td hlmTd>{{ r.nombre }}</td>
+											<td hlmTd>{{ r.cantidad }}</td>
+											<td hlmTd>${{ r.subtotal | number: '1.2-2' }}</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					}
+					<p class="text-sm font-semibold mt-3 text-right">Total estimado: ${{ ot.total_estimado | number: '1.2-2' }}</p>
+				</div>
+			</hlm-card>
+		}
+
+		@if (ot.checklist.total > 0) {
+			<hlm-card>
+				<hlm-card-header>
+					<h3 hlmCardTitle>Progreso de trabajo</h3>
+					<p hlmCardDescription>{{ ot.checklist.completadas }} de {{ ot.checklist.total }} tareas completadas</p>
+				</hlm-card-header>
+				<div hlmCardContent>
+					<div class="progress-bar-track">
+						<div class="progress-bar-fill" [style.width.%]="checklistPct()"></div>
+					</div>
+				</div>
+			</hlm-card>
+		}
+
+		@if (ot.notas.length > 0) {
+			<hlm-card>
+				<hlm-card-header>
+					<h3 hlmCardTitle>Mensajes del taller</h3>
+				</hlm-card-header>
+				<div hlmCardContent class="notes-list">
+					@for (nota of ot.notas; track nota.id) {
+						<article class="note-item">
+							<p class="text-sm">{{ nota.texto }}</p>
+							<p class="text-muted-foreground text-xs">{{ nota.created_at }}</p>
+						</article>
+					}
+				</div>
+			</hlm-card>
+		}
+
+		@if (ot.timeline.length > 0) {
+			<hlm-card>
+				<hlm-card-header>
+					<h3 hlmCardTitle>Historial de cambios</h3>
+				</hlm-card-header>
+				<div hlmCardContent class="timeline-list">
+					@for (event of ot.timeline; track event.id) {
+						<article class="timeline-item">
+							<p class="text-sm font-medium">{{ event.descripcion }}</p>
+							<p class="text-muted-foreground text-xs">{{ event.created_at }}</p>
+						</article>
+					}
+				</div>
+			</hlm-card>
+		}
+	</section>
+} @else {
+	<section class="portal-order-page">
+		<hlm-card>
+			<div hlmCardContent class="empty-state">
+				<p class="text-sm text-muted-foreground">Orden no encontrada.</p>
+				<div>
+					<button hlmBtn variant="outline" type="button" (click)="goBack()">Volver</button>
+				</div>
+			</div>
+		</hlm-card>
+	</section>
+}

@@ -1,0 +1,207 @@
+<section class="contacts-page">
+  <div class="header-row">
+    <div>
+      <h1 class="text-xl font-semibold">Proveedores</h1>
+      <p class="text-muted-foreground text-sm">Gestor de proveedores, condiciones de crédito y productos.</p>
+    </div>
+    <button hlmBtn type="button" (click)="createContact()">
+      Nuevo Contacto
+    </button>
+  </div>
+
+  <hlm-card>
+    <div hlmCardContent class="filters-grid">
+      <input
+        class="search-field"
+        hlmInput
+        type="text"
+        placeholder="Buscar por nombre, RFC, teléfono o correo..."
+        [value]="searchText()"
+        (input)="updateSearch(($any($event.target)).value)"
+      />
+
+      <hlm-select-multiple>
+        <hlm-select-trigger class="w-full">
+          <hlm-select-placeholder>{{ selectedTagsLabel() }}</hlm-select-placeholder>
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          <hlm-select-group>
+            <div class="py-2 px-2 border-b">
+              <input
+                hlmInput
+                type="text"
+                placeholder="Crear nueva etiqueta..."
+                (keyup.enter)="addNewTag(newTagInput.value); newTagInput.value = ''"
+                #newTagInput
+              />
+            </div>
+            <hlm-select-label>Etiquetas</hlm-select-label>
+            @for (tag of availableTags(); track tag) {
+              <hlm-select-item [value]="tag" (click)="toggleTag(tag)">
+                @if (selectedTags().includes(tag)) {
+                  <span>{{ tag }}</span>
+                } @else {
+                  <span>{{ tag }}</span>
+                }
+              </hlm-select-item>
+            }
+          </hlm-select-group>
+        </hlm-select-content>
+      </hlm-select-multiple>
+    </div>
+  </hlm-card>
+
+  <div class="view-switch">
+    <button hlmBtn type="button" [variant]="viewMode() === 'list' ? 'default' : 'outline'" (click)="setView('list')">
+      Tabla
+    </button>
+    <button hlmBtn type="button" [variant]="viewMode() === 'grid' ? 'default' : 'outline'" (click)="setView('grid')">
+      Tarjetas
+    </button>
+  </div>
+
+  @if (viewMode() === 'list') {
+    <hlm-card>
+      <div hlmCardContent>
+        <div hlmTableContainer>
+          <table hlmTable>
+            <thead hlmTHead>
+              <tr hlmTr>
+                <th hlmTh>Nombre</th>
+                <th hlmTh>RFC</th>
+                <th hlmTh>Teléfono</th>
+                <th hlmTh>Correo</th>
+                <th hlmTh>Límite Crédito</th>
+                <th hlmTh>Acciones</th>
+              </tr>
+            </thead>
+            <tbody hlmTBody>
+              @for (contact of filteredContacts(); track contact.id) {
+                <tr hlmTr>
+                  <td hlmTd class="font-medium">{{ contact.nombre }}</td>
+                  <td hlmTd>{{ contact.rfc }}</td>
+                  <td hlmTd class="text-sm">{{ contact.telefono }}</td>
+                  <td hlmTd class="text-sm">{{ contact.correo }}</td>
+                  <td hlmTd>${{ contact.condicionesDeCreditoL.limiteCredito | number }}</td>
+                  <td hlmTd>
+                    <div class="actions-cell">
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="outline"
+                        type="button"
+                        (click)="viewDetails(contact)"
+                        title="Ver detalles"
+                      >
+                        <ng-icon name="lucideEye" class="size-4" />
+                      </button>
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="outline"
+                        type="button"
+                        (click)="editContact(contact)"
+                        title="Editar"
+                      >
+                        <ng-icon name="lucidePencil" class="size-4" />
+                      </button>
+                      <button
+                        hlmBtn
+                        size="icon"
+                        variant="destructive"
+                        type="button"
+                        (click)="deleteContact(contact.id)"
+                        title="Eliminar"
+                      >
+                        <ng-icon name="lucideTrash2" class="size-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </hlm-card>
+  }
+
+  @if (viewMode() === 'grid') {
+    <section class="contacts-grid">
+      @for (contact of filteredContacts(); track contact.id) {
+        <hlm-card class="contact-card">
+          <hlm-card-header>
+            <div class="card-header-content">
+              <h3 hlmCardTitle class="text-sm">{{ contact.nombre }}</h3>
+              <p class="text-xs text-muted-foreground">{{ contact.empresa }}</p>
+            </div>
+          </hlm-card-header>
+          <div hlmCardContent class="card-content">
+            <div class="info-section">
+              <p class="text-xs">
+                <span class="label">RFC:</span>
+                <span>{{ contact.rfc }}</span>
+              </p>
+              <p class="text-xs">
+                <span class="label">Tel:</span>
+                <span>{{ contact.telefono }}</span>
+              </p>
+              <p class="text-xs">
+                <span class="label">Email:</span>
+                <span class="truncate">{{ contact.correo }}</span>
+              </p>
+            </div>
+
+            <div class="info-section">
+              <p class="text-xs">
+                <span class="label">Crédito:</span>
+                <span>${{ contact.condicionesDeCreditoL.limiteCredito | number }}</span>
+              </p>
+              <p class="text-xs">
+                <span class="label">Días:</span>
+                <span>{{ contact.condicionesDeCreditoL.diasPago }} días</span>
+              </p>
+            </div>
+
+            @if (contact.etiquetas.length > 0) {
+              <div class="tags">
+                @for (tag of contact.etiquetas; track tag) {
+                  <span hlmBadge variant="secondary" class="text-xs">{{ tag }}</span>
+                }
+              </div>
+            }
+
+            <div class="card-actions">
+              <button
+                hlmBtn
+                size="sm"
+                variant="outline"
+                type="button"
+                (click)="viewDetails(contact)"
+              >
+                Detalles
+              </button>
+              <button
+                hlmBtn
+                size="sm"
+                type="button"
+                (click)="editContact(contact)"
+              >
+                Editar
+              </button>
+              <button
+                hlmBtn
+                size="sm"
+                variant="destructive"
+                type="button"
+                (click)="deleteContact(contact.id)"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </hlm-card>
+      }
+    </section>
+  }
+</section>

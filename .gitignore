@@ -1,0 +1,39 @@
+# ─── Node ───────────────────────────────────────────────────────────────────
+**/node_modules/
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# ─── Environment / Secrets ──────────────────────────────────────────────────
+**/.env
+!**/.env.example
+
+# ─── Angular (ProyectoSPA) ──────────────────────────────────────────────────
+ProyectoSPA/dist/
+ProyectoSPA/tmp/
+ProyectoSPA/out-tsc/
+ProyectoSPA/.angular/cache/
+ProyectoSPA/.sass-cache/
+ProyectoSPA/coverage/
+ProyectoSPA/connect.lock
+ProyectoSPA/libpeerconnection.log
+ProyectoSPA/testem.log
+
+# ─── Backend (taller-automotriz) ────────────────────────────────────────────
+taller-automotriz/dist/
+taller-automotriz/coverage/
+
+# ─── IDEs ───────────────────────────────────────────────────────────────────
+.idea/
+*.sublime-workspace
+.history/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+
+# ─── OS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

@@ -1,0 +1,198 @@
+<section class="work-orders-page">
+	<div class="header-row">
+		<div>
+			<h1 class="text-xl font-semibold">Ordenes de Trabajo</h1>
+			<p class="text-muted-foreground text-sm">Listado paginado con filtros, busqueda en tiempo real y vista Kanban.</p>
+		</div>
+		<button hlmBtn type="button" (click)="createOrder()">Crear nueva orden</button>
+	</div>
+
+	<hlm-card>
+		<div hlmCardContent class="filters-grid">
+			<input
+				class="search-field"
+				hlmInput
+				type="text"
+				placeholder="Buscar OT, cliente, tecnico o placas..."
+				[value]="search()"
+				(input)="updateSearch(($any($event.target)).value)"
+			/>
+
+			<hlm-select [value]="filterStatus()" (valueChange)="updateStatusFilter(($event ?? 'Todos') + '')">
+				<hlm-select-trigger>
+					<hlm-select-value />
+				</hlm-select-trigger>
+				<hlm-select-content *hlmSelectPortal>
+					<hlm-select-group>
+						<hlm-select-item value="Todos">Todos los estados</hlm-select-item>
+						@for (status of statuses; track status) {
+							<hlm-select-item [value]="status">{{ status }}</hlm-select-item>
+						}
+					</hlm-select-group>
+				</hlm-select-content>
+			</hlm-select>
+
+			<hlm-select [value]="filterTech()" (valueChange)="updateTechFilter(($event ?? 'Todos') + '')">
+				<hlm-select-trigger>
+					<hlm-select-value />
+				</hlm-select-trigger>
+				<hlm-select-content *hlmSelectPortal>
+					<hlm-select-group>
+						<hlm-select-item value="Todos">Todos los tecnicos</hlm-select-item>
+						@for (tech of technicians(); track tech) {
+							<hlm-select-item [value]="tech">{{ tech }}</hlm-select-item>
+						}
+					</hlm-select-group>
+				</hlm-select-content>
+			</hlm-select>
+
+			<hlm-select [value]="filterClient()" (valueChange)="updateClientFilter(($event ?? 'Todos') + '')">
+				<hlm-select-trigger>
+					<hlm-select-value />
+				</hlm-select-trigger>
+				<hlm-select-content *hlmSelectPortal>
+					<hlm-select-group>
+						<hlm-select-item value="Todos">Todos los clientes</hlm-select-item>
+						@for (client of clients(); track client) {
+							<hlm-select-item [value]="client">{{ client }}</hlm-select-item>
+						}
+					</hlm-select-group>
+				</hlm-select-content>
+			</hlm-select>
+
+			<spartan-date-picker-field
+				[value]="filterDate()"
+				placeholder="Filtrar por fecha"
+				(valueChange)="updateDateFilter($event)"
+			/>
+		</div>
+	</hlm-card>
+
+	<div class="view-switch">
+		<button hlmBtn type="button" [variant]="viewMode() === 'tabla' ? 'default' : 'outline'" (click)="setView('tabla')">
+			Tabla
+		</button>
+		<button hlmBtn type="button" [variant]="viewMode() === 'kanban' ? 'default' : 'outline'" (click)="setView('kanban')">
+			Kanban
+		</button>
+	</div>
+
+	@if (viewMode() === 'tabla') {
+		<hlm-card>
+			<div hlmCardContent>
+				<div hlmTableContainer>
+					<table hlmTable>
+						<thead hlmTHead>
+							<tr hlmTr>
+								<th hlmTh>OT</th>
+								<th hlmTh>Cliente</th>
+								<th hlmTh>Tecnico</th>
+								<th hlmTh>Fecha</th>
+								<th hlmTh>Estado</th>
+								<th hlmTh>Prioridad</th>
+								<th hlmTh>Acciones</th>
+							</tr>
+						</thead>
+						<tbody hlmTBody>
+							@for (order of pagedOrders(); track order.id) {
+								<tr hlmTr>
+									<td hlmTd class="font-medium">{{ order.id }}</td>
+									<td hlmTd>{{ order.cliente }}</td>
+									<td hlmTd>{{ order.tecnico }}</td>
+									<td hlmTd>{{ order.fechaProgramada }}</td>
+									<td hlmTd>
+										<div class="cell-stack">
+											<hlm-select [value]="order.status" (valueChange)="updateOrderStatus(order.id, ($event ?? order.status) + '')">
+												<hlm-select-trigger size="sm" class="w-full">
+													<hlm-select-value />
+												</hlm-select-trigger>
+												<hlm-select-content *hlmSelectPortal>
+													<hlm-select-group>
+														@for (status of statuses; track status) {
+															<hlm-select-item [value]="status">{{ status }}</hlm-select-item>
+														}
+													</hlm-select-group>
+												</hlm-select-content>
+											</hlm-select>
+										</div>
+									</td>
+									<td hlmTd>
+										<div class="cell-stack">
+											<hlm-select [value]="order.priority" (valueChange)="updateOrderPriority(order.id, ($event ?? order.priority) + '')">
+												<hlm-select-trigger size="sm" class="w-full">
+													<hlm-select-value />
+												</hlm-select-trigger>
+												<hlm-select-content *hlmSelectPortal>
+													<hlm-select-group>
+														@for (priority of priorities; track priority) {
+															<hlm-select-item [value]="priority">{{ priority }}</hlm-select-item>
+														}
+													</hlm-select-group>
+												</hlm-select-content>
+											</hlm-select>
+										</div>
+									</td>
+									<td hlmTd>
+										<button hlmBtn type="button" size="sm" variant="outline" (click)="goToDetail(order.id)">
+											Ver detalle
+										</button>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</hlm-card>
+
+		<div class="pagination-row">
+			<button hlmBtn type="button" size="sm" variant="outline" [disabled]="page() <= 1" (click)="previousPage()">Anterior</button>
+			<span class="text-sm">Pagina {{ page() }} de {{ totalPages() }}</span>
+			<button hlmBtn type="button" size="sm" variant="outline" [disabled]="page() >= totalPages()" (click)="nextPage()">Siguiente</button>
+		</div>
+	} @else {
+		<section class="kanban-grid">
+			@for (column of kanbanColumns(); track column.status) {
+				<hlm-card class="kanban-column">
+					<hlm-card-header>
+						<div class="flex items-center justify-between gap-2">
+							<h3 hlmCardTitle class="text-sm">{{ column.status }}</h3>
+							<span hlmBadge [ngClass]="['wo-chip', statusChipClass(column.status)]" [variant]="statusVariant(column.status)">
+								{{ column.orders.length }}
+							</span>
+						</div>
+					</hlm-card-header>
+					<div
+						hlmCardContent
+						class="kanban-drop-zone"
+						cdkDropList
+						[id]="getKanbanDropListId(column.status)"
+						[cdkDropListData]="column.orders"
+						[cdkDropListConnectedTo]="kanbanDropListIds()"
+						(cdkDropListDropped)="onKanbanDrop($event, column.status)"
+					>
+						@for (order of column.orders; track order.id) {
+							<button
+								hlmBtn
+								type="button"
+								variant="outline"
+								class="kanban-card"
+								cdkDrag
+								[cdkDragData]="order"
+								[cdkDragStartDelay]="{ touch: 140, mouse: 0 }"
+								(click)="goToDetail(order.id)"
+							>
+								<span class="font-medium">{{ order.id }}</span>
+								<span class="text-muted-foreground text-xs">{{ order.cliente }}</span>
+								<span class="text-muted-foreground text-xs">{{ order.tecnico }}</span>
+								<span hlmBadge [ngClass]="['wo-chip', priorityChipClass(order.priority)]" [variant]="priorityVariant(order.priority)">
+									{{ order.priority }}
+								</span>
+							</button>
+						}
+					</div>
+				</hlm-card>
+			}
+		</section>
+	}
+</section>

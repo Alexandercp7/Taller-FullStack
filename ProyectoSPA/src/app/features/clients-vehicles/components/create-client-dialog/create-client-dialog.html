@@ -1,0 +1,30 @@
+<div class="space-y-4 p-1">
+	<div>
+		<h3 class="text-lg font-semibold">Crear cliente</h3>
+		<p class="text-muted-foreground text-sm">Completa la ficha del cliente.</p>
+	</div>
+
+	<div class="grid gap-3 md:grid-cols-2">
+		<label class="field md:col-span-2">
+			<span>Nombre</span>
+			<input hlmInput type="text" [value]="nombre()" (input)="nombre.set(($any($event.target)).value)" />
+		</label>
+		<label class="field">
+			<span>Telefono</span>
+			<input hlmInput type="text" [value]="telefono()" (input)="telefono.set(($any($event.target)).value)" />
+		</label>
+		<label class="field">
+			<span>Correo</span>
+			<input hlmInput type="email" [value]="correo()" (input)="correo.set(($any($event.target)).value)" />
+		</label>
+		<label class="field md:col-span-2">
+			<span>RFC</span>
+			<input hlmInput type="text" [value]="rfc()" (input)="rfc.set(($any($event.target)).value)" />
+		</label>
+	</div>
+
+	<div class="flex justify-end gap-2">
+		<button hlmBtn type="button" variant="ghost" (click)="cancel()">Cancelar</button>
+		<button hlmBtn type="button" [disabled]="!canCreate()" (click)="submit()">Crear cliente</button>
+	</div>
+</div>

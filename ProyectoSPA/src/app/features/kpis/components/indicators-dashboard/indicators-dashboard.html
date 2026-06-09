@@ -1,0 +1,64 @@
+<div class="indicators-container">
+	<h2 class="text-2xl font-semibold">KPIs Dashboard</h2>
+	<p class="indicators-subtitle">Indicadores de desempeño en tiempo real</p>
+
+	<div class="categories-grid" [ngSwitch]="indicadores().categorias.length">
+		<ng-container *ngFor="let categoria of indicadores().categorias">
+			<div class="category-section">
+				<div class="category-header">
+					<h3 class="category-title">{{ categoria.label }}</h3>
+					<div class="category-divider"></div>
+				</div>
+
+				<div class="indicators-grid">
+					<ng-container *ngFor="let indicador of categoria.indicadores">
+						<div class="indicator-card">
+							<div class="card-header">
+								<div class="icon-wrapper">
+									<ng-icon [name]="getIconName(indicador.icon)"></ng-icon>
+								</div>
+								<div class="header-content">
+									<h4 class="indicator-name">{{ indicador.nombre }}</h4>
+									<p class="indicator-description">{{ indicador.descripcion }}</p>
+								</div>
+							</div>
+
+							<div class="card-body">
+								<div class="value-section">
+									<div class="value-display">
+										<span class="value-number">{{ indicador.valor }}</span>
+										<span class="value-unit">{{ indicador.unidad }}</span>
+									</div>
+
+									<div class="trend-section">
+										<div [ngClass]="'trend-badge ' + getTrendClass(indicador.tendencia)">
+											<ng-icon [name]="getTrendIcon(indicador.tendencia)"></ng-icon>
+											<span class="trend-text">{{ indicador.tendencia === 'up' ? 'Mejorando' : indicador.tendencia === 'down' ? 'Bajando' : 'Estable' }}</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="meta-section" *ngIf="indicador.meta">
+									<div class="meta-row">
+										<span class="meta-label">Meta:</span>
+										<span class="meta-value">{{ indicador.meta }} {{ indicador.unidad }}</span>
+									</div>
+									<div class="meta-row">
+										<span class="meta-label">Variación:</span>
+										<span [ngClass]="'meta-variation ' + (getMetaComparison(indicador.valor, indicador.meta).includes('+') ? 'positive' : getMetaComparison(indicador.valor, indicador.meta).includes('-') ? 'negative' : 'neutral')">
+											{{ getMetaComparison(indicador.valor, indicador.meta) }}
+										</span>
+									</div>
+								</div>
+
+								<div class="update-info">
+									<span class="update-text">Actualizado: {{ indicador.ultimaActualizacion }}</span>
+								</div>
+							</div>
+						</div>
+					</ng-container>
+				</div>
+			</div>
+		</ng-container>
+	</div>
+</div>
