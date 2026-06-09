@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
 import { createContainer } from './infrastructure/di/container';
 import { createContext } from './presentation/trpc/context';
@@ -22,6 +23,7 @@ async function bootstrap() {
 
   await app.register(cors, { origin: true });
   await app.register(helmet);
+  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } }); // 10 MB
 
   await app.register(fastifyTRPCPlugin, {
     prefix: '/trpc',

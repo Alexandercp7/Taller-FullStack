@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { Container } from '../../infrastructure/di/container';
 import { Argon2HasherAdapter } from '../../infrastructure/external/argon2-hasher.adapter';
+import { S3FileStorageAdapter } from '../../infrastructure/external/s3-file-storage.adapter';
+import { createId } from '../../shared/identifier';
 
 // ─── Enum maps ────────────────────────────────────────────────────────────────
 
@@ -570,14 +572,15 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const perPage = Math.min(Number((req.query as any).per_page ?? 100), 500);
     const items = await db.inventoryItem.findMany({ where: { isActive: true }, take: perPage, orderBy: { createdAt: 'desc' } });
-    return {
-      data: items.map(i => ({
-        id: i.id, nombre: i.name, tipo: INVENTORY_TYPE_MAP[i.type] ?? i.type,
-        estado: 'Bueno', stock_actual: i.stock, stock_minimo: i.minStock,
-        precio: Number(i.purchasePrice), precio_venta: Number(i.salePrice),
-        low_stock: i.stock <= i.minStock, foto_url: null,
-      })),
-    };
+    const storage = new S3FileStorageAdapter();
+    const data = await Promise.all(items.map(async (i) => ({
+      id: i.id, nombre: i.name, tipo: INVENTORY_TYPE_MAP[i.type] ?? i.type,
+      estado: 'Bueno', stock_actual: i.stock, stock_minimo: i.minStock,
+      precio: Number(i.purchasePrice), precio_venta: Number(i.salePrice),
+      low_stock: i.stock <= i.minStock,
+      foto_url: i.photoUrl ? await storage.getDownloadUrl(i.photoUrl) : null,
+    })));
+    return { data };
   });
 
   app.post('/api/v1/inventory', async (req, reply) => {
@@ -637,7 +640,37 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const { id } = req.params as any;
     const item = await db.inventoryItem.findUnique({ where: { id } });
     if (!item) return reply.status(404).send({ error: 'Item no encontrado' });
-    return { data: { id: item.id, nombre: item.name, foto_url: null } };
+
+    const data = await req.file();
+    if (!data) return reply.status(400).send({ error: 'No se recibió archivo' });
+
+    const buffer = await data.toBuffer();
+    const ext = data.filename.split('.').pop() ?? 'jpg';
+    const key = `inventory/${id}/${createId()}.${ext}`;
+
+    const storage = new S3FileStorageAdapter();
+    const uploadUrl = await storage.getUploadUrl(key, data.mimetype);
+
+    await fetch(uploadUrl, {
+      method: 'PUT',
+      body: buffer,
+      headers: { 'Content-Type': data.mimetype },
+    });
+
+    const photoUrl = await storage.getDownloadUrl(key);
+    const updated = await db.inventoryItem.update({
+      where: { id },
+      data: { photoUrl: key },
+    });
+
+    return {
+      data: {
+        id: updated.id, nombre: updated.name, tipo: INVENTORY_TYPE_MAP[updated.type] ?? updated.type,
+        estado: 'Bueno', stock_actual: updated.stock, stock_minimo: updated.minStock,
+        precio: Number(updated.purchasePrice), precio_venta: Number(updated.salePrice),
+        low_stock: updated.stock <= updated.minStock, foto_url: photoUrl,
+      },
+    };
   });
 
   app.post('/api/v1/inventory/:id/movements', async (req, reply) => {
