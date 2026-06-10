@@ -30,6 +30,7 @@ export interface ChecklistItem {
 	id: string;
 	tarea: string;
 	responsable: string;
+	responsableId: string | null;
 	completada: boolean;
 }
 

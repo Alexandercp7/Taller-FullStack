@@ -116,6 +116,19 @@
 			</hlm-card>
 		}
 
+		@if (ot.fotos.length > 0) {
+			<hlm-card>
+				<hlm-card-header>
+					<h3 hlmCardTitle>Fotos</h3>
+				</hlm-card-header>
+				<div hlmCardContent class="photos-grid">
+					@for (foto of ot.fotos; track foto.id) {
+						<img [src]="foto.url" alt="Foto del vehiculo" class="photo-thumb" />
+					}
+				</div>
+			</hlm-card>
+		}
+
 		@if (ot.notas.length > 0) {
 			<hlm-card>
 				<hlm-card-header>

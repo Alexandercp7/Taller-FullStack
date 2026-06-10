@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
@@ -7,7 +8,14 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { type WorkOrderStatus } from '../../../work-orders/models';
-import { WorkOrdersService } from '../../../work-orders/services';
+
+interface PortalSearchResult {
+	portalToken: string;
+	code: string;
+	status: WorkOrderStatus;
+	fecha_programada: string;
+	vehiculo: { marca: string; modelo: string; anio: number } | null;
+}
 
 @Component({
 	selector: 'spartan-portal-search-content',
@@ -17,30 +25,34 @@ import { WorkOrdersService } from '../../../work-orders/services';
 	styleUrl: './portal-search-content.css',
 })
 export class PortalSearchContentComponent {
-	private readonly _service = inject(WorkOrdersService);
+	private readonly _http = inject(HttpClient);
 	private readonly _router = inject(Router);
 
 	protected readonly searchTerm = signal('');
 	protected readonly hasSearched = signal(false);
-
-	protected readonly results = computed(() => {
-		if (!this.hasSearched()) return [];
-		const term = this.searchTerm().trim().toLowerCase();
-		if (!term) return [];
-		return this._service.workOrders().filter(
-			(order) =>
-				order.cliente.toLowerCase().includes(term) ||
-				order.clientData.telefono.toLowerCase().includes(term) ||
-				order.clientData.correo.toLowerCase().includes(term),
-		);
-	});
+	protected readonly results = signal<PortalSearchResult[]>([]);
 
 	protected search(): void {
-		this.hasSearched.set(true);
+		const term = this.searchTerm().trim();
+		if (!term) {
+			this.results.set([]);
+			this.hasSearched.set(true);
+			return;
+		}
+		this._http.get<{ data: PortalSearchResult[] }>('/api/v1/portal/search', { params: { q: term } }).subscribe({
+			next: (res) => {
+				this.results.set(res.data);
+				this.hasSearched.set(true);
+			},
+			error: () => {
+				this.results.set([]);
+				this.hasSearched.set(true);
+			},
+		});
 	}
 
-	protected openOrder(id: string): void {
-		void this._router.navigate(['/portal/ordenes', id]);
+	protected openOrder(token: string): void {
+		void this._router.navigate(['/portal', token]);
 	}
 
 	protected statusChipClass(status: WorkOrderStatus): string {

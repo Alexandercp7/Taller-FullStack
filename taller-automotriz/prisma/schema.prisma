@@ -138,6 +138,7 @@ model User {
   assignedActivities  Activity[]       @relation("AssignedActivities")
   createdActivities   Activity[]       @relation("CreatedActivities")
   activityComments    ActivityComment[]
+  checklistItems      Checklist[]
 
   @@map("users")
 }
@@ -563,15 +564,17 @@ model TimelineEntry {
 }
 
 model Checklist {
-  id        String   @id @default(cuid())
-  orderId   String
-  label     String
-  checked   Boolean  @default(false)
-  phase     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  orderId       String
+  label         String
+  checked       Boolean  @default(false)
+  phase         String?
+  responsableId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  order WorkOrder @relation(fields: [orderId], references: [id])
+  order       WorkOrder @relation(fields: [orderId], references: [id])
+  responsable User?     @relation(fields: [responsableId], references: [id])
 
   @@map("checklists")
 }

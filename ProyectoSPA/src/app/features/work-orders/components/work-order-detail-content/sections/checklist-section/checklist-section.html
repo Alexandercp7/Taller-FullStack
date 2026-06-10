@@ -16,7 +16,12 @@
 				}
 				<div class="add-row">
 					<input hlmInput type="text" placeholder="Nueva tarea" [value]="newChecklistInicialTask()" (input)="newChecklistInicialTask.set(($any($event.target)).value)" />
-					<input hlmInput type="text" placeholder="Responsable" [value]="newChecklistInicialOwner()" (input)="newChecklistInicialOwner.set(($any($event.target)).value)" />
+					<select hlmInput [value]="newChecklistInicialOwner()" (change)="newChecklistInicialOwner.set(($any($event.target)).value)">
+						<option value="">Sin asignar</option>
+						@for (resp of responsables(); track resp.id) {
+							<option [value]="resp.id">{{ resp.name }}</option>
+						}
+					</select>
 					<button hlmBtn type="button" size="sm" (click)="addChecklistItem('checklistInicial')">Agregar</button>
 				</div>
 			</div>
@@ -38,7 +43,12 @@
 				}
 				<div class="add-row">
 					<input hlmInput type="text" placeholder="Nueva tarea" [value]="newChecklistTrabajoTask()" (input)="newChecklistTrabajoTask.set(($any($event.target)).value)" />
-					<input hlmInput type="text" placeholder="Responsable" [value]="newChecklistTrabajoOwner()" (input)="newChecklistTrabajoOwner.set(($any($event.target)).value)" />
+					<select hlmInput [value]="newChecklistTrabajoOwner()" (change)="newChecklistTrabajoOwner.set(($any($event.target)).value)">
+						<option value="">Sin asignar</option>
+						@for (resp of responsables(); track resp.id) {
+							<option [value]="resp.id">{{ resp.name }}</option>
+						}
+					</select>
 					<button hlmBtn type="button" size="sm" (click)="addChecklistItem('checklistTrabajo')">Agregar</button>
 				</div>
 			</div>

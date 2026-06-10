@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
@@ -9,6 +10,11 @@ import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmProgressImports } from '@spartan-ng/helm/progress';
 import { NotificationService } from '../../../../../../core';
 import { WorkOrdersService } from '../../../../services';
+
+interface ResponsableOption {
+	id: string;
+	name: string;
+}
 
 @Component({
 	selector: 'spartan-wo-checklist-section',
@@ -21,6 +27,7 @@ export class WorkOrderChecklistSectionComponent {
 	private readonly _route = inject(ActivatedRoute);
 	private readonly _service = inject(WorkOrdersService);
 	private readonly _notification = inject(NotificationService);
+	private readonly _http = inject(HttpClient);
 	private readonly _params = toSignal(this._route.paramMap, { initialValue: this._route.snapshot.paramMap });
 
 	protected readonly orderId = computed(() => this._params().get('id') ?? '');
@@ -28,10 +35,18 @@ export class WorkOrderChecklistSectionComponent {
 	protected readonly checklistInicialProgress = computed(() => this.calculateProgress('checklistInicial'));
 	protected readonly checklistTrabajoProgress = computed(() => this.calculateProgress('checklistTrabajo'));
 
+	protected readonly responsables = signal<ResponsableOption[]>([]);
+
 	protected readonly newChecklistInicialTask = signal('');
 	protected readonly newChecklistInicialOwner = signal('');
 	protected readonly newChecklistTrabajoTask = signal('');
 	protected readonly newChecklistTrabajoOwner = signal('');
+
+	constructor() {
+		this._http.get<{ data: ResponsableOption[] }>('/api/v1/users').subscribe({
+			next: (res) => this.responsables.set(res.data ?? []),
+		});
+	}
 
 	protected toggleChecklist(listType: 'checklistInicial' | 'checklistTrabajo', itemId: string): void {
 		const order = this.order();
@@ -44,14 +59,14 @@ export class WorkOrderChecklistSectionComponent {
 		if (!order) return;
 
 		if (listType === 'checklistInicial') {
-			this._service.addChecklistItem(order.id, listType, this.newChecklistInicialTask(), this.newChecklistInicialOwner());
+			this._service.addChecklistItem(order.id, listType, this.newChecklistInicialTask(), this.newChecklistInicialOwner() || null);
 			this.newChecklistInicialTask.set('');
 			this.newChecklistInicialOwner.set('');
 			this._notification.success('Tarea agregada a checklist inicial.');
 			return;
 		}
 
-		this._service.addChecklistItem(order.id, listType, this.newChecklistTrabajoTask(), this.newChecklistTrabajoOwner());
+		this._service.addChecklistItem(order.id, listType, this.newChecklistTrabajoTask(), this.newChecklistTrabajoOwner() || null);
 		this.newChecklistTrabajoTask.set('');
 		this.newChecklistTrabajoOwner.set('');
 		this._notification.success('Tarea agregada a checklist de trabajos.');

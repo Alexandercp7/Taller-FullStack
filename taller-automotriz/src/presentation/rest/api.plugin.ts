@@ -109,7 +109,8 @@ async function mapOrderDetail(o: any) {
   return {
     ...base,
     checklists: (o.checklist ?? []).map((c: any) => ({
-      id: c.id, tipo: c.phase ?? 'inicial', tarea: c.label, responsable: '', completada: c.checked,
+      id: c.id, tipo: c.phase ?? 'inicial', tarea: c.label,
+      responsable: c.responsable?.name ?? '', responsableId: c.responsableId ?? null, completada: c.checked,
     })),
     fotos,
     notas: (o.notes ?? []).map((n: any) => ({
@@ -198,7 +199,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       where: { id },
       include: {
         client: true, vehicle: true, technician: true, accountReceivable: true,
-        checklist: true,
+        checklist: { include: { responsable: { select: { name: true } } } },
         photos: true,
         notes: true,
         assignedParts: { include: { item: true } },
@@ -276,7 +277,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       where: { id: orderId },
       include: {
         client: true, vehicle: true, technician: true, accountReceivable: true,
-        checklist: true, photos: true, notes: true, assignedParts: { include: { item: true } },
+        checklist: { include: { responsable: { select: { name: true } } } }, photos: true, notes: true, assignedParts: { include: { item: true } },
         quotes: { include: { service: true } }, timeline: { include: { user: { select: { name: true } } } },
       },
     });
@@ -301,7 +302,43 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       await container.useCases.changeOrderStatus.execute({ orderId: id, newStatus: dbStatus, userId: u.id });
     } catch {
       await db.workOrder.update({ where: { id }, data: { status: dbStatus } });
+      await db.timelineEntry.create({
+        data: { orderId: id, userId: u.id, event: 'status_changed', detail: { newStatus: dbStatus } },
+      });
     }
+
+    if (dbStatus === 'DELIVERED') {
+      const order = await db.workOrder.findUnique({
+        where: { id },
+        include: { quotes: true, assignedParts: true, accountReceivable: true },
+      });
+      if (order) {
+        const total = order.quotes.reduce((sum, q) => sum + Number(q.total), 0)
+          + order.assignedParts.reduce((sum, p) => sum + Number(p.unitPrice) * p.quantity, 0);
+
+        let ar = order.accountReceivable;
+        if (!ar) {
+          ar = await db.accountReceivable.create({
+            data: { orderId: id, clientId: order.clientId, total, paid: 0, balance: total, status: 'PENDING' },
+          });
+        }
+
+        if (Number(ar.balance) > 0) {
+          const newPaid = Number(ar.total);
+          await db.accountReceivable.update({
+            where: { id: ar.id },
+            data: { paid: newPaid, balance: 0, status: 'PAID' },
+          });
+          await db.payment.create({
+            data: { accountReceivableId: ar.id, amount: Number(ar.balance), method: 'CASH', userId: u.id, notes: 'Pago automatico al entregar la orden' },
+          });
+          await db.timelineEntry.create({
+            data: { orderId: id, userId: u.id, event: 'payment_registered', detail: { amount: Number(ar.balance), automatic: true } },
+          });
+        }
+      }
+    }
+
     return { message: 'ok' };
   });
 
@@ -382,6 +419,9 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const note = await db.note.create({
       data: { orderId: id, content: body.texto, userId: u.id, visibility },
     });
+    await db.timelineEntry.create({
+      data: { orderId: id, userId: u.id, event: 'note_added', detail: { visibility, preview: String(body.texto ?? '').slice(0, 140) } },
+    });
     return { data: { id: note.id, tipo: body.tipo ?? 'interna', texto: note.content, created_at: note.createdAt.toISOString() } };
   });
 
@@ -418,6 +458,10 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       },
     });
 
+    await db.timelineEntry.create({
+      data: { orderId: id, userId: u.id, event: 'photo_added', detail: { photoId: photo.id } },
+    });
+
     const url = await storage.getDownloadUrl(key);
     return { data: { id: photo.id, url } };
   });
@@ -449,13 +493,16 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const { id } = req.params as any;
     const body = req.body as any;
     const priceItem = await db.priceList.findUnique({ where: { id: String(body.price_item_id) } });
+    const precio = body.precio !== undefined && body.precio !== null
+      ? Number(body.precio)
+      : Number(priceItem?.price ?? 0);
     const q = await db.quote.create({
       data: {
         orderId: id,
         serviceId: String(body.price_item_id),
-        subtotal: priceItem?.price ?? 0,
+        subtotal: precio,
         tax: 0,
-        total: priceItem?.price ?? 0,
+        total: precio,
       },
     });
     return { data: { id: q.id, price_item_id: q.serviceId, nombre: priceItem?.name ?? 'Servicio', precio: Number(q.total) } };
@@ -484,18 +531,25 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const { id } = req.params as any;
     const body = req.body as any;
     const item = await db.checklist.create({
-      data: { orderId: id, label: body.tarea, checked: false, phase: body.tipo ?? 'inicial' },
+      data: { orderId: id, label: body.tarea, checked: false, phase: body.tipo ?? 'inicial', responsableId: body.responsableId || null },
+      include: { responsable: { select: { name: true } } },
     });
-    return { data: { id: item.id, tarea: item.label, responsable: body.responsable ?? '', completada: item.checked } };
+    await db.timelineEntry.create({
+      data: { orderId: id, userId: u.id, event: 'checklist_item_added', detail: { label: item.label } },
+    });
+    return { data: { id: item.id, tarea: item.label, responsable: item.responsable?.name ?? body.responsable ?? '', responsableId: item.responsableId, completada: item.checked } };
   });
 
   app.patch('/api/v1/work-orders/:id/checklist/:itemId', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    const { itemId } = req.params as any;
+    const { id, itemId } = req.params as any;
     const current = await db.checklist.findUnique({ where: { id: itemId } });
     if (!current) return reply.status(404).send({ error: 'Item no encontrado' });
-    await db.checklist.update({ where: { id: itemId }, data: { checked: !current.checked } });
+    const updated = await db.checklist.update({ where: { id: itemId }, data: { checked: !current.checked } });
+    await db.timelineEntry.create({
+      data: { orderId: id, userId: u.id, event: 'checklist_item_updated', detail: { label: updated.label, checked: updated.checked } },
+    });
     return { message: 'ok' };
   });
 
@@ -1391,6 +1445,36 @@ export async function registerRestApi(app: FastifyInstance, container: Container
 
   // ── PORTAL (public) ───────────────────────────────────────────────────────
 
+  app.get('/api/v1/portal/search', async (req, reply) => {
+    const { q } = req.query as any;
+    const term = String(q ?? '').trim();
+    if (!term) return { data: [] };
+    const orders = await db.workOrder.findMany({
+      where: {
+        client: {
+          OR: [
+            { name: { contains: term, mode: 'insensitive' } },
+            { phone: { contains: term, mode: 'insensitive' } },
+          ],
+        },
+      },
+      include: { client: true, vehicle: true },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+    return {
+      data: orders.map((o) => ({
+        portalToken: o.portalToken,
+        code: o.code,
+        status: STATUS_MAP[o.status] ?? o.status,
+        fecha_programada: toDate(o.scheduledAt),
+        vehiculo: o.vehicle
+          ? { marca: o.vehicle.brand, modelo: o.vehicle.model, anio: o.vehicle.year }
+          : null,
+      })),
+    };
+  });
+
   app.get('/api/v1/portal/:token', async (req, reply) => {
     const { token } = req.params as any;
     const order = await db.workOrder.findUnique({
@@ -1402,6 +1486,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       },
     });
     if (!order) return reply.status(404).send({ error: 'No encontrado' });
+    order.notes = (order.notes ?? []).filter((n: any) => n.visibility === 'CLIENT');
     return { data: await mapOrderDetail(order) };
   });
 }

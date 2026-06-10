@@ -19,7 +19,7 @@ interface WoListApi {
 
 interface WoDetailApi extends WoListApi {
   diagnostico: string;
-  checklists: { id: number; tipo: string; tarea: string; responsable: string; completada: boolean }[];
+  checklists: { id: number; tipo: string; tarea: string; responsable: string; responsableId: string | null; completada: boolean }[];
   fotos: { id: number; url: string }[];
   notas: { id: number; tipo: string; texto: string; created_at: string; user?: { name: string } }[];
   partes: { id: number; inventory_item_id: number; nombre: string; cantidad: number; costo_unitario: number }[];
@@ -105,10 +105,10 @@ export class WorkOrdersService {
       ...base,
       diagnostico: item.diagnostico ?? '',
       checklistInicial: (item.checklists ?? []).filter(c => c.tipo === 'inicial').map(c => ({
-        id: String(c.id), tarea: c.tarea, responsable: c.responsable ?? '', completada: c.completada,
+        id: String(c.id), tarea: c.tarea, responsable: c.responsable ?? '', responsableId: c.responsableId ?? null, completada: c.completada,
       })),
       checklistTrabajo: (item.checklists ?? []).filter(c => c.tipo === 'trabajo').map(c => ({
-        id: String(c.id), tarea: c.tarea, responsable: c.responsable ?? '', completada: c.completada,
+        id: String(c.id), tarea: c.tarea, responsable: c.responsable ?? '', responsableId: c.responsableId ?? null, completada: c.completada,
       })),
       fotosIngreso: (item.fotos ?? []).map(f => f.url),
       timeline: (item.timeline ?? []).map(t => ({
@@ -290,22 +290,20 @@ export class WorkOrdersService {
       const list = o[listType].map(c => c.id === itemId ? { ...c, completada: !c.completada } as ChecklistItem : c);
       return { ...o, [listType]: list };
     }));
-    const apiItemId = itemId.replace(/\D/g, '');
-    if (apiItemId) this._http.patch(`/api/v1/work-orders/${id}/checklist/${apiItemId}`, {}).subscribe();
+    this._http.patch(`/api/v1/work-orders/${id}/checklist/${itemId}`, {}).subscribe();
   }
 
-  public addChecklistItem(id: string, listType: 'checklistInicial' | 'checklistTrabajo', tarea: string, responsable: string, _usuario = 'Supervisor'): void {
+  public addChecklistItem(id: string, listType: 'checklistInicial' | 'checklistTrabajo', tarea: string, responsableId: string | null, _usuario = 'Supervisor'): void {
     const trimmedTask = tarea.trim();
-    const trimmedOwner = responsable.trim() || 'Sin asignar';
     if (!trimmedTask) return;
 
     const tipo = listType === 'checklistInicial' ? 'inicial' : 'trabajo';
-    this._http.post<{ data: { id: number; tarea: string; responsable: string; completada: boolean } }>(
+    this._http.post<{ data: { id: number; tarea: string; responsable: string; responsableId: string | null; completada: boolean } }>(
       `/api/v1/work-orders/${id}/checklist`,
-      { tipo, tarea: trimmedTask, responsable: trimmedOwner }
+      { tipo, tarea: trimmedTask, responsableId }
     ).subscribe({
       next: (res) => {
-        const newItem: ChecklistItem = { id: String(res.data.id), tarea: res.data.tarea, responsable: res.data.responsable, completada: false };
+        const newItem: ChecklistItem = { id: String(res.data.id), tarea: res.data.tarea, responsable: res.data.responsable, responsableId: res.data.responsableId, completada: false };
         this._workOrders.update(orders => orders.map(o =>
           o.id === id ? { ...o, [listType]: [...o[listType], newItem] } : o
         ));
@@ -364,7 +362,7 @@ export class WorkOrdersService {
       };
       return { ...o, serviciosAsignados: [...o.serviciosAsignados, assignedService] };
     }));
-    this._http.post(`/api/v1/work-orders/${id}/services`, { price_item_id: service.id }).subscribe();
+    this._http.post(`/api/v1/work-orders/${id}/services`, { price_item_id: service.id, precio: service.precio }).subscribe();
   }
 
   public assignDirectPart(id: string, part: any, usuario = 'Almacen'): void {

@@ -70,6 +70,20 @@
 	transition: width 300ms ease;
 }
 
+.photos-grid {
+	display: grid;
+	gap: 0.75rem;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.photo-thumb {
+	width: 100%;
+	aspect-ratio: 4 / 3;
+	object-fit: cover;
+	border-radius: 0.5rem;
+	border: 1px solid var(--border);
+}
+
 .empty-state {
 	padding-top: 0.5rem;
 	display: flex;

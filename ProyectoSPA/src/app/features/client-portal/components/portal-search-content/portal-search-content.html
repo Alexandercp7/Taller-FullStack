@@ -36,16 +36,16 @@
 								</tr>
 							</thead>
 							<tbody hlmTBody>
-								@for (order of results(); track order.id) {
+								@for (order of results(); track order.portalToken) {
 									<tr hlmTr>
 										<td hlmTd class="font-medium">{{ order.code }}</td>
-										<td hlmTd>{{ order.vehicle.marca }} {{ order.vehicle.modelo }} {{ order.vehicle.anio }}</td>
-										<td hlmTd>{{ order.fechaProgramada }}</td>
+										<td hlmTd>{{ order.vehiculo?.marca }} {{ order.vehiculo?.modelo }} {{ order.vehiculo?.anio }}</td>
+										<td hlmTd>{{ order.fecha_programada }}</td>
 										<td hlmTd>
 											<span hlmBadge [ngClass]="['wo-chip', statusChipClass(order.status)]">{{ order.status }}</span>
 										</td>
 										<td hlmTd>
-											<button hlmBtn size="sm" variant="outline" type="button" (click)="openOrder(order.id)">Ver detalle</button>
+											<button hlmBtn size="sm" variant="outline" type="button" (click)="openOrder(order.portalToken)">Ver detalle</button>
 										</td>
 									</tr>
 								}

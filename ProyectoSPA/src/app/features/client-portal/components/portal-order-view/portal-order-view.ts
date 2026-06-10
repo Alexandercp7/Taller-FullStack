@@ -26,6 +26,7 @@ interface PortalOrder {
 	timeline: { id: number; descripcion: string; created_at: string }[];
 	checklist: { total: number; completadas: number };
 	notas: { id: number; texto: string; created_at: string }[];
+	fotos: { id: number; url: string }[];
 	servicios: { nombre: string; precio: number }[];
 	refacciones: { nombre: string; cantidad: number; subtotal: number }[];
 	total_estimado: number;
