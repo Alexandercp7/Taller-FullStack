@@ -41,10 +41,9 @@ export class WorkOrderGallerySectionComponent {
 		const file = input?.files?.[0];
 		const order = this.order();
 		if (!file || !order) return;
-		const objectUrl = URL.createObjectURL(file);
-		this._service.addPhoto(order.id, objectUrl);
+		this._service.uploadPhoto(order.id, file);
 		if (input) input.value = '';
-		this._notification.success('Foto agregada desde archivo.');
+		this._notification.success('Foto subida correctamente.');
 	}
 
 	protected openPhoto(photo: string): void {

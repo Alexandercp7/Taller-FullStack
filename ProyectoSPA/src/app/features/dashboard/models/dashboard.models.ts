@@ -2,6 +2,7 @@ export type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' |
 
 export interface WorkOrderItem {
 	id: string;
+	code: string;
 	client: string;
 	assignee: string;
 	dueDate: string;

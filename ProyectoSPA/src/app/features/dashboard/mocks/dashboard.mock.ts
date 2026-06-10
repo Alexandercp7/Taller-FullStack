@@ -3,7 +3,7 @@ import type { DashboardMockData } from '../models/dashboard.models';
 export const dashboardMockData: DashboardMockData = {
 	recentWorkOrders: [
 		{
-			id: 'WO-1042',
+			id: 'WO-1042', code: 'OT-1042',
 			client: 'Clinica Distrito Norte',
 			assignee: 'M. Rivera',
 			dueDate: '06 Abr 2026',
@@ -13,7 +13,7 @@ export const dashboardMockData: DashboardMockData = {
 			statusVariant: 'secondary',
 		},
 		{
-			id: 'WO-1041',
+			id: 'WO-1041', code: 'OT-1041',
 			client: 'Almacen Central',
 			assignee: 'D. Ortega',
 			dueDate: '07 Abr 2026',
@@ -23,7 +23,7 @@ export const dashboardMockData: DashboardMockData = {
 			statusVariant: 'ghost',
 		},
 		{
-			id: 'WO-1038',
+			id: 'WO-1038', code: 'OT-1038',
 			client: 'Anexo de Palacio Municipal',
 			assignee: 'A. Salinas',
 			dueDate: '08 Abr 2026',
@@ -33,7 +33,7 @@ export const dashboardMockData: DashboardMockData = {
 			statusVariant: 'outline',
 		},
 		{
-			id: 'WO-1036',
+			id: 'WO-1036', code: 'OT-1036',
 			client: 'Centro de Control de Transito',
 			assignee: 'L. Medina',
 			dueDate: '09 Abr 2026',
@@ -43,7 +43,7 @@ export const dashboardMockData: DashboardMockData = {
 			statusVariant: 'outline',
 		},
 		{
-			id: 'WO-1031',
+			id: 'WO-1031', code: 'OT-1031',
 			client: 'Parque Empresarial Regional',
 			assignee: 'C. Vega',
 			dueDate: '10 Abr 2026',

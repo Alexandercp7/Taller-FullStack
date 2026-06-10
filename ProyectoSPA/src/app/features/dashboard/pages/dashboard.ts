@@ -63,6 +63,7 @@ export class DashboardComponent {
 			.slice(0, 5)
 			.map(wo => ({
 				id: wo.id,
+				code: wo.code,
 				client: wo.cliente,
 				assignee: wo.tecnico,
 				dueDate: wo.fechaProgramada,

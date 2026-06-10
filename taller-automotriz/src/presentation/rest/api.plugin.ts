@@ -385,6 +385,43 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     return { data: { id: note.id, tipo: body.tipo ?? 'interna', texto: note.content, created_at: note.createdAt.toISOString() } };
   });
 
+  app.post('/api/v1/work-orders/:id/photos', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    const order = await db.workOrder.findUnique({ where: { id } });
+    if (!order) return reply.status(404).send({ error: 'Orden no encontrada' });
+
+    const data = await req.file();
+    if (!data) return reply.status(400).send({ error: 'No se recibió archivo' });
+
+    const buffer = await data.toBuffer();
+    const ext = data.filename.split('.').pop() ?? 'jpg';
+    const key = `photos/${id}/${createId()}.${ext}`;
+
+    const storage = new S3FileStorageAdapter();
+    const uploadUrl = await storage.getUploadUrl(key, data.mimetype);
+
+    await fetch(uploadUrl, {
+      method: 'PUT',
+      body: buffer,
+      headers: { 'Content-Type': data.mimetype },
+    });
+
+    const photo = await db.photo.create({
+      data: {
+        orderId: id,
+        phase: 'INTAKE',
+        url: key,
+        key,
+        uploadedBy: u.id,
+      },
+    });
+
+    const url = await storage.getDownloadUrl(key);
+    return { data: { id: photo.id, url } };
+  });
+
   app.post('/api/v1/work-orders/:id/portal-token', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });

@@ -321,6 +321,18 @@ export class WorkOrdersService {
     ));
   }
 
+  public uploadPhoto(id: string, file: File): void {
+    const formData = new FormData();
+    formData.append('file', file);
+    this._http.post<{ data: { id: string; url: string } }>(`/api/v1/work-orders/${id}/photos`, formData).subscribe({
+      next: (res) => {
+        this._workOrders.update(orders => orders.map(o =>
+          o.id === id ? { ...o, fotosIngreso: [...o.fotosIngreso, res.data.url] } : o
+        ));
+      },
+    });
+  }
+
   public assignPart(id: string, partId: string, usuario = 'Almacen'): void {
     this._workOrders.update(orders => orders.map(o => {
       if (o.id !== id) return o;
