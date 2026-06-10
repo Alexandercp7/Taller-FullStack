@@ -111,7 +111,7 @@ export class WorkOrderQuotationsSectionComponent {
 	protected readonly partItemToString = (item: unknown): string => {
 		const part = item as InventoryItem | null;
 		if (!part) return '';
-		const price = part.precio ?? part.precioVenta;
+		const price = part.precioVenta ?? part.precio;
 		const priceStr = price ? ` - $${price.toFixed(0)}` : '';
 		return `${part.nombre} (Stock: ${part.stockActual})${priceStr}`;
 	};

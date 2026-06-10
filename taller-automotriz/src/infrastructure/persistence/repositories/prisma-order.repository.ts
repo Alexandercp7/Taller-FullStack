@@ -93,8 +93,9 @@ export class PrismaOrderRepository implements OrderRepository {
       orderBy: { code: 'desc' },
       select: { code: true },
     });
-    const lastNumber = last ? parseInt(last.code.replace('WO-', ''), 10) : 0;
-    return `WO-${String(lastNumber + 1).padStart(4, '0')}`;
+    const match = last?.code.match(/(\d+)$/);
+    const lastNumber = match ? parseInt(match[1], 10) : 0;
+    return `OT-${String(lastNumber + 1).padStart(4, '0')}`;
   }
 
   async countActiveByClientId(clientId: string): Promise<number> {

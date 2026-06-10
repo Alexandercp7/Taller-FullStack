@@ -80,6 +80,7 @@ function toDate(d: Date | null | undefined): string | null {
 function mapOrderList(o: any) {
   return {
     id: o.id,
+    code: o.code,
     status: STATUS_MAP[o.status] ?? o.status,
     priority: PRIORITY_MAP[o.priority] ?? o.priority,
     tipo_vehiculo: o.vehicle ? (VEHICLE_TYPE_MAP[o.vehicle.type] ?? 'Auto') : 'Auto',
@@ -98,16 +99,21 @@ function mapOrderList(o: any) {
   };
 }
 
-function mapOrderDetail(o: any) {
+async function mapOrderDetail(o: any) {
   const base = mapOrderList(o);
+  const storage = new S3FileStorageAdapter();
+  const fotos = await Promise.all((o.photos ?? []).map(async (f: any) => ({
+    id: f.id,
+    url: f.key ? await storage.getDownloadUrl(f.key) : f.url,
+  })));
   return {
     ...base,
     checklists: (o.checklist ?? []).map((c: any) => ({
       id: c.id, tipo: c.phase ?? 'inicial', tarea: c.label, responsable: '', completada: c.checked,
     })),
-    fotos: (o.photos ?? []).map((f: any) => ({ id: f.id, url: f.url })),
+    fotos,
     notas: (o.notes ?? []).map((n: any) => ({
-      id: n.id, tipo: 'interna', texto: n.content, created_at: n.createdAt?.toISOString(),
+      id: n.id, tipo: n.visibility === 'CLIENT' ? 'cliente' : 'interna', texto: n.content, created_at: n.createdAt?.toISOString(),
       user: n.user ? { name: n.user.name } : undefined,
     })),
     partes: (o.assignedParts ?? []).map((p: any) => ({
@@ -201,7 +207,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       },
     });
     if (!o) return reply.status(404).send({ error: 'Orden no encontrada' });
-    return { data: mapOrderDetail(o) };
+    return { data: await mapOrderDetail(o) };
   });
 
   app.post('/api/v1/work-orders', async (req, reply) => {
@@ -274,7 +280,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         quotes: { include: { service: true } }, timeline: { include: { user: { select: { name: true } } } },
       },
     });
-    return { data: mapOrderDetail(order) };
+    return { data: await mapOrderDetail(order) };
   });
 
   app.delete('/api/v1/work-orders/:id', async (req, reply) => {
@@ -372,8 +378,9 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const { id } = req.params as any;
     const body = req.body as any;
+    const visibility = body.tipo === 'cliente' ? 'CLIENT' : 'INTERNAL';
     const note = await db.note.create({
-      data: { orderId: id, content: body.texto, userId: u.id },
+      data: { orderId: id, content: body.texto, userId: u.id, visibility },
     });
     return { data: { id: note.id, tipo: body.tipo ?? 'interna', texto: note.content, created_at: note.createdAt.toISOString() } };
   });
@@ -1358,6 +1365,6 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       },
     });
     if (!order) return reply.status(404).send({ error: 'No encontrado' });
-    return { data: mapOrderDetail(order) };
+    return { data: await mapOrderDetail(order) };
   });
 }

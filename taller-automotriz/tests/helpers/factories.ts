@@ -1,5 +1,6 @@
 import { WorkOrder } from '../../src/domain/entities/work-order.entity';
 import { Client } from '../../src/domain/entities/client.entity';
+import { Vehicle } from '../../src/domain/entities/vehicle.entity';
 import { InventoryItem } from '../../src/domain/entities/inventory-item.entity';
 import { User } from '../../src/domain/entities/user.entity';
 import { UserRole } from '../../src/domain/enums/user-role.enum';
@@ -8,6 +9,7 @@ import { OrderType } from '../../src/domain/enums/order-type.enum';
 import { Priority } from '../../src/domain/enums/priority.enum';
 import { ClientTag } from '../../src/domain/enums/client-tag.enum';
 import { InventoryType } from '../../src/domain/enums/inventory-type.enum';
+import { VehicleType } from '../../src/domain/enums/vehicle-type.enum';
 import { Money } from '../../src/domain/value-objects/money.vo';
 
 let seq = 1;
@@ -77,6 +79,26 @@ export function createTestItem(overrides: Partial<{
     null,
     null,
     true,
+  );
+}
+
+export function createTestVehicle(overrides: Partial<{
+  id: string;
+  clientId: string;
+  vin: string | null;
+  plates: string;
+}> = {}): Vehicle {
+  return new Vehicle(
+    overrides.id ?? id(),
+    overrides.clientId ?? `client-${id()}`,
+    overrides.plates ?? `PLT-${seq}`,
+    overrides.vin ?? null,
+    'Nissan',
+    'Sentra',
+    2020,
+    'Rojo',
+    VehicleType.CAR,
+    50000,
   );
 }
 

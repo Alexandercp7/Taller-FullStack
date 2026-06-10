@@ -18,7 +18,7 @@
 										<div hlmComboboxLabel>{{ group[0] }}</div>
 										@for (item of group[1]; track item.id) {
 											@if (item.precio || item.precioVenta) {
-												<hlm-combobox-item [value]="item">{{ item.nombre }} (Stock: {{ item.stockActual }}) - ${{ item.precio ?? item.precioVenta | number : '1.0-0' }}</hlm-combobox-item>
+												<hlm-combobox-item [value]="item">{{ item.nombre }} (Stock: {{ item.stockActual }}) - ${{ item.precioVenta ?? item.precio | number : '1.0-0' }}</hlm-combobox-item>
 											} @else {
 												<hlm-combobox-item [value]="item">{{ item.nombre }} (Stock: {{ item.stockActual }})</hlm-combobox-item>
 											}

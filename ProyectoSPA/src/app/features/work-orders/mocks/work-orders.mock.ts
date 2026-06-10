@@ -3,6 +3,7 @@ import type { WorkOrder } from '../models/work-orders.models';
 export const workOrdersMock: WorkOrder[] = [
 	{
 		id: 'WO-1042',
+		code: 'OT-1042',
 		cliente: 'Clinica Distrito Norte',
 		tecnico: 'M. Rivera',
 		fechaIngreso: '2026-04-02',
@@ -54,6 +55,7 @@ export const workOrdersMock: WorkOrder[] = [
 	},
 	{
 		id: 'WO-1041',
+		code: 'OT-1041',
 		cliente: 'Almacen Central',
 		tecnico: 'D. Ortega',
 		fechaIngreso: '2026-04-01',
@@ -96,6 +98,7 @@ export const workOrdersMock: WorkOrder[] = [
 	},
 	{
 		id: 'WO-1038',
+		code: 'OT-1038',
 		cliente: 'Anexo de Palacio Municipal',
 		tecnico: 'A. Salinas',
 		fechaIngreso: '2026-03-30',

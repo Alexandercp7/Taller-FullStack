@@ -10,7 +10,6 @@ import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmSelectImports } from '@spartan-ng/helm/select';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { NotificationService } from '../../../../core';
-import { ClientsVehiclesService } from '../../../clients-vehicles/services';
 import { DatePickerFieldComponent } from '../../../../shared';
 import { CreateWorkOrderDialogComponent, type CreateWorkOrderDialogContext } from '../create-work-order-dialog';
 import {
@@ -47,7 +46,6 @@ export class WorkOrdersContentComponent {
 	private readonly _router = inject(Router);
 	private readonly _dialog = inject(HlmDialogService);
 	private readonly _notification = inject(NotificationService);
-	private readonly _clientsService = inject(ClientsVehiclesService);
 
 	protected readonly statuses = WORK_ORDER_STATUSES;
 	protected readonly priorities = WORK_ORDER_PRIORITIES;
@@ -211,17 +209,12 @@ export class WorkOrdersContentComponent {
 			clients: this.clients(),
 			onCreateClient: (name) => {
 				this._service.addClient(name);
-				this._clientsService.createClient({
-					nombre: name,
-					telefono: '',
-					correo: '',
-					rfc: '',
-				});
 			},
 			onCreate: (payload: CreateWorkOrderInput) => {
-				const order = this._service.createWorkOrder(payload);
-				this._notification.success(`OT ${order.id} creada correctamente.`);
-				void this._router.navigate(['/app/ordenes-trabajo', order.id]);
+				this._service.createWorkOrder(payload, (order) => {
+					this._notification.success(`OT ${order.id} creada correctamente.`);
+					void this._router.navigate(['/app/ordenes-trabajo', order.id]);
+				});
 			},
 		};
 

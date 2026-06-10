@@ -96,7 +96,7 @@
 						<tbody hlmTBody>
 							@for (order of pagedOrders(); track order.id) {
 								<tr hlmTr>
-									<td hlmTd class="font-medium">{{ order.id }}</td>
+									<td hlmTd class="font-medium">{{ order.code }}</td>
 									<td hlmTd>{{ order.cliente }}</td>
 									<td hlmTd>{{ order.tecnico }}</td>
 									<td hlmTd>{{ order.fechaProgramada }}</td>
@@ -182,7 +182,7 @@
 								[cdkDragStartDelay]="{ touch: 140, mouse: 0 }"
 								(click)="goToDetail(order.id)"
 							>
-								<span class="font-medium">{{ order.id }}</span>
+								<span class="font-medium">{{ order.code }}</span>
 								<span class="text-muted-foreground text-xs">{{ order.cliente }}</span>
 								<span class="text-muted-foreground text-xs">{{ order.tecnico }}</span>
 								<span hlmBadge [ngClass]="['wo-chip', priorityChipClass(order.priority)]" [variant]="priorityVariant(order.priority)">

@@ -87,6 +87,7 @@ export interface ClientSignature {
 
 export interface WorkOrder {
 	id: string;
+	code: string;
 	cliente: string;
 	tecnico: string;
 	fechaIngreso: string;

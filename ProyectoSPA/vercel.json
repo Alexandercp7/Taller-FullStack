@@ -5,6 +5,9 @@
     { "source": "/api/:path*", "destination": "https://taller-fullstack.onrender.com/api/:path*" },
     { "source": "/trpc/:path*", "destination": "https://taller-fullstack.onrender.com/trpc/:path*" },
     { "source": "/storage/:path*", "destination": "https://taller-fullstack.onrender.com/storage/:path*" },
+    { "source": "/vpic/:path*", "destination": "https://vpic.nhtsa.dot.gov/:path*" },
+    { "source": "/nhtsa/:path*", "destination": "https://api.nhtsa.gov/:path*" },
+    { "source": "/carquery/:path*", "destination": "https://www.carqueryapi.com/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

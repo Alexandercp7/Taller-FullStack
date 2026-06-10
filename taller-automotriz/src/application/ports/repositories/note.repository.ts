@@ -1,8 +1,11 @@
+export type NoteVisibility = 'INTERNAL' | 'CLIENT';
+
 export interface NoteRecord {
   id: string;
   orderId: string;
   content: string;
   userId: string;
+  visibility: NoteVisibility;
   createdAt: Date;
 }
 

@@ -4,15 +4,15 @@ export class OrderCode {
   private constructor(private readonly _value: string) {}
 
   static from(value: string): OrderCode {
-    if (!/^WO-\d{4,}$/.test(value)) {
-      throw new InvalidValueObjectError('OrderCode', 'debe tener formato WO-#### (mínimo 4 dígitos)');
+    if (!/^(WO|OT)-\d{4,}$/.test(value)) {
+      throw new InvalidValueObjectError('OrderCode', 'debe tener formato OT-#### (mínimo 4 dígitos)');
     }
     return new OrderCode(value);
   }
 
   static generate(sequential: number): OrderCode {
     const padded = String(sequential).padStart(4, '0');
-    return new OrderCode(`WO-${padded}`);
+    return new OrderCode(`OT-${padded}`);
   }
 
   get value(): string {

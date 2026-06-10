@@ -9,7 +9,7 @@ import type {
 } from '../models/work-orders.models';
 
 interface WoListApi {
-  id: string; status: string; priority: string; tipo_vehiculo: string;
+  id: string; code: string; status: string; priority: string; tipo_vehiculo: string;
   problema: string; fecha_ingreso: string; fecha_programada: string;
   cargo_generado: boolean;
   cliente: { id: number; nombre: string; telefono: string; correo: string } | null;
@@ -62,6 +62,7 @@ export class WorkOrdersService {
   private mapList(item: WoListApi): WorkOrder {
     return {
       id: item.id,
+      code: item.code ?? item.id,
       cliente: item.cliente?.nombre ?? 'Sin cliente',
       tecnico: item.tecnico?.name ?? 'Sin asignar',
       fechaIngreso: this.toDate(item.fecha_ingreso),
@@ -151,7 +152,7 @@ export class WorkOrdersService {
     return this._workOrders().find(o => o.id === id);
   }
 
-  public createWorkOrder(input?: CreateWorkOrderInput): WorkOrder {
+  public createWorkOrder(input: CreateWorkOrderInput | undefined, onCreated: (order: WorkOrder) => void): void {
     const nextId = this.buildNextOrderId();
     const nowDate = this.todayDate();
     const payload: CreateWorkOrderInput = {
@@ -163,7 +164,7 @@ export class WorkOrdersService {
     };
 
     const newOrder: WorkOrder = {
-      id: nextId, cliente: payload.cliente, tecnico: payload.tecnico,
+      id: nextId, code: 'Generando...', cliente: payload.cliente, tecnico: payload.tecnico,
       fechaIngreso: nowDate, fechaProgramada: payload.fechaProgramada || nowDate,
       status: 'Agendado', priority: payload.priority, vehicle: { ...payload.vehicle },
       tipoVehiculo: payload.tipoVehiculo, problema: payload.problema, diagnostico: payload.diagnostico,
@@ -195,9 +196,9 @@ export class WorkOrdersService {
       next: (res) => {
         const realOrder = this.mapDetail(res.data);
         this._workOrders.update(orders => orders.map(o => o.id === nextId ? realOrder : o));
+        onCreated(realOrder);
       },
     });
-    return newOrder;
   }
 
   public getOrCreatePortalToken(id: string): Observable<string> {
@@ -359,7 +360,7 @@ export class WorkOrdersService {
       if (o.id !== id) return o;
       const catalogItem: PartCatalogItem = {
         id: part.id, nombre: part.nombre, sku: part.id,
-        stock: part.stockActual || 1, costo: part.precio ?? part.precioVenta ?? 0,
+        stock: part.stockActual || 1, costo: part.precioVenta ?? part.precio ?? 0,
       };
       const assigned = this.mergeAssignedPart(o.refaccionesAsignadas, catalogItem);
       this._inventoryService.consumeForWorkOrder(part.id, id, usuario);

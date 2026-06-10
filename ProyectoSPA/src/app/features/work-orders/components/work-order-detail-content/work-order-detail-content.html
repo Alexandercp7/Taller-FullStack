@@ -3,7 +3,7 @@
 		<div class="detail-header">
 			<div>
 				<div class="flex items-center gap-2">
-					<h1 class="text-xl font-semibold">{{ ot.id }}</h1>
+					<h1 class="text-xl font-semibold">{{ ot.code }}</h1>
 					<span hlmBadge [variant]="statusVariant(ot.status)" [ngClass]="['wo-chip', statusChipClass(ot.status)]">{{ ot.status }}</span>
 					<span hlmBadge [variant]="priorityVariant(ot.priority)" [ngClass]="['wo-chip', priorityChipClass(ot.priority)]">{{ ot.priority }}</span>
 				</div>

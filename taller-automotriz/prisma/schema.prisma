@@ -99,6 +99,11 @@ enum PhotoPhase {
   QUALITY
 }
 
+enum NoteVisibility {
+  INTERNAL
+  CLIENT
+}
+
 enum ClientTag {
   NEW
   FREQUENT
@@ -572,12 +577,13 @@ model Checklist {
 }
 
 model Note {
-  id        String   @id @default(cuid())
-  orderId   String
-  content   String
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String         @id @default(cuid())
+  orderId    String
+  content    String
+  userId     String
+  visibility NoteVisibility @default(INTERNAL)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 
   order WorkOrder @relation(fields: [orderId], references: [id])
 

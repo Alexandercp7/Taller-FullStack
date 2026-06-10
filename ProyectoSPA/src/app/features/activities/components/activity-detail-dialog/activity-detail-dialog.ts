@@ -9,6 +9,7 @@ import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
 import { ActivitiesService } from '../../services/activities.service';
 import { Activity, Comment } from '../../models/activity.model';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 export interface ActivityDetailDialogContext {
   activity: Activity;
@@ -36,10 +37,14 @@ export class ActivityDetailDialogComponent {
   private readonly _dialogRef = inject(BrnDialogRef<unknown>);
   private readonly _context = injectBrnDialogContext<ActivityDetailDialogContext>();
   private readonly activitiesService = inject(ActivitiesService);
+  private readonly _authService = inject(AuthService);
 
   protected readonly activity = signal(this._context.activity);
   protected readonly newComment = signal('');
-  protected readonly currentUser = 'Admin';
+
+  private get currentUser(): string {
+    return this._authService.currentUser()?.name ?? 'Admin';
+  }
 
   protected tagStyle(etiqueta: string): string {
     switch (etiqueta) {

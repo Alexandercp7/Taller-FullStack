@@ -5,6 +5,10 @@ import { TimelineEventRecord } from '../../src/domain/types/timeline-event.type'
 import { StockMovementRepository } from '../../src/application/ports/repositories/stock-movement.repository';
 import { StockMovementRecord } from '../../src/domain/entities/inventory-item.entity';
 import { NotificationSender, NotificationMessage } from '../../src/application/ports/services/notification-sender.port';
+import { IDomainEventDispatcher } from '../../src/application/ports/services/domain-event-dispatcher.port';
+import { DomainEvent } from '../../src/domain/events/domain-event';
+import { Hasher } from '../../src/application/ports/services/hasher.port';
+import { TokenProvider, TokenPayload } from '../../src/application/ports/services/token-provider.port';
 
 export class FakeUnitOfWork implements UnitOfWork {
   async execute<T>(fn: () => Promise<T>): Promise<T> {
@@ -57,6 +61,44 @@ export class FakeStockMovementRepository implements StockMovementRepository {
     return this.movements
       .filter((m) => m.itemId === itemId)
       .map((m, idx) => ({ ...m, id: `sm-${idx}` }));
+  }
+}
+
+export class FakeDomainEventDispatcher implements IDomainEventDispatcher {
+  dispatched: DomainEvent[] = [];
+
+  async dispatch(events: ReadonlyArray<DomainEvent>): Promise<void> {
+    this.dispatched.push(...events);
+  }
+}
+
+export class FakeHasher implements Hasher {
+  async hash(plain: string): Promise<string> {
+    return `hashed:${plain}`;
+  }
+
+  async verify(plain: string, hashed: string): Promise<boolean> {
+    return hashed === `hashed:${plain}`;
+  }
+}
+
+export class FakeTokenProvider implements TokenProvider {
+  sign(payload: Omit<TokenPayload, 'iat' | 'exp'>): string {
+    return `access:${payload.sub}:${payload.role}`;
+  }
+
+  verify(token: string): TokenPayload {
+    const [, sub, role] = token.split(':');
+    return { sub, role };
+  }
+
+  signRefresh(payload: Omit<TokenPayload, 'iat' | 'exp'>): string {
+    return `refresh:${payload.sub}:${payload.role}`;
+  }
+
+  verifyRefresh(token: string): TokenPayload {
+    const [, sub, role] = token.split(':');
+    return { sub, role };
   }
 }
 
