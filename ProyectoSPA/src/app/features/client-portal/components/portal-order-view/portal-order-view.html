@@ -11,7 +11,7 @@
 		<div class="portal-order-header">
 			<div>
 				<div class="flex items-center gap-2 flex-wrap">
-					<h1 class="text-xl font-semibold">{{ ot.id }}</h1>
+					<h1 class="text-xl font-semibold">{{ ot.code }}</h1>
 					<span hlmBadge [ngClass]="['wo-chip', statusChipClass(ot.status)]">{{ ot.status }}</span>
 					<span hlmBadge [ngClass]="['wo-chip', priorityChipClass(ot.priority)]">{{ ot.priority }}</span>
 				</div>

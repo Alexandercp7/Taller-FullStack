@@ -35,6 +35,7 @@ interface VehicleApi {
 
 interface WoHistoryApi {
   id: string;
+  code: string;
   status: string;
   priority: string;
   fecha_programada: string;
@@ -138,7 +139,7 @@ export class ClientsVehiclesService {
           workOrderIds: (v.workOrderIds ?? []).map(String),
         }));
         const workOrders: ClientWorkOrderHistoryItem[] = (item.workOrders ?? []).map(wo => ({
-          id: wo.id, status: wo.status as any, priority: wo.priority as any,
+          id: wo.id, code: wo.code, status: wo.status as any, priority: wo.priority as any,
           fechaProgramada: wo.fecha_programada,
           tecnico: wo.tecnico?.name ?? 'Sin asignar',
           vehiculo: wo.vehiculo ? `${wo.vehiculo.marca} ${wo.vehiculo.modelo} ${wo.vehiculo.anio}` : '',

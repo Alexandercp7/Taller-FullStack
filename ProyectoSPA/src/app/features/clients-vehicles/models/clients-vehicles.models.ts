@@ -13,6 +13,7 @@ export interface ClientProfileMock {
 
 export interface ClientWorkOrderHistoryItem {
 	id: string;
+	code: string;
 	status: WorkOrderStatus;
 	priority: WorkOrderPriority;
 	fechaProgramada: string;

@@ -38,7 +38,7 @@
 							<tbody hlmTBody>
 								@for (order of results(); track order.id) {
 									<tr hlmTr>
-										<td hlmTd class="font-medium">{{ order.id }}</td>
+										<td hlmTd class="font-medium">{{ order.code }}</td>
 										<td hlmTd>{{ order.vehicle.marca }} {{ order.vehicle.modelo }} {{ order.vehicle.anio }}</td>
 										<td hlmTd>{{ order.fechaProgramada }}</td>
 										<td hlmTd>

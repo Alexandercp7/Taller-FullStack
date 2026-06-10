@@ -156,7 +156,7 @@ describe('ClientsVehiclesService', () => {
           total_ots: 3, total_vehiculos: 2,
           vehicles: [{ id: 10, marca: 'Nissan', modelo: 'Sentra', anio: 2020, placas: 'ABC-123', vin: 'VIN1', services: ['Afinación'], workOrderIds: [100] }],
           workOrders: [{
-            id: 'WO-100', status: 'En Proceso', priority: 'Alta', fecha_programada: '2026-06-10',
+            id: 'WO-100', code: 'OT-0100', status: 'En Proceso', priority: 'Alta', fecha_programada: '2026-06-10',
             tecnico: { name: 'Pedro' }, vehiculo: { marca: 'Nissan', modelo: 'Sentra', anio: 2020, placas: 'ABC-123' },
             paymentState: 'Pendiente',
           }],

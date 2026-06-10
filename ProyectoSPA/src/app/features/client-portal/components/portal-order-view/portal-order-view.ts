@@ -12,6 +12,7 @@ import { type WorkOrderPriority, type WorkOrderStatus } from '../../../work-orde
 
 interface PortalOrder {
 	id: string;
+	code: string;
 	status: WorkOrderStatus;
 	priority: WorkOrderPriority;
 	tipo_vehiculo: string;

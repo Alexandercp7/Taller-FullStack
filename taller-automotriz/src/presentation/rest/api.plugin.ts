@@ -542,7 +542,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
           id: v.id, marca: v.brand, modelo: v.model, anio: v.year, placas: v.plates, vin: v.vin ?? '',
         })),
         workOrders: c.orders.map(o => ({
-          id: o.id, status: STATUS_MAP[o.status] ?? o.status, priority: PRIORITY_MAP[o.priority] ?? o.priority,
+          id: o.id, code: o.code, status: STATUS_MAP[o.status] ?? o.status, priority: PRIORITY_MAP[o.priority] ?? o.priority,
           fecha_programada: toDate(o.scheduledAt),
           tecnico: o.technician ? { name: o.technician.name } : null,
           vehiculo: o.vehicle ? { marca: o.vehicle.brand, modelo: o.vehicle.model, anio: o.vehicle.year, placas: o.vehicle.plates } : null,
