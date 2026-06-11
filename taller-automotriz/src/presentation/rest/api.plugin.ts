@@ -308,7 +308,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       });
     }
 
-    if (dbStatus === 'DELIVERED') {
+    if (dbStatus === 'COMPLETED' || dbStatus === 'DELIVERED') {
       const order = await db.workOrder.findUnique({
         where: { id },
         include: { quotes: true, assignedParts: true, accountReceivable: true },
@@ -324,7 +324,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
           });
         }
 
-        if (Number(ar.balance) > 0) {
+        if (dbStatus === 'DELIVERED' && Number(ar.balance) > 0) {
           const newPaid = Number(ar.total);
           await db.accountReceivable.update({
             where: { id: ar.id },
@@ -1081,7 +1081,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         categoria: 'General',
         fecha_vencimiento: toDate(p.dueDate) ?? '',
         monto_presupuestado: Number(p.amount),
-        monto_pagado: 0,
+        monto_pagado: Number(p.paidAmount),
         estado: PAYMENT_STATUS_MAP[p.status] ?? p.status,
         comprobante_url: null, notas: p.notes ?? null,
       })),
@@ -1097,12 +1097,13 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       data: {
         description: body.concepto,
         amount: Number(body.monto_presupuestado ?? 0),
+        paidAmount: Number(body.monto_pagado ?? 0),
         dueDate: new Date(body.fecha_vencimiento),
         type: tipo,
         notes: body.notas || null,
       },
     });
-    return { data: { id: p.id, concepto: p.description, tipo: CASH_TYPE_MAP[p.type] ?? p.type, categoria: 'General', fecha_vencimiento: toDate(p.dueDate) ?? '', monto_presupuestado: Number(p.amount), monto_pagado: 0, estado: PAYMENT_STATUS_MAP[p.status] ?? p.status, comprobante_url: null, notas: p.notes ?? null } };
+    return { data: { id: p.id, concepto: p.description, tipo: CASH_TYPE_MAP[p.type] ?? p.type, categoria: 'General', fecha_vencimiento: toDate(p.dueDate) ?? '', monto_presupuestado: Number(p.amount), monto_pagado: Number(p.paidAmount), estado: PAYMENT_STATUS_MAP[p.status] ?? p.status, comprobante_url: null, notas: p.notes ?? null } };
   });
 
   app.put('/api/v1/payments-agenda/:id', async (req, reply) => {
@@ -1118,12 +1119,13 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       data: {
         description: body.concepto || undefined,
         amount: body.monto_presupuestado !== undefined ? Number(body.monto_presupuestado) : undefined,
+        paidAmount: body.monto_pagado !== undefined ? Number(body.monto_pagado) : undefined,
         dueDate: body.fecha_vencimiento ? new Date(body.fecha_vencimiento) : undefined,
         notes: body.notas !== undefined ? body.notas : undefined,
         status: body.estado !== undefined ? ((PAYMENT_STATUS_REVERSE[body.estado] ?? body.estado) as any) : undefined,
       },
     });
-    return { data: { id: p.id, concepto: p.description, tipo: CASH_TYPE_MAP[p.type] ?? p.type, categoria: 'General', fecha_vencimiento: toDate(p.dueDate) ?? '', monto_presupuestado: Number(p.amount), monto_pagado: 0, estado: PAYMENT_STATUS_MAP[p.status] ?? p.status, comprobante_url: null, notas: p.notes ?? null } };
+    return { data: { id: p.id, concepto: p.description, tipo: CASH_TYPE_MAP[p.type] ?? p.type, categoria: 'General', fecha_vencimiento: toDate(p.dueDate) ?? '', monto_presupuestado: Number(p.amount), monto_pagado: Number(p.paidAmount), estado: PAYMENT_STATUS_MAP[p.status] ?? p.status, comprobante_url: null, notas: p.notes ?? null } };
   });
 
   app.delete('/api/v1/payments-agenda/:id', async (req, reply) => {
