@@ -423,6 +423,7 @@ model ScheduledPayment {
   id          String        @id @default(cuid())
   description String
   amount      Decimal       @db.Decimal(12, 2)
+  paidAmount  Decimal       @default(0) @db.Decimal(12, 2)
   dueDate     DateTime
   status      PaymentStatus @default(PENDING)
   type        CashType
