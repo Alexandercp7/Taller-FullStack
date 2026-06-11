@@ -32,6 +32,9 @@ describe('WorkOrdersService', () => {
     // Responde la carga inicial disparada por el constructor
     const req = httpMock.expectOne('/api/v1/work-orders?per_page=100');
     req.flush(emptyListResponse);
+
+    const clientsReq = httpMock.expectOne('/api/v1/clients?per_page=500');
+    clientsReq.flush(emptyListResponse);
   });
 
   afterEach(() => {
