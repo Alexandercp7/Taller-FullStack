@@ -92,7 +92,7 @@ export class CreateWorkOrderDialogComponent {
 		});
 	}
 
-	protected onClienteChange(value: string): void {
+	protected onClienteChange(value: string | null): void {
 		const name = (value ?? '').toString();
 		this.cliente.set(name);
 
