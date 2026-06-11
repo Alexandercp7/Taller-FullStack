@@ -236,15 +236,15 @@ export class WorkOrderQuotationsSectionComponent {
 		if (isLatheSvc) {
 			return safeParse((service as any).precio);
 		}
-		
+
 		switch (vehicleType) {
 			case 'Camioneta':
-				return safeParse((service as any).precioCamioneta) || 0;
+				return safeParse((service as any).precioCamioneta) || safeParse((service as any).precio);
 			case 'Camión':
-				return safeParse((service as any).precioCamion) || 0;
+				return safeParse((service as any).precioCamion) || safeParse((service as any).precio);
 			case 'Auto':
 			default:
-				return safeParse((service as any).precioAuto) || 0;
+				return safeParse((service as any).precioAuto) || safeParse((service as any).precio);
 		}
 	};
 

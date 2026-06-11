@@ -37,6 +37,8 @@ export interface ChecklistItem {
 export interface TimelineEvent {
 	id: string;
 	descripcion: string;
+	evento: string;
+	detalle: Record<string, unknown> | null;
 	timestamp: string;
 	usuario: string;
 }
@@ -100,6 +102,7 @@ export interface WorkOrder {
 	problema: string;
 	diagnostico: string;
 	fotosIngreso: string[];
+	fotos: { id: string; url: string }[];
 	checklistInicial: ChecklistItem[];
 	checklistTrabajo: ChecklistItem[];
 	timeline: TimelineEvent[];

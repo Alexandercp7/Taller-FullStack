@@ -43,8 +43,9 @@ export class WorkOrderChecklistSectionComponent {
 	protected readonly newChecklistTrabajoOwner = signal('');
 
 	constructor() {
-		this._http.get<{ data: ResponsableOption[] }>('/api/v1/users').subscribe({
+		this._http.get<{ data: ResponsableOption[] }>('/api/v1/employees').subscribe({
 			next: (res) => this.responsables.set(res.data ?? []),
+			error: () => this.responsables.set([]),
 		});
 	}
 

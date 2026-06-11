@@ -103,13 +103,13 @@
 									} @else {
 										@switch (ot.tipoVehiculo) {
 											@case ('Camioneta') {
-												<td hlmTd>{{ service.precioCamioneta ? ('$' + (service.precioCamioneta | number : '1.0-0')) : '—' }}</td>
+												<td hlmTd>{{ '$' + (getPriceToDisplayInTable(service) | number : '1.0-0') }}</td>
 											}
 											@case ('Camión') {
-												<td hlmTd>{{ service.precioCamion ? ('$' + (service.precioCamion | number : '1.0-0')) : '—' }}</td>
+												<td hlmTd>{{ '$' + (getPriceToDisplayInTable(service) | number : '1.0-0') }}</td>
 											}
 											@default {
-												<td hlmTd>{{ service.precioAuto ? ('$' + (service.precioAuto | number : '1.0-0')) : '—' }}</td>
+												<td hlmTd>{{ '$' + (getPriceToDisplayInTable(service) | number : '1.0-0') }}</td>
 											}
 										}
 									}

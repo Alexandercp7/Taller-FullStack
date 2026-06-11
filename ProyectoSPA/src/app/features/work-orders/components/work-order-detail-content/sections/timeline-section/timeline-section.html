@@ -4,7 +4,10 @@
 		<div hlmCardContent class="timeline-list">
 			@for (event of ot.timeline; track event.id) {
 				<article class="timeline-item">
-					<p class="text-sm font-medium">{{ event.descripcion }}</p>
+					<p class="text-sm font-medium">{{ describeEvent(event, ot) }}</p>
+					@if (getEventPhotoUrl(event, ot); as photoUrl) {
+						<img [src]="photoUrl" alt="Foto de la orden" class="timeline-photo" />
+					}
 					<p class="text-muted-foreground text-xs">{{ event.timestamp }} - {{ event.usuario }}</p>
 				</article>
 			}

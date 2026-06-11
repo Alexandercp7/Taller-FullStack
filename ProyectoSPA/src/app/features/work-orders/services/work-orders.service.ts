@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { map, type Observable } from 'rxjs';
+import { AuthService } from '../../../core';
 import { InventoryService } from '../../inventory/services';
 import type {
   AssignedPartItem, AssignedServiceItem, ChecklistItem, ClientData,
@@ -24,7 +25,7 @@ interface WoDetailApi extends WoListApi {
   notas: { id: number; tipo: string; texto: string; created_at: string; user?: { name: string } }[];
   partes: { id: number; inventory_item_id: number; nombre: string; cantidad: number; costo_unitario: number }[];
   servicios: { id: number; price_item_id: number; nombre: string; precio: number }[];
-  timeline: { id: number; descripcion: string; created_at: string; user?: { name: string } }[];
+  timeline: { id: number; descripcion: string; evento: string; detalle: Record<string, unknown> | null; created_at: string; user?: { name: string } }[];
 }
 
 interface Paginated<T> { data: T[] }
@@ -33,6 +34,7 @@ interface Paginated<T> { data: T[] }
 export class WorkOrdersService {
   private readonly _inventoryService = inject(InventoryService);
   private readonly _http = inject(HttpClient);
+  private readonly _auth = inject(AuthService);
   private readonly _workOrders = signal<WorkOrder[]>([]);
   private readonly _listLoaded = signal(false);
 
@@ -81,6 +83,7 @@ export class WorkOrdersService {
         kilometraje: 0,
       },
       fotosIngreso: [],
+      fotos: [],
       checklistInicial: [],
       checklistTrabajo: [],
       timeline: [],
@@ -111,8 +114,9 @@ export class WorkOrdersService {
         id: String(c.id), tarea: c.tarea, responsable: c.responsable ?? '', responsableId: c.responsableId ?? null, completada: c.completada,
       })),
       fotosIngreso: (item.fotos ?? []).map(f => f.url),
+      fotos: (item.fotos ?? []).map(f => ({ id: String(f.id), url: f.url })),
       timeline: (item.timeline ?? []).map(t => ({
-        id: String(t.id), descripcion: t.descripcion,
+        id: String(t.id), descripcion: t.descripcion, evento: t.evento, detalle: t.detalle,
         timestamp: t.created_at, usuario: t.user?.name ?? 'Sistema',
       })),
       notasInternas: (item.notas ?? []).filter(n => n.tipo === 'interna').map(n => ({
@@ -168,7 +172,7 @@ export class WorkOrdersService {
       fechaIngreso: nowDate, fechaProgramada: payload.fechaProgramada || nowDate,
       status: 'Agendado', priority: payload.priority, vehicle: { ...payload.vehicle },
       tipoVehiculo: payload.tipoVehiculo, problema: payload.problema, diagnostico: payload.diagnostico,
-      fotosIngreso: [], checklistInicial: [], checklistTrabajo: [],
+      fotosIngreso: [], fotos: [], checklistInicial: [], checklistTrabajo: [],
       timeline: [this.createTimeline('OT creada', 'Recepcion')],
       catalogoRefacciones: [], refaccionesAsignadas: [], catalogoServicios: [], serviciosAsignados: [],
       cargoCuentasPorCobrarGenerado: false, notasInternas: [], notasCliente: [],
@@ -379,11 +383,11 @@ export class WorkOrdersService {
     this._http.post(`/api/v1/work-orders/${id}/parts`, { inventory_item_id: part.id, cantidad: 1 }).subscribe();
   }
 
-  public addInternalNote(id: string, texto: string, usuario = 'Personal'): void {
+  public addInternalNote(id: string, texto: string, usuario = this._auth.currentUser()?.name ?? 'Sistema'): void {
     this.addNote(id, 'notasInternas', texto, usuario, 'interna');
   }
 
-  public addCustomerNote(id: string, texto: string, usuario = 'Asesor'): void {
+  public addCustomerNote(id: string, texto: string, usuario = this._auth.currentUser()?.name ?? 'Sistema'): void {
     this.addNote(id, 'notasCliente', texto, usuario, 'cliente');
   }
 
@@ -431,7 +435,7 @@ export class WorkOrdersService {
   }
 
   private createTimeline(descripcion: string, usuario: string) {
-    return { id: `tl-${Date.now()}`, descripcion, timestamp: this.timestampNow(), usuario };
+    return { id: `tl-${Date.now()}`, descripcion, evento: 'order_created', detalle: null, timestamp: this.timestampNow(), usuario };
   }
 
   private timestampNow(): string {

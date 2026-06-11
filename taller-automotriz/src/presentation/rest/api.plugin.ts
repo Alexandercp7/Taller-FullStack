@@ -125,7 +125,8 @@ async function mapOrderDetail(o: any) {
       id: q.id, price_item_id: q.serviceId ?? q.id, nombre: q.service?.name ?? 'Servicio', precio: Number(q.total),
     })),
     timeline: (o.timeline ?? []).map((t: any) => ({
-      id: t.id, descripcion: t.event, created_at: t.createdAt?.toISOString(),
+      id: t.id, descripcion: t.event, evento: t.event, detalle: t.detail ?? null,
+      created_at: t.createdAt?.toISOString(),
       user: t.user ? { name: t.user.name } : undefined,
     })),
   };
@@ -201,7 +202,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         client: true, vehicle: true, technician: true, accountReceivable: true,
         checklist: { include: { responsable: { select: { name: true } } } },
         photos: true,
-        notes: true,
+        notes: { include: { user: { select: { name: true } } } },
         assignedParts: { include: { item: true } },
         quotes: { include: { service: true } },
         timeline: { include: { user: { select: { name: true } } } },
@@ -277,7 +278,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       where: { id: orderId },
       include: {
         client: true, vehicle: true, technician: true, accountReceivable: true,
-        checklist: { include: { responsable: { select: { name: true } } } }, photos: true, notes: true, assignedParts: { include: { item: true } },
+        checklist: { include: { responsable: { select: { name: true } } } }, photos: true, notes: { include: { user: { select: { name: true } } } }, assignedParts: { include: { item: true } },
         quotes: { include: { service: true } }, timeline: { include: { user: { select: { name: true } } } },
       },
     });
@@ -1481,7 +1482,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       where: { portalToken: token },
       include: {
         client: true, vehicle: true, technician: true, accountReceivable: true,
-        checklist: true, photos: true, notes: true,
+        checklist: true, photos: true, notes: { include: { user: { select: { name: true } } } },
         timeline: { include: { user: { select: { name: true } } } },
       },
     });

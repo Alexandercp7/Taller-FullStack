@@ -19,7 +19,7 @@ export const workOrdersMock: WorkOrder[] = [
 		},
 		problema: 'Ruidos en frenado y vibracion al girar.',
 		diagnostico: 'Desgaste irregular en discos delanteros y bujes con holgura.',
-		fotosIngreso: [],
+		fotosIngreso: [], fotos: [],
 		checklistInicial: [
 			{ id: 'ci-1', tarea: 'Revision visual de carroceria', responsable: 'Recepcion', completada: true },
 			{ id: 'ci-2', tarea: 'Lectura de kilometraje', responsable: 'Recepcion', completada: true },
@@ -31,8 +31,8 @@ export const workOrdersMock: WorkOrder[] = [
 			{ id: 'ct-3', tarea: 'Prueba de ruta final', responsable: 'Supervisor', completada: false },
 		],
 		timeline: [
-			{ id: 'tl-1', descripcion: 'OT creada', timestamp: '2026-04-02 08:40', usuario: 'Recepcion' },
-			{ id: 'tl-2', descripcion: 'Estado actualizado a En Proceso', timestamp: '2026-04-03 11:20', usuario: 'M. Rivera' },
+			{ id: 'tl-1', descripcion: 'OT creada', evento: 'order_created', detalle: null, timestamp: '2026-04-02 08:40', usuario: 'Recepcion' },
+			{ id: 'tl-2', descripcion: 'Estado actualizado a En Proceso', evento: 'status_changed', detalle: { newStatus: 'IN_PROGRESS' }, timestamp: '2026-04-03 11:20', usuario: 'M. Rivera' },
 		],
 		catalogoRefacciones: [
 			{ id: 'p-1', nombre: 'Disco de freno delantero', sku: 'DFD-1002', stock: 8, costo: 950 },
@@ -73,14 +73,14 @@ export const workOrdersMock: WorkOrder[] = [
 		},
 		problema: 'Falla intermitente de arranque en frio.',
 		diagnostico: 'Pendiente de inspeccion electrica completa.',
-		fotosIngreso: [],
+		fotosIngreso: [], fotos: [],
 		checklistInicial: [
 			{ id: 'ci-1', tarea: 'Revision de bateria', responsable: 'Recepcion', completada: false },
 		],
 		checklistTrabajo: [
 			{ id: 'ct-1', tarea: 'Prueba de alternador', responsable: 'D. Ortega', completada: false },
 		],
-		timeline: [{ id: 'tl-1', descripcion: 'OT creada', timestamp: '2026-04-01 09:05', usuario: 'Recepcion' }],
+		timeline: [{ id: 'tl-1', descripcion: 'OT creada', evento: 'order_created', detalle: null, timestamp: '2026-04-01 09:05', usuario: 'Recepcion' }],
 		catalogoRefacciones: [
 			{ id: 'p-3', nombre: 'Bateria 12V 650CCA', sku: 'BAT-650', stock: 5, costo: 1850 },
 		],
@@ -116,14 +116,14 @@ export const workOrdersMock: WorkOrder[] = [
 		},
 		problema: 'Ruido en suspension trasera.',
 		diagnostico: 'Pendiente llegada de refaccion.',
-		fotosIngreso: [],
+		fotosIngreso: [], fotos: [],
 		checklistInicial: [
 			{ id: 'ci-1', tarea: 'Inspeccion de suspension', responsable: 'Recepcion', completada: true },
 		],
 		checklistTrabajo: [
 			{ id: 'ct-1', tarea: 'Sustitucion de buje trasero', responsable: 'A. Salinas', completada: false },
 		],
-		timeline: [{ id: 'tl-1', descripcion: 'Estado actualizado a En Espera', timestamp: '2026-04-01 15:30', usuario: 'Supervisor' }],
+		timeline: [{ id: 'tl-1', descripcion: 'Estado actualizado a En Espera', evento: 'status_changed', detalle: { newStatus: 'ON_HOLD' }, timestamp: '2026-04-01 15:30', usuario: 'Supervisor' }],
 		catalogoRefacciones: [
 			{ id: 'p-4', nombre: 'Buje trasero', sku: 'BUJ-778', stock: 3, costo: 420 },
 		],

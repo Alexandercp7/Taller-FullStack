@@ -139,6 +139,7 @@ model User {
   createdActivities   Activity[]       @relation("CreatedActivities")
   activityComments    ActivityComment[]
   checklistItems      Checklist[]
+  notes               Note[]
 
   @@map("users")
 }
@@ -589,6 +590,7 @@ model Note {
   updatedAt  DateTime       @updatedAt
 
   order WorkOrder @relation(fields: [orderId], references: [id])
+  user  User      @relation(fields: [userId], references: [id])
 
   @@map("notes")
 }
