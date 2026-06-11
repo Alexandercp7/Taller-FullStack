@@ -15,7 +15,7 @@ export class UserMapper {
     );
   }
 
-  static toPersistence(entity: User): Omit<PrismaUser, 'createdAt' | 'updatedAt'> {
+  static toPersistence(entity: User): Omit<PrismaUser, 'createdAt' | 'updatedAt' | 'kpiRole'> {
     return {
       id: entity.id,
       name: entity.name,

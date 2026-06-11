@@ -182,7 +182,7 @@ export class PaymentsAgendaSectionComponent implements OnInit {
       this.notification.info('Este pago ya está confirmado.');
       return;
     }
-    this.service.updatePayment(payment.id, { estado: 'Pagado' });
+    this.service.updatePayment(payment.id, { estado: 'Pagado', montoPagado: payment.montoPresupuestado });
     this.notification.success('Pago confirmado correctamente.');
   }
 

@@ -125,6 +125,7 @@ model User {
   email        String   @unique
   passwordHash String
   role         UserRole @default(TECHNICIAN)
+  kpiRole      String?
   permissions  String[] @default([])
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -140,6 +141,7 @@ model User {
   activityComments    ActivityComment[]
   checklistItems      Checklist[]
   notes               Note[]
+  kpiActivities       KpiActivity[]    @relation("KpiActivityAssignee")
 
   @@map("users")
 }
@@ -607,4 +609,60 @@ model Survey {
   order WorkOrder @relation(fields: [orderId], references: [id])
 
   @@map("surveys")
+}
+
+// ─── KPIs / Organigrama ─────────────────────────────────────────────────────
+
+model OrganizationInfo {
+  id      String   @id @default(cuid())
+  mision  String   @default("")
+  vision  String   @default("")
+  valores String[] @default([])
+
+  @@map("organization_info")
+}
+
+model Kpi {
+  id              String   @id @default(cuid())
+  nombre          String
+  descripcion     String   @default("")
+  roleResponsable String
+  meta            Float    @default(0)
+  progreso        Float    @default(0)
+  periodo         String
+  fechaInicio     DateTime
+  fechaFin        DateTime
+  activo          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("kpis")
+}
+
+model ActivityTag {
+  id     String        @id @default(cuid())
+  nombre String
+  color  String
+
+  activities KpiActivity[] @relation("KpiActivityTags")
+
+  @@map("activity_tags")
+}
+
+model KpiActivity {
+  id               String    @id @default(cuid())
+  titulo           String
+  descripcion      String    @default("")
+  roleAsignado     String
+  status           String    @default("Pendiente")
+  prioridad        String    @default("Normal")
+  fechaVencimiento DateTime?
+  empleadoId       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  empleado User?         @relation("KpiActivityAssignee", fields: [empleadoId], references: [id])
+  tags     ActivityTag[] @relation("KpiActivityTags")
+
+  @@map("kpi_activities")
 }

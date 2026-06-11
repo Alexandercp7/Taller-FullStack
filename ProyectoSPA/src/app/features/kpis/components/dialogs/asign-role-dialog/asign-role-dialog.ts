@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
@@ -29,35 +29,57 @@ export interface AsignRoleDialogContext {
 					<p class="text-sm text-muted-foreground">Actualiza los datos del empleado</p>
 				} @else {
 					<h2 class="text-lg font-semibold">Asignar empleado a <span class="text-primary">{{ context.role }}</span></h2>
-					<p class="text-sm text-muted-foreground">Completa los datos del nuevo empleado</p>
+					<p class="text-sm text-muted-foreground">Selecciona un trabajador existente del taller</p>
 				}
 			</div>
 
-			<div class="space-y-4">
-				<div class="grid grid-cols-2 gap-4">
-					<div class="space-y-2">
-						<label hlmLabel for="nombre">Nombre *</label>
-						<input hlmInput id="nombre" [(ngModel)]="nombre" placeholder="Ej: Juan" />
+			@if (context.isEditing) {
+				<div class="space-y-4">
+					<div class="grid grid-cols-2 gap-4">
+						<div class="space-y-2">
+							<label hlmLabel for="nombre">Nombre *</label>
+							<input hlmInput id="nombre" [(ngModel)]="nombre" placeholder="Ej: Juan" />
+						</div>
+
+						<div class="space-y-2">
+							<label hlmLabel for="apellido">Apellido</label>
+							<input hlmInput id="apellido" [(ngModel)]="apellido" placeholder="Ej: Pérez" />
+						</div>
 					</div>
 
-					<div class="space-y-2">
-						<label hlmLabel for="apellido">Apellido</label>
-						<input hlmInput id="apellido" [(ngModel)]="apellido" placeholder="Ej: Pérez" />
+					<div class="grid grid-cols-2 gap-4">
+						<div class="space-y-2">
+							<label hlmLabel for="email">Email *</label>
+							<input hlmInput id="email" type="email" [(ngModel)]="email" placeholder="Ej: juan@example.com" />
+						</div>
+
+						<div class="space-y-2">
+							<label hlmLabel for="telefono">Teléfono</label>
+							<input hlmInput id="telefono" [(ngModel)]="telefono" placeholder="Ej: +1234567890" />
+						</div>
 					</div>
 				</div>
-
-				<div class="grid grid-cols-2 gap-4">
-					<div class="space-y-2">
-						<label hlmLabel for="email">Email *</label>
-						<input hlmInput id="email" type="email" [(ngModel)]="email" placeholder="Ej: juan@example.com" />
-					</div>
-
-					<div class="space-y-2">
-						<label hlmLabel for="telefono">Teléfono</label>
-						<input hlmInput id="telefono" [(ngModel)]="telefono" placeholder="Ej: +1234567890" />
-					</div>
+			} @else {
+				<div class="space-y-2">
+					<label hlmLabel for="empleado">Trabajador *</label>
+					<select
+						hlmInput
+						id="empleado"
+						class="w-full"
+						[(ngModel)]="selectedEmployeeId"
+					>
+						<option value="" disabled>Selecciona un trabajador</option>
+						@for (employee of availableEmployees(); track employee.id) {
+							<option [value]="employee.id">
+								{{ employee.nombre }} {{ employee.apellido }} ({{ employee.role }})
+							</option>
+						}
+					</select>
+					@if (availableEmployees().length === 0) {
+						<p class="text-sm text-muted-foreground">No hay otros trabajadores disponibles para asignar.</p>
+					}
 				</div>
-			</div>
+			}
 
 			<div class="flex justify-end gap-2 pt-4">
 				<button hlmBtn type="button" variant="outline" (click)="onCancel()">Cancelar</button>
@@ -66,7 +88,7 @@ export interface AsignRoleDialogContext {
 						Actualizar
 					</button>
 				} @else {
-					<button hlmBtn type="button" (click)="onAssign()" [disabled]="!nombre() || !email()">
+					<button hlmBtn type="button" (click)="onAssign()" [disabled]="!selectedEmployeeId()">
 						Asignar
 					</button>
 				}
@@ -85,6 +107,11 @@ export class AsignRoleDialogComponent {
 	protected apellido = signal('');
 	protected email = signal('');
 	protected telefono = signal('');
+	protected selectedEmployeeId = signal('');
+
+	protected readonly availableEmployees = computed(() =>
+		this.kpisService.employees().filter((e) => e.role !== this.context.role),
+	);
 
 	constructor() {
 		if (this.context.isEditing && this.context.employee) {
@@ -121,24 +148,16 @@ export class AsignRoleDialogComponent {
 	}
 
 	protected onAssign(): void {
-		const nombreVal = this.nombre().trim();
-		const emailVal = this.email().trim();
-
-		if (!nombreVal || !emailVal) {
-			this.notification.error('Por favor completa nombre y email');
+		const employeeId = this.selectedEmployeeId();
+		const employee = this.kpisService.getEmployeeById(employeeId);
+		if (!employee) {
+			this.notification.error('Selecciona un trabajador valido');
 			return;
 		}
 
-		this.kpisService.createEmployee({
-			nombre: nombreVal,
-			apellido: this.apellido().trim(),
-			email: emailVal,
-			telefono: this.telefono().trim(),
-			role: this.context.role,
-			fotoUrl: '',
-		});
+		this.kpisService.updateEmployee(employee.id, { role: this.context.role });
 
-		this.notification.success(`${nombreVal} asignado a ${this.context.role}`);
+		this.notification.success(`${employee.nombre} asignado a ${this.context.role}`);
 		this.dialogRef.close();
 	}
 }

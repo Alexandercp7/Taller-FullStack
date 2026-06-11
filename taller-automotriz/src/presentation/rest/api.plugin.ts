@@ -43,6 +43,13 @@ const PAYMENT_METHOD_REVERSE: Record<string, string> = Object.fromEntries(
   Object.entries(PAYMENT_METHOD_MAP).map(([k, v]) => [v, k]),
 );
 
+const KPI_ROLE_FALLBACK: Record<string, string> = {
+  ADMIN: 'Líder Admin',
+  MANAGER: 'Director General',
+  RECEPTIONIST: 'Asesor de Servicio',
+  TECHNICIAN: 'Técnico Automotriz',
+};
+
 const PAYMENT_STATUS_MAP: Record<string, string> = {
   PENDING: 'Pendiente', PARTIAL: 'Parcial', PAID: 'Pagado', OVERDUE: 'Vencido',
 };
@@ -1320,47 +1327,172 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     return { message: 'ok' };
   });
 
-  // ── KPIs (in-memory) ──────────────────────────────────────────────────────
+  // ── KPIs ──────────────────────────────────────────────────────────────────
+
+  const mapKpi = (k: Awaited<ReturnType<typeof db.kpi.findFirst>>) => k && {
+    id: k.id, nombre: k.nombre, descripcion: k.descripcion,
+    role_responsable: k.roleResponsable, meta: Number(k.meta), progreso: Number(k.progreso),
+    periodo: k.periodo, fecha_inicio: toDate(k.fechaInicio), fecha_fin: toDate(k.fechaFin),
+  };
 
   app.get('/api/v1/kpis', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { data: [] };
+    const kpis = await db.kpi.findMany({ where: { activo: true }, orderBy: { createdAt: 'desc' } });
+    return { data: kpis.map(mapKpi) };
   });
 
   app.post('/api/v1/kpis', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { data: { id: `kpi-${Date.now()}`, ...(req.body as any) } };
+    const body = req.body as any;
+    const kpi = await db.kpi.create({
+      data: {
+        nombre: body.nombre ?? 'Sin nombre',
+        descripcion: body.descripcion ?? '',
+        roleResponsable: body.role_responsable,
+        meta: Number(body.meta ?? 0),
+        progreso: Number(body.progreso ?? 0),
+        periodo: body.periodo ?? '',
+        fechaInicio: new Date(body.fecha_inicio),
+        fechaFin: new Date(body.fecha_fin),
+      },
+    });
+    return { data: mapKpi(kpi) };
   });
 
   app.put('/api/v1/kpis/:id', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    const body = req.body as any;
+    const kpi = await db.kpi.update({
+      where: { id },
+      data: {
+        nombre: body.nombre ?? undefined,
+        descripcion: body.descripcion ?? undefined,
+        roleResponsable: body.roleResponsable ?? undefined,
+        meta: body.meta !== undefined ? Number(body.meta) : undefined,
+        progreso: body.progreso !== undefined ? Number(body.progreso) : undefined,
+        periodo: body.periodo ?? undefined,
+        fechaInicio: body.fechaInicio ? new Date(body.fechaInicio) : undefined,
+        fechaFin: body.fechaFin ? new Date(body.fechaFin) : undefined,
+        activo: body.activo ?? undefined,
+      },
+    });
+    return { data: mapKpi(kpi) };
+  });
+
+  app.delete('/api/v1/kpis/:id', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    await db.kpi.update({ where: { id }, data: { activo: false } });
     return { message: 'ok' };
+  });
+
+  // ── KPI Activity Tags ───────────────────────────────────────────────────────
+
+  app.get('/api/v1/activity-tags', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const tags = await db.activityTag.findMany();
+    return { data: tags.map(t => ({ id: t.id, nombre: t.nombre, color: t.color })) };
+  });
+
+  app.post('/api/v1/activity-tags', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const body = req.body as any;
+    const tag = await db.activityTag.create({ data: { nombre: body.nombre ?? 'Sin nombre', color: body.color ?? '#999999' } });
+    return { data: { id: tag.id, nombre: tag.nombre, color: tag.color } };
+  });
+
+  app.put('/api/v1/activity-tags/:id', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    const body = req.body as any;
+    const tag = await db.activityTag.update({
+      where: { id },
+      data: { nombre: body.nombre ?? undefined, color: body.color ?? undefined },
+    });
+    return { data: { id: tag.id, nombre: tag.nombre, color: tag.color } };
+  });
+
+  app.delete('/api/v1/activity-tags/:id', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    await db.activityTag.delete({ where: { id } });
+    return { message: 'ok' };
+  });
+
+  // ── KPI Activities ────────────────────────────────────────────────────────
+
+  const mapKpiActivity = (a: any) => ({
+    id: a.id, titulo: a.titulo, descripcion: a.descripcion,
+    role_asignado: a.roleAsignado, status: a.status, prioridad: a.prioridad,
+    fecha_vencimiento: toDate(a.fechaVencimiento),
+    tags: (a.tags ?? []).map((t: any) => t.id),
+    empleado_id: a.empleadoId ?? undefined,
   });
 
   app.get('/api/v1/kpi-activities', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { data: [] };
+    const activities = await db.kpiActivity.findMany({ include: { tags: true }, orderBy: { createdAt: 'desc' } });
+    return { data: activities.map(mapKpiActivity) };
   });
 
   app.post('/api/v1/kpi-activities', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { data: { id: `kpia-${Date.now()}`, ...(req.body as any) } };
+    const body = req.body as any;
+    const activity = await db.kpiActivity.create({
+      data: {
+        titulo: body.titulo ?? 'Sin título',
+        descripcion: body.descripcion ?? '',
+        roleAsignado: body.role_asignado,
+        prioridad: body.prioridad ?? 'Normal',
+        fechaVencimiento: body.fecha_vencimiento ? new Date(body.fecha_vencimiento) : null,
+        empleadoId: body.empleado_id ?? null,
+        tags: body.tags ? { connect: (body.tags as string[]).map((id) => ({ id })) } : undefined,
+      },
+      include: { tags: true },
+    });
+    return { data: mapKpiActivity(activity) };
   });
 
   app.put('/api/v1/kpi-activities/:id', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { message: 'ok' };
+    const { id } = req.params as any;
+    const body = req.body as any;
+    const activity = await db.kpiActivity.update({
+      where: { id },
+      data: {
+        titulo: body.titulo ?? undefined,
+        descripcion: body.descripcion ?? undefined,
+        roleAsignado: body.roleAsignado ?? undefined,
+        status: body.status ?? undefined,
+        prioridad: body.prioridad ?? undefined,
+        fechaVencimiento: body.fechaVencimiento !== undefined
+          ? (body.fechaVencimiento ? new Date(body.fechaVencimiento) : null)
+          : undefined,
+        empleadoId: body.empleadoAsignado !== undefined ? (body.empleadoAsignado || null) : undefined,
+        tags: body.tags ? { set: (body.tags as string[]).map((tagId) => ({ id: tagId })) } : undefined,
+      },
+      include: { tags: true },
+    });
+    return { data: mapKpiActivity(activity) };
   });
 
   app.delete('/api/v1/kpi-activities/:id', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    await db.kpiActivity.delete({ where: { id } });
     return { message: 'ok' };
   });
 
@@ -1372,7 +1504,9 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const users = await db.user.findMany({ where: { isActive: true } });
     return {
       data: users.map(u => ({
-        id: u.id, name: u.name, email: u.email, role: u.role, isActive: u.isActive,
+        id: u.id, name: u.name, email: u.email,
+        role: u.kpiRole ?? KPI_ROLE_FALLBACK[u.role] ?? u.role,
+        isActive: u.isActive,
         permissions: u.permissions,
       })),
     };
@@ -1402,9 +1536,13 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const body = req.body as any;
     const upd = await db.user.update({
       where: { id },
-      data: { name: body.name || undefined, role: body.role || undefined, permissions: body.permissions || undefined },
+      data: {
+        name: body.nombre || body.name || undefined,
+        kpiRole: body.role || undefined,
+        permissions: body.permissions || undefined,
+      },
     });
-    return { data: { id: upd.id, name: upd.name, email: upd.email, role: upd.role, isActive: upd.isActive, permissions: upd.permissions } };
+    return { data: { id: upd.id, name: upd.name, email: upd.email, role: upd.kpiRole ?? KPI_ROLE_FALLBACK[upd.role] ?? upd.role, isActive: upd.isActive, permissions: upd.permissions } };
   });
 
   app.delete('/api/v1/employees/:id', async (req, reply) => {
@@ -1442,10 +1580,33 @@ export async function registerRestApi(app: FastifyInstance, container: Container
 
   // ── ORGANIZATION ──────────────────────────────────────────────────────────
 
+  app.get('/api/v1/organization', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    let org = await db.organizationInfo.findFirst();
+    if (!org) {
+      org = await db.organizationInfo.create({ data: {} });
+    }
+    return { data: { id: org.id, mision: org.mision, vision: org.vision, valores: org.valores } };
+  });
+
   app.put('/api/v1/organization', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
-    return { message: 'ok' };
+    const body = req.body as any;
+    let org = await db.organizationInfo.findFirst();
+    if (!org) {
+      org = await db.organizationInfo.create({ data: {} });
+    }
+    org = await db.organizationInfo.update({
+      where: { id: org.id },
+      data: {
+        mision: body.mision ?? undefined,
+        vision: body.vision ?? undefined,
+        valores: body.valores ?? undefined,
+      },
+    });
+    return { data: { id: org.id, mision: org.mision, vision: org.vision, valores: org.valores } };
   });
 
   // ── PORTAL (public) ───────────────────────────────────────────────────────

@@ -10,15 +10,16 @@ interface EmployeeApi {
   telefono: string; role: string; foto_url: string | null; activo: boolean;
 }
 interface KpiApi {
-  id: number; nombre: string; descripcion: string; role_responsable: string;
+  id: string; nombre: string; descripcion: string; role_responsable: string;
   meta: number; periodo: string; fecha_inicio: string; fecha_fin: string; progreso: number;
 }
 interface KpiActivityApi {
-  id: number; titulo: string; descripcion: string; role_asignado: string;
+  id: string; titulo: string; descripcion: string; role_asignado: string;
   status: string; prioridad: string; fecha_vencimiento: string | null;
-  tags?: string[]; empleado_id?: number;
+  tags?: string[]; empleado_id?: string;
 }
-interface OrgApi { id: number; mision: string; vision: string; valores: string[] }
+interface TagApi { id: string; nombre: string; color: string }
+interface OrgApi { id: string; mision: string; vision: string; valores: string[] }
 
 @Injectable({ providedIn: 'root' })
 export class KpisService {
@@ -41,6 +42,7 @@ export class KpisService {
     this.loadKpis();
     this.loadActivities();
     this.loadOrganization();
+    this.loadTags();
   }
 
   private loadEmployees(): void {
@@ -72,8 +74,15 @@ export class KpisService {
         roleAsignado: a.role_asignado as RoleType,
         status: a.status as Activity['status'],
         tags: a.tags ?? [], prioridad: (a.prioridad ?? 'Normal') as Activity['prioridad'],
+        empleadoAsignado: a.empleado_id !== undefined ? String(a.empleado_id) : undefined,
         fechaCreacion: '', fechaVencimiento: a.fecha_vencimiento ?? undefined,
       }))),
+    });
+  }
+
+  private loadTags(): void {
+    this._http.get<{ data: TagApi[] }>('/api/v1/activity-tags').subscribe({
+      next: (res) => this._tags.set(res.data.map(t => ({ id: t.id, nombre: t.nombre, color: t.color }))),
     });
   }
 
@@ -148,8 +157,8 @@ export class KpisService {
     const kpi: KPI = { id: `kpi-${Date.now()}`, ...input, activo: true };
     this._kpis.update(list => [kpi, ...list]);
     this._http.post<{ data: KpiApi }>('/api/v1/kpis', {
-      nombre: input.nombre, role_responsable: input.roleResponsable,
-      meta: input.meta, periodo: input.periodo,
+      nombre: input.nombre, descripcion: input.descripcion, role_responsable: input.roleResponsable,
+      meta: input.meta, progreso: input.progreso, periodo: input.periodo,
       fecha_inicio: input.fechaInicio, fecha_fin: input.fechaFin,
     }).subscribe({ next: () => this.loadKpis() });
     return kpi;
@@ -159,7 +168,17 @@ export class KpisService {
     const found = this._kpis().find(k => k.id === id);
     if (!found) return false;
     this._kpis.update(list => list.map(k => k.id === id ? { ...k, ...updates } : k));
-    this._http.put(`/api/v1/kpis/${id}`, updates).subscribe();
+    const body: Record<string, unknown> = {};
+    if (updates.nombre !== undefined) body['nombre'] = updates.nombre;
+    if (updates.descripcion !== undefined) body['descripcion'] = updates.descripcion;
+    if (updates.roleResponsable !== undefined) body['roleResponsable'] = updates.roleResponsable;
+    if (updates.meta !== undefined) body['meta'] = updates.meta;
+    if (updates.progreso !== undefined) body['progreso'] = updates.progreso;
+    if (updates.periodo !== undefined) body['periodo'] = updates.periodo;
+    if (updates.fechaInicio !== undefined) body['fechaInicio'] = updates.fechaInicio;
+    if (updates.fechaFin !== undefined) body['fechaFin'] = updates.fechaFin;
+    if (updates.activo !== undefined) body['activo'] = updates.activo;
+    this._http.put(`/api/v1/kpis/${id}`, body).subscribe();
     return true;
   }
 
@@ -170,7 +189,11 @@ export class KpisService {
   public deleteKPI(id: string): boolean {
     const initial = this._kpis().length;
     this._kpis.update(list => list.filter(k => k.id !== id));
-    return this._kpis().length < initial;
+    if (this._kpis().length < initial) {
+      this._http.delete(`/api/v1/kpis/${id}`).subscribe();
+      return true;
+    }
+    return false;
   }
 
   public createActivity(input: CreateActivityInput): Activity {
@@ -183,8 +206,9 @@ export class KpisService {
     };
     this._activities.update(list => [act, ...list]);
     this._http.post<{ data: KpiActivityApi }>('/api/v1/kpi-activities', {
-      titulo: input.titulo, role_asignado: input.roleAsignado,
+      titulo: input.titulo, descripcion: input.descripcion, role_asignado: input.roleAsignado,
       prioridad: input.prioridad, fecha_vencimiento: input.fechaVencimiento,
+      tags: input.tags, empleado_id: input.empleadoAsignado,
     }).subscribe({ next: () => this.loadActivities() });
     return act;
   }
@@ -193,7 +217,16 @@ export class KpisService {
     const found = this._activities().find(a => a.id === id);
     if (!found) return false;
     this._activities.update(list => list.map(a => a.id === id ? { ...a, ...updates } : a));
-    this._http.put(`/api/v1/kpi-activities/${id}`, updates).subscribe();
+    const body: Record<string, unknown> = {};
+    if (updates.titulo !== undefined) body['titulo'] = updates.titulo;
+    if (updates.descripcion !== undefined) body['descripcion'] = updates.descripcion;
+    if (updates.roleAsignado !== undefined) body['roleAsignado'] = updates.roleAsignado;
+    if (updates.status !== undefined) body['status'] = updates.status;
+    if (updates.prioridad !== undefined) body['prioridad'] = updates.prioridad;
+    if (updates.fechaVencimiento !== undefined) body['fechaVencimiento'] = updates.fechaVencimiento;
+    if (updates.empleadoAsignado !== undefined) body['empleadoAsignado'] = updates.empleadoAsignado;
+    if (updates.tags !== undefined) body['tags'] = updates.tags;
+    this._http.put(`/api/v1/kpi-activities/${id}`, body).subscribe();
     return true;
   }
 
@@ -210,6 +243,9 @@ export class KpisService {
   public createTag(input: CreateTagInput): ActivityTag {
     const tag: ActivityTag = { id: `tag-${Date.now()}`, nombre: input.nombre, color: input.color };
     this._tags.update(list => [tag, ...list]);
+    this._http.post<{ data: TagApi }>('/api/v1/activity-tags', { nombre: input.nombre, color: input.color }).subscribe({
+      next: () => this.loadTags(),
+    });
     return tag;
   }
 
@@ -217,6 +253,7 @@ export class KpisService {
     const found = this._tags().find(t => t.id === id);
     if (!found) return false;
     this._tags.update(list => list.map(t => t.id === id ? { ...t, ...updates } : t));
+    this._http.put(`/api/v1/activity-tags/${id}`, updates).subscribe();
     return true;
   }
 
@@ -225,6 +262,7 @@ export class KpisService {
     this._tags.update(list => list.filter(t => t.id !== id));
     if (this._tags().length < initial) {
       this._activities.update(list => list.map(a => ({ ...a, tags: a.tags.filter(t => t !== id) })));
+      this._http.delete(`/api/v1/activity-tags/${id}`).subscribe();
       return true;
     }
     return false;
