@@ -7,7 +7,7 @@
 	<div class="form-grid">
 		<label class="field">
 			<span>Cliente</span>
-			<hlm-combobox [value]="cliente()" (valueChange)="cliente.set(($event ?? '') + '')">
+			<hlm-combobox [value]="cliente()" (valueChange)="onClienteChange($event)">
 				<hlm-combobox-trigger class="w-full">
 					<hlm-combobox-value placeholder="Selecciona o busca cliente" />
 				</hlm-combobox-trigger>

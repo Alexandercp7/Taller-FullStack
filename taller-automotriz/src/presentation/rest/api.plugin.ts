@@ -218,13 +218,15 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const body = req.body as any;
 
     // Find or create client
-    const phone = body.cliente_telefono || `TEMP-${Date.now()}`;
-    let client = await db.client.findFirst({ where: { phone } });
+    const clientName = body.cliente_nombre ?? 'Sin nombre';
+    let client = body.cliente_telefono
+      ? await db.client.findFirst({ where: { phone: body.cliente_telefono } })
+      : await db.client.findFirst({ where: { name: clientName } });
     if (!client) {
       client = await db.client.create({
         data: {
-          name: body.cliente_nombre ?? 'Sin nombre',
-          phone,
+          name: clientName,
+          phone: body.cliente_telefono || `TEMP-${Date.now()}`,
           email: body.cliente_correo || null,
           tag: 'NEW',
         },

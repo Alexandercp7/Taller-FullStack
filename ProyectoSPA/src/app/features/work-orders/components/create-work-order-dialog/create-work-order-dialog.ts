@@ -16,6 +16,7 @@ import type { VehicleRecallItem } from '../../../../core';
 
 export interface CreateWorkOrderDialogContext {
 	clients: string[];
+	clientsDirectory: { nombre: string; telefono: string; correo: string }[];
 	onCreate: (payload: CreateWorkOrderInput) => void;
 	onCreateClient: (name: string) => void;
 }
@@ -89,6 +90,17 @@ export class CreateWorkOrderDialogComponent {
 		this._http.get<{ data: { id: string; name: string }[] }>('/api/v1/employees').subscribe({
 			next: (res) => this.employees.set(res.data),
 		});
+	}
+
+	protected onClienteChange(value: string): void {
+		const name = (value ?? '').toString();
+		this.cliente.set(name);
+
+		const existing = this._context.clientsDirectory.find((c) => c.nombre === name);
+		if (existing) {
+			this.telefono.set(existing.telefono ?? '');
+			this.correo.set(existing.correo ?? '');
+		}
 	}
 
 	protected onTecnicoChange(value: string): void {

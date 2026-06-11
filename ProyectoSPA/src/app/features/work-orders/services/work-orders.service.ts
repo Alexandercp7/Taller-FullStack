@@ -28,7 +28,7 @@ interface WoDetailApi extends WoListApi {
   timeline: { id: number; descripcion: string; evento: string; detalle: Record<string, unknown> | null; created_at: string; user?: { name: string } }[];
 }
 
-interface ClientApi { id: number; nombre: string }
+interface ClientApi { id: number; nombre: string; telefono: string; correo: string }
 interface Paginated<T> { data: T[] }
 
 @Injectable({ providedIn: 'root' })
@@ -38,13 +38,14 @@ export class WorkOrdersService {
   private readonly _auth = inject(AuthService);
   private readonly _workOrders = signal<WorkOrder[]>([]);
   private readonly _listLoaded = signal(false);
-  private readonly _registeredClients = signal<string[]>([]);
+  private readonly _clientsDirectory = signal<{ nombre: string; telefono: string; correo: string }[]>([]);
 
   public readonly workOrders = this._workOrders.asReadonly();
   public readonly listLoaded = this._listLoaded.asReadonly();
+  public readonly clientsDirectory = this._clientsDirectory.asReadonly();
   public readonly technicians = computed(() => [...new Set(this._workOrders().map(o => o.tecnico))]);
   public readonly clients = computed(() => [...new Set(this._workOrders().map(o => o.cliente))]);
-  public readonly allClients = computed(() => [...new Set([...this._registeredClients(), ...this.clients()])].sort((a, b) => a.localeCompare(b)));
+  public readonly allClients = computed(() => [...new Set([...this._clientsDirectory().map(c => c.nombre), ...this.clients()])].sort((a, b) => a.localeCompare(b)));
 
   constructor() {
     this.loadAll();
@@ -53,7 +54,9 @@ export class WorkOrdersService {
 
   private loadClients(): void {
     this._http.get<Paginated<ClientApi>>('/api/v1/clients?per_page=500').subscribe({
-      next: (res) => this._registeredClients.set(res.data.map(c => c.nombre)),
+      next: (res) => this._clientsDirectory.set(res.data.map(c => ({
+        nombre: c.nombre, telefono: c.telefono, correo: c.correo,
+      }))),
     });
   }
 

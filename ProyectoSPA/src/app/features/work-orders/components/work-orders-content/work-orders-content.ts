@@ -207,6 +207,7 @@ export class WorkOrdersContentComponent {
 	protected createOrder(): void {
 		const context: CreateWorkOrderDialogContext = {
 			clients: this.clients(),
+			clientsDirectory: this._service.clientsDirectory(),
 			onCreateClient: (name) => {
 				this._service.addClient(name);
 			},
