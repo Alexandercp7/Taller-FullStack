@@ -11,6 +11,6 @@ export interface OrderRepository {
   findByTechnicianId(technicianId: string): Promise<WorkOrder[]>;
   save(order: WorkOrder): Promise<void>;
   delete(id: string): Promise<void>;
-  getNextCode(): Promise<string>;
+  getNextCode(offset?: number): Promise<string>;
   countActiveByClientId(clientId: string): Promise<number>;
 }

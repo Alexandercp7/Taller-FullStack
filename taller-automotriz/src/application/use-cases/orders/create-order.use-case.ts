@@ -8,6 +8,7 @@ import { OrderStatus } from '../../../domain/enums/order-status.enum';
 import { OrderType } from '../../../domain/enums/order-type.enum';
 import { Priority } from '../../../domain/enums/priority.enum';
 import { createId } from '../../../shared/identifier';
+import { DuplicateOrderCodeError } from '../../../domain/errors/duplicate-order-code.error';
 
 interface CreateOrderInput {
   clientId: string;
@@ -43,43 +44,54 @@ export class CreateOrderUseCase {
     if (!vehicle) throw new Error('Vehículo no encontrado');
     if (vehicle.clientId !== input.clientId) throw new Error('El vehículo no pertenece al cliente');
 
-    const code = await this.orderRepo.getNextCode();
     const id = createId();
     const portalToken = createId();
 
-    const order = WorkOrder.create({
-      id,
-      code,
-      status: OrderStatus.SCHEDULED,
-      phase: null,
-      priority: input.priority ?? Priority.MEDIUM,
-      type: input.type ?? OrderType.NORMAL,
-      clientId: input.clientId,
-      vehicleId: input.vehicleId,
-      technicianId: input.technicianId,
-      createdById: input.createdById,
-      problem: input.problem,
-      mileageIn: input.mileageIn ?? null,
-      mileageOut: null,
-      portalToken,
-      scheduledAt: input.scheduledAt,
-      closedAt: null,
-      needsDiagnosis: false,
-      intakeCauses: [],
-      discoveredFaults: [],
-      repairNotes: null,
-    });
+    const maxAttempts = 5;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const code = await this.orderRepo.getNextCode(attempt);
 
-    await this.unitOfWork.execute(async () => {
-      await this.orderRepo.save(order);
-      await this.timelineRepo.save({
-        orderId: id,
-        userId: input.createdById,
-        event: 'order_created',
-        detail: { code, clientId: input.clientId, vehicleId: input.vehicleId },
+      const order = WorkOrder.create({
+        id,
+        code,
+        status: OrderStatus.SCHEDULED,
+        phase: null,
+        priority: input.priority ?? Priority.MEDIUM,
+        type: input.type ?? OrderType.NORMAL,
+        clientId: input.clientId,
+        vehicleId: input.vehicleId,
+        technicianId: input.technicianId,
+        createdById: input.createdById,
+        problem: input.problem,
+        mileageIn: input.mileageIn ?? null,
+        mileageOut: null,
+        portalToken,
+        scheduledAt: input.scheduledAt,
+        closedAt: null,
+        needsDiagnosis: false,
+        intakeCauses: [],
+        discoveredFaults: [],
+        repairNotes: null,
       });
-    }, [order]);
 
-    return { id, code };
+      try {
+        await this.unitOfWork.execute(async () => {
+          await this.orderRepo.save(order);
+          await this.timelineRepo.save({
+            orderId: id,
+            userId: input.createdById,
+            event: 'order_created',
+            detail: { code, clientId: input.clientId, vehicleId: input.vehicleId },
+          });
+        }, [order]);
+
+        return { id, code };
+      } catch (err) {
+        const isCodeConflict = err instanceof DuplicateOrderCodeError;
+        if (!isCodeConflict || attempt === maxAttempts - 1) throw err;
+      }
+    }
+
+    throw new Error('No se pudo generar un código de OT único');
   }
 }

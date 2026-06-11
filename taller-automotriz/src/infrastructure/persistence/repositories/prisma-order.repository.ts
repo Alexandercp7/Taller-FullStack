@@ -5,6 +5,7 @@ import { OrderMapper } from '../prisma/mappers/order.mapper';
 import { OrderFilters } from '../../../domain/types/order-filters.type';
 import { PaginatedResult } from '../../../domain/types/paginated-result.type';
 import { PrismaClientProvider } from '../prisma/prisma-client-provider';
+import { DuplicateOrderCodeError } from '../../../domain/errors/duplicate-order-code.error';
 
 export class PrismaOrderRepository implements OrderRepository {
   constructor(private readonly provider: PrismaClientProvider) {}
@@ -77,25 +78,36 @@ export class PrismaOrderRepository implements OrderRepository {
 
   async save(order: WorkOrder): Promise<void> {
     const data = OrderMapper.toPersistence(order);
-    await this.db.workOrder.upsert({
-      where: { id: order.id },
-      create: data,
-      update: data,
-    });
+    try {
+      await this.db.workOrder.upsert({
+        where: { id: order.id },
+        create: data,
+        update: data,
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError
+        && err.code === 'P2002'
+        && (err.meta?.target as string[] | undefined)?.includes('code')
+      ) {
+        throw new DuplicateOrderCodeError(order.code);
+      }
+      throw err;
+    }
   }
 
   async delete(id: string): Promise<void> {
     await this.db.workOrder.delete({ where: { id } });
   }
 
-  async getNextCode(): Promise<string> {
+  async getNextCode(offset = 0): Promise<string> {
     const last = await this.db.workOrder.findFirst({
       orderBy: { code: 'desc' },
       select: { code: true },
     });
     const match = last?.code.match(/(\d+)$/);
     const lastNumber = match ? parseInt(match[1], 10) : 0;
-    return `OT-${String(lastNumber + 1).padStart(4, '0')}`;
+    return `OT-${String(lastNumber + 1 + offset).padStart(4, '0')}`;
   }
 
   async countActiveByClientId(clientId: string): Promise<number> {
