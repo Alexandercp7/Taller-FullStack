@@ -105,6 +105,7 @@ export class WorkOrdersService {
       refaccionesAsignadas: [],
       catalogoServicios: [],
       serviciosAsignados: [],
+      incluirIvaCotizacion: false,
       cargoCuentasPorCobrarGenerado: item.cargo_generado ?? false,
       notasInternas: [],
       notasCliente: [],
@@ -189,6 +190,7 @@ export class WorkOrdersService {
       fotosIngreso: [], fotos: [], checklistInicial: [], checklistTrabajo: [],
       timeline: [this.createTimeline('OT creada', 'Recepcion')],
       catalogoRefacciones: [], refaccionesAsignadas: [], catalogoServicios: [], serviciosAsignados: [],
+      incluirIvaCotizacion: false,
       cargoCuentasPorCobrarGenerado: false, notasInternas: [], notasCliente: [],
       clientData: { nombre: payload.cliente, telefono: payload.telefono, correo: payload.correo },
     };
@@ -386,15 +388,22 @@ export class WorkOrdersService {
   public assignDirectPart(id: string, part: any, usuario = 'Almacen'): void {
     this._workOrders.update(orders => orders.map(o => {
       if (o.id !== id) return o;
+      const salePrice = typeof part.precioVenta === 'number' ? part.precioVenta : 0;
       const catalogItem: PartCatalogItem = {
         id: part.id, nombre: part.nombre, sku: part.id,
-        stock: part.stockActual || 1, costo: part.precioVenta ?? part.precio ?? 0,
+        stock: part.stockActual || 1, costo: salePrice,
       };
       const assigned = this.mergeAssignedPart(o.refaccionesAsignadas, catalogItem);
       this._inventoryService.consumeForWorkOrder(part.id, id, usuario);
       return { ...o, refaccionesAsignadas: assigned };
     }));
     this._http.post(`/api/v1/work-orders/${id}/parts`, { inventory_item_id: part.id, cantidad: 1 }).subscribe();
+  }
+
+  public updateQuoteTaxPreference(id: string, incluirIvaCotizacion: boolean): void {
+    this._workOrders.update(orders => orders.map(o =>
+      o.id === id ? { ...o, incluirIvaCotizacion } : o
+    ));
   }
 
   public addInternalNote(id: string, texto: string, usuario = this._auth.currentUser()?.name ?? 'Sistema'): void {

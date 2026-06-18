@@ -9,6 +9,18 @@
 
 	<hlm-card>
 		<div hlmCardContent class="filters-grid">
+			<div class="quick-filters">
+				<button hlmBtn type="button" size="sm" [variant]="quickStatusFilter() === 'no-terminadas' ? 'default' : 'outline'" (click)="setQuickStatusFilter('no-terminadas')">
+					No terminadas
+				</button>
+				<button hlmBtn type="button" size="sm" [variant]="quickStatusFilter() === 'terminadas' ? 'default' : 'outline'" (click)="setQuickStatusFilter('terminadas')">
+					Terminadas
+				</button>
+				<button hlmBtn type="button" size="sm" [variant]="quickStatusFilter() === 'todas' ? 'default' : 'outline'" (click)="setQuickStatusFilter('todas')">
+					Todas
+				</button>
+			</div>
+
 			<input
 				class="search-field"
 				hlmInput
@@ -69,11 +81,11 @@
 	</hlm-card>
 
 	<div class="view-switch">
-		<button hlmBtn type="button" [variant]="viewMode() === 'tabla' ? 'default' : 'outline'" (click)="setView('tabla')">
-			Tabla
-		</button>
 		<button hlmBtn type="button" [variant]="viewMode() === 'kanban' ? 'default' : 'outline'" (click)="setView('kanban')">
 			Kanban
+		</button>
+		<button hlmBtn type="button" [variant]="viewMode() === 'tabla' ? 'default' : 'outline'" (click)="setView('tabla')">
+			Tabla
 		</button>
 	</div>
 

@@ -110,6 +110,7 @@ export interface WorkOrder {
 	refaccionesAsignadas: AssignedPartItem[];
 	catalogoServicios: ServiceCatalogItem[];
 	serviciosAsignados: AssignedServiceItem[];
+	incluirIvaCotizacion?: boolean;
 	cargoCuentasPorCobrarGenerado: boolean;
 	firmaCliente?: ClientSignature;
 	notasInternas: WorkOrderNote[];

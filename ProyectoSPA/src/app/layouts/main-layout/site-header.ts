@@ -8,6 +8,7 @@ import { HlmBreadCrumbImports } from '@spartan-ng/helm/breadcrumb';
 import { HlmSeparatorImports } from '@spartan-ng/helm/separator';
 import { HlmSidebarImports } from '@spartan-ng/helm/sidebar';
 import { NotificationService } from '../../core/notifications/notification.service';
+import { WorkOrdersService } from '../../features/work-orders/services';
 import { toast } from '@spartan-ng/brain/sonner';
 import { filter, map, startWith } from 'rxjs/operators';
 
@@ -61,6 +62,7 @@ type Crumb = { label: string; url?: string; current: boolean };
 export class SiteHeader {
 	private readonly _router = inject(Router);
 	private readonly _notificationService = inject(NotificationService);
+	private readonly _workOrdersService = inject(WorkOrdersService);
 
 	private readonly _currentUrl = toSignal(
 		this._router.events.pipe(
@@ -76,9 +78,10 @@ export class SiteHeader {
 
 		if (url.startsWith('/app/ordenes-trabajo/')) {
 			const orderId = url.split('/').pop() ?? 'Detalle';
+			const orderCode = this._workOrdersService.getById(orderId)?.code ?? 'Detalle OT';
 			return [
 				{ label: 'Ordenes de trabajo', url: '/app/ordenes-trabajo', current: false },
-				{ label: orderId, current: true },
+				{ label: orderCode, current: true },
 			];
 		}
 

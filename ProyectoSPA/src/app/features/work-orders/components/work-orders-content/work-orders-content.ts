@@ -53,11 +53,12 @@ export class WorkOrdersContentComponent {
 	protected readonly priorityVariant = workOrderPriorityVariant;
 
 	protected readonly search = signal('');
+	protected readonly quickStatusFilter = signal<'todas' | 'no-terminadas' | 'terminadas'>('no-terminadas');
 	protected readonly filterStatus = signal<WorkOrderStatus | 'Todos'>('Todos');
 	protected readonly filterTech = signal<string>('Todos');
 	protected readonly filterClient = signal<string>('Todos');
 	protected readonly filterDate = signal<string>('');
-	protected readonly viewMode = signal<'tabla' | 'kanban'>('tabla');
+	protected readonly viewMode = signal<'tabla' | 'kanban'>('kanban');
 	protected readonly page = signal(1);
 	private readonly _pageSize = 6;
 
@@ -67,6 +68,7 @@ export class WorkOrdersContentComponent {
 
 	protected readonly filteredOrders = computed(() => {
 		const search = this.search().trim().toLowerCase();
+		const quickStatus = this.quickStatusFilter();
 		const status = this.filterStatus();
 		const tech = this.filterTech();
 		const client = this.filterClient();
@@ -79,11 +81,16 @@ export class WorkOrdersContentComponent {
 				order.cliente.toLowerCase().includes(search) ||
 				order.tecnico.toLowerCase().includes(search) ||
 				order.vehicle.placas.toLowerCase().includes(search);
+			const isFinished = order.status === 'Terminado' || order.status === 'Entregado';
+			const matchesQuickStatus =
+				quickStatus === 'todas' ||
+				(quickStatus === 'terminadas' && isFinished) ||
+				(quickStatus === 'no-terminadas' && !isFinished);
 			const matchesStatus = status === 'Todos' || order.status === status;
 			const matchesTech = tech === 'Todos' || order.tecnico === tech;
 			const matchesClient = client === 'Todos' || order.cliente === client;
 			const matchesDate = !date || order.fechaProgramada === date;
-			return matchesSearch && matchesStatus && matchesTech && matchesClient && matchesDate;
+			return matchesSearch && matchesQuickStatus && matchesStatus && matchesTech && matchesClient && matchesDate;
 		});
 	});
 
@@ -104,6 +111,11 @@ export class WorkOrdersContentComponent {
 
 	protected updateSearch(value: string): void {
 		this.search.set(value);
+		this.page.set(1);
+	}
+
+	protected setQuickStatusFilter(value: 'todas' | 'no-terminadas' | 'terminadas'): void {
+		this.quickStatusFilter.set(value);
 		this.page.set(1);
 	}
 

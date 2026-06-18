@@ -4,11 +4,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmCheckboxImports } from '@spartan-ng/helm/checkbox';
 import { HlmComboboxImports } from '@spartan-ng/helm/combobox';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { NotificationService } from '../../../../../../core';
 import { type PartCatalogItem, type ServiceCatalogItem } from '../../../../models';
-import { WorkOrdersService } from '../../../../services';
+import { QuotationExportService, WorkOrdersService } from '../../../../services';
 import { InventoryService } from '../../../../../inventory/services';
 import { PricesService } from '../../../../../prices/services/prices.service';
 import type { InventoryItem } from '../../../../../inventory/models';
@@ -16,7 +17,7 @@ import type { Servicio } from '../../../../../prices/models/price.model';
 
 @Component({
 	selector: 'spartan-wo-quotations-section',
-	imports: [CommonModule, HlmCardImports, HlmComboboxImports, HlmButtonImports, HlmTableImports],
+	imports: [CommonModule, HlmCardImports, HlmComboboxImports, HlmButtonImports, HlmCheckboxImports, HlmTableImports],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	templateUrl: './quotations-section.html',
 	styleUrl: './quotations-section.css',
@@ -24,6 +25,7 @@ import type { Servicio } from '../../../../../prices/models/price.model';
 export class WorkOrderQuotationsSectionComponent {
 	private readonly _route = inject(ActivatedRoute);
 	private readonly _service = inject(WorkOrdersService);
+	private readonly _quotationExport = inject(QuotationExportService);
 	private readonly _notification = inject(NotificationService);
 	private readonly _inventoryService = inject(InventoryService);
 	private readonly _pricesService = inject(PricesService);
@@ -261,6 +263,29 @@ export class WorkOrderQuotationsSectionComponent {
 	});
 
 	protected totalCotizacion = computed(() => {
+		return this.subtotalCotizacion() + this.ivaCotizacion();
+	});
+
+	protected subtotalCotizacion = computed(() => {
 		return this.totalRefacciones() + this.totalServicios();
 	});
+
+	protected incluirIvaCotizacion = computed(() => this.order()?.incluirIvaCotizacion ?? false);
+
+	protected ivaCotizacion = computed(() => {
+		return this.incluirIvaCotizacion() ? this.subtotalCotizacion() * 0.16 : 0;
+	});
+
+	protected onIncludeIvaChange(checked: boolean | 'indeterminate'): void {
+		const order = this.order();
+		if (!order) return;
+		this._service.updateQuoteTaxPreference(order.id, checked === true);
+	}
+
+	protected exportQuotationPdf(): void {
+		const order = this.order();
+		if (!order) return;
+		this._quotationExport.exportPdf(order, this.incluirIvaCotizacion());
+		this._notification.success('PDF de cotizacion generado.');
+	}
 }

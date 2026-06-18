@@ -123,11 +123,22 @@
 		</section>
 
 		<hlm-card>
-			<hlm-card-header><h3 hlmCardTitle>Total cotizacion</h3></hlm-card-header>
+			<hlm-card-header>
+				<h3 hlmCardTitle>Total cotizacion</h3>
+			</hlm-card-header>
 			<div hlmCardContent class="space-y-2 text-sm">
-				<p>Subtotal refacciones: <strong>${{ totalRefacciones() | number : '1.0-0' }}</strong></p>
-				<p>Subtotal servicios: <strong>${{ totalServicios() | number : '1.0-0' }}</strong></p>
+				<p>Subtotal: <strong>${{ subtotalCotizacion() | number : '1.0-0' }}</strong></p>
+				<p>IVA: <strong>{{ incluirIvaCotizacion() ? ('$' + (ivaCotizacion() | number : '1.0-0')) : 'No incluido' }}</strong></p>
 				<p class="text-base">Total cotizacion: <strong>${{ totalCotizacion() | number : '1.0-0' }}</strong></p>
+				<div class="flex flex-col gap-3 pt-2">
+					<label class="flex items-center gap-2">
+						<hlm-checkbox [checked]="incluirIvaCotizacion()" (checkedChange)="onIncludeIvaChange($event)" />
+						<span>Incluir IVA (16%)</span>
+					</label>
+					<div class="flex justify-end">
+						<button hlmBtn type="button" size="sm" (click)="exportQuotationPdf()">Exportar PDF</button>
+					</div>
+				</div>
 			</div>
 		</hlm-card>
 	</div>
