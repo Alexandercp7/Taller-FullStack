@@ -94,7 +94,7 @@
 						<div class="vehicle-grid">
 							<p><strong>Marca:</strong> {{ ot.vehicle.marca }}</p>
 							<p><strong>Modelo:</strong> {{ ot.vehicle.modelo }}</p>
-							<p><strong>Anio:</strong> {{ ot.vehicle.anio }}</p>
+							<p><strong>Año:</strong> {{ ot.vehicle.anio }}</p>
 							<p><strong>Placas:</strong> {{ ot.vehicle.placas }}</p>
 							<p><strong>VIN:</strong> {{ ot.vehicle.vin }}</p>
 							<p><strong>Kilometraje:</strong> {{ ot.vehicle.kilometraje | number }} km</p>
@@ -142,7 +142,7 @@
 								</hlm-combobox>
 							</label>
 							<label class="field">
-								<span>Anio</span>
+								<span>Año</span>
 								<hlm-combobox [value]="vehicleAnio().toString()" (valueChange)="onVehicleYearSelected(($event ?? '') + '')">
 									<hlm-combobox-input placeholder="Selecciona anio" (input)="onVehicleYearInputChange(($any($event.target)).value)" />
 									<hlm-combobox-content *hlmComboboxPortal>

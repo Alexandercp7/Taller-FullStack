@@ -51,7 +51,8 @@ export class SalePartsSectionComponent {
 	protected readonly createResponsable = signal('Almacen');
 	protected readonly createStockActual = signal(0);
 	protected readonly createStockMinimo = signal(0);
-	protected readonly createPrecio = signal(0);
+	protected readonly createPrecioCosto = signal(0);
+	protected readonly createPrecioVenta = signal(0);
 	protected readonly createLinkedPartId = signal('');
 	protected readonly createPhoto = signal('');
 	protected readonly createPhotoFile = signal<File | null>(null);
@@ -77,7 +78,8 @@ export class SalePartsSectionComponent {
 		this.createResponsable.set(item.responsable);
 		this.createStockActual.set(item.stockActual);
 		this.createStockMinimo.set(item.stockMinimo);
-		this.createPrecio.set(item.precioVenta || 0);
+		this.createPrecioCosto.set(item.precioCosto ?? item.precio ?? 0);
+		this.createPrecioVenta.set(item.precioVenta ?? 0);
 		this.createLinkedPartId.set(item.linkedPartId || '');
 		this.createPhoto.set(item.fotoUrl);
 		this.showCreateForm.set(true);
@@ -165,7 +167,8 @@ export class SalePartsSectionComponent {
 				responsable: this.createResponsable(),
 				stockActual: this.createStockActual(),
 				stockMinimo: this.createStockMinimo(),
-				precioVenta: this.createPrecio(),
+				precioCosto: this.createPrecioCosto(),
+				precioVenta: this.createPrecioVenta(),
 				linkedPartId: this.createLinkedPartId().trim() || undefined,
 			});
 			if (photoFile) {
@@ -183,7 +186,8 @@ export class SalePartsSectionComponent {
 				responsable: this.createResponsable(),
 				stockActual: this.createStockActual(),
 				stockMinimo: this.createStockMinimo(),
-				precioVenta: this.createPrecio(),
+				precioCosto: this.createPrecioCosto(),
+				precioVenta: this.createPrecioVenta(),
 				linkedPartId: this.createLinkedPartId().trim() || undefined,
 			});
 			this._notification.success('Parte en venta agregada.');
@@ -198,7 +202,8 @@ export class SalePartsSectionComponent {
 		this.createDescripcion.set('');
 		this.createPhoto.set('');
 		this.createPhotoFile.set(null);
-		this.createPrecio.set(0);
+		this.createPrecioCosto.set(0);
+		this.createPrecioVenta.set(0);
 		this.createLinkedPartId.set('');
 		this.createStockActual.set(0);
 		this.createStockMinimo.set(0);

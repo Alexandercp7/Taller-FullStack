@@ -70,7 +70,8 @@ export class StockItemsSectionComponent {
 	protected readonly createResponsable = signal('Almacen');
 	protected readonly createStockActual = signal(0);
 	protected readonly createStockMinimo = signal(0);
-	protected readonly createPrecio = signal(0);
+	protected readonly createPrecioCosto = signal(0);
+	protected readonly createPrecioVenta = signal(0);
 	protected readonly createPhoto = signal('');
 	protected readonly createPhotoFile = signal<File | null>(null);
 	protected readonly editingItemId = signal('');
@@ -101,7 +102,8 @@ export class StockItemsSectionComponent {
 		this.createResponsable.set(item.responsable);
 		this.createStockActual.set(item.stockActual);
 		this.createStockMinimo.set(item.stockMinimo);
-		this.createPrecio.set(item.precio || 0);
+		this.createPrecioCosto.set(item.precioCosto ?? item.precio ?? 0);
+		this.createPrecioVenta.set(item.precioVenta ?? 0);
 		this.createPhoto.set(item.fotoUrl);
 		this.showCreateForm.set(true);
 	}
@@ -163,7 +165,8 @@ export class StockItemsSectionComponent {
 				responsable: this.createResponsable(),
 				stockActual: this.createStockActual(),
 				stockMinimo: this.createStockMinimo(),
-				precio: this.createPrecio(),
+				precioCosto: this.createPrecioCosto(),
+				precioVenta: this.createPrecioVenta(),
 			});
 			if (photoFile) {
 				this._service.uploadItemPhoto(editingId, photoFile);
@@ -180,7 +183,8 @@ export class StockItemsSectionComponent {
 				responsable: this.createResponsable(),
 				stockActual: this.createStockActual(),
 				stockMinimo: this.createStockMinimo(),
-				precio: this.createPrecio(),
+				precioCosto: this.createPrecioCosto(),
+				precioVenta: this.createPrecioVenta(),
 			});
 			this._notification.success('Item operativo agregado.');
 		}
@@ -196,7 +200,8 @@ export class StockItemsSectionComponent {
 		this.createPhotoFile.set(null);
 		this.createStockActual.set(0);
 		this.createStockMinimo.set(0);
-		this.createPrecio.set(0);
+		this.createPrecioCosto.set(0);
+		this.createPrecioVenta.set(0);
 		this.createTipo.set('Herramienta');
 		this.createEstado.set('Bueno');
 		this.createResponsable.set('Almacen');

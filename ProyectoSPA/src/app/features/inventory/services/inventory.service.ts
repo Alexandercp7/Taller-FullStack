@@ -18,6 +18,7 @@ interface InventoryItemApi {
   stock_actual: number;
   stock_minimo: number;
   precio: number | null;
+  precio_costo?: number | null;
   precio_venta: number | null;
   low_stock: boolean;
   foto_url: string | null;
@@ -74,6 +75,7 @@ export class InventoryService {
   }
 
   private mapItem(item: InventoryItemApi): InventoryItem {
+    const precioCosto = item.precio_costo ?? item.precio ?? undefined;
     return {
       id: String(item.id),
       nombre: item.nombre,
@@ -84,9 +86,20 @@ export class InventoryService {
       responsable: 'Almacen',
       stockActual: item.stock_actual,
       stockMinimo: item.stock_minimo,
-      precio: item.precio ?? undefined,
+      precioCosto,
+      precio: precioCosto,
       precioVenta: item.precio_venta ?? undefined,
     };
+  }
+
+  private resolvePrecioCosto(payload: Partial<CreateInventoryItemInput>): number | undefined {
+    if (typeof payload.precioCosto === 'number') return payload.precioCosto;
+    if (typeof payload.precio === 'number') return payload.precio;
+    return undefined;
+  }
+
+  private resolvePrecioVenta(payload: Partial<CreateInventoryItemInput>): number | undefined {
+    return typeof payload.precioVenta === 'number' ? payload.precioVenta : undefined;
   }
 
   private mapCustody(c: CustodyApi) {
@@ -103,6 +116,8 @@ export class InventoryService {
   }
 
   public createInventoryItem(payload: CreateInventoryItemInput): InventoryItem {
+    const precioCosto = this.resolvePrecioCosto(payload);
+    const precioVenta = this.resolvePrecioVenta(payload);
     const body = {
       nombre: payload.nombre.trim(),
       tipo: payload.tipo,
@@ -110,8 +125,8 @@ export class InventoryService {
       responsable: payload.responsable.trim() || 'Almacen',
       stock_actual: Math.max(0, payload.stockActual),
       stock_minimo: Math.max(0, payload.stockMinimo),
-      precio: payload.precio,
-      precio_venta: payload.precioVenta,
+      precio: precioCosto,
+      precio_venta: precioVenta,
     };
     const tempItem: InventoryItem = {
       id: `inv-${Date.now()}`,
@@ -123,8 +138,9 @@ export class InventoryService {
       responsable: payload.responsable.trim() || 'Almacen',
       stockActual: Math.max(0, payload.stockActual),
       stockMinimo: Math.max(0, payload.stockMinimo),
-      precio: payload.precio,
-      precioVenta: payload.precioVenta,
+      precioCosto,
+      precio: precioCosto,
+      precioVenta: precioVenta,
       linkedPartId: payload.linkedPartId,
     };
     this._items.update(items => [tempItem, ...items]);
@@ -159,6 +175,8 @@ export class InventoryService {
   }
 
   public updateInventoryItem(itemId: string, payload: Partial<CreateInventoryItemInput>): boolean {
+    const precioCosto = this.resolvePrecioCosto(payload);
+    const precioVenta = this.resolvePrecioVenta(payload);
     this._items.update(items =>
       items.map(item =>
         item.id === itemId
@@ -172,8 +190,9 @@ export class InventoryService {
               responsable: payload.responsable?.trim() || item.responsable,
               stockActual: typeof payload.stockActual === 'number' ? Math.max(0, payload.stockActual) : item.stockActual,
               stockMinimo: typeof payload.stockMinimo === 'number' ? Math.max(0, payload.stockMinimo) : item.stockMinimo,
-              precio: typeof payload.precio === 'number' ? payload.precio : item.precio,
-              precioVenta: payload.precioVenta ?? item.precioVenta,
+              precioCosto: typeof precioCosto === 'number' ? precioCosto : item.precioCosto,
+              precio: typeof precioCosto === 'number' ? precioCosto : item.precio,
+              precioVenta: typeof precioVenta === 'number' ? precioVenta : item.precioVenta,
             }
           : item,
       ),
@@ -183,7 +202,7 @@ export class InventoryService {
       this._http.put(`/api/v1/inventory/${itemId}`, {
         nombre: updated.nombre,
         estado: updated.estado,
-        precio: updated.precio,
+        precio: updated.precioCosto ?? updated.precio,
         precio_venta: updated.precioVenta,
         stock_actual: updated.stockActual,
         stock_minimo: updated.stockMinimo,

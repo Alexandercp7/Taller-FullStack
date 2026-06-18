@@ -142,7 +142,7 @@
 				</hlm-combobox>
 			</label>
 			<label class="field">
-				<span>Anio</span>
+				<span>Año</span>
 				<hlm-combobox [value]="anio().toString()" (valueChange)="onVehicleYearSelected(($event ?? '') + '')">
 					<hlm-combobox-input placeholder="Selecciona anio" (input)="onYearInputChange(($any($event.target)).value)" />
 					<hlm-combobox-content *hlmComboboxPortal>

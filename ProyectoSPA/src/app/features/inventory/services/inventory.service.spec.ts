@@ -39,7 +39,7 @@ describe('InventoryService', () => {
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({
       id: '1', nombre: 'Filtro de aceite', tipo: 'Parte en venta',
-      stockActual: 10, stockMinimo: 2, precio: 50, precioVenta: 120,
+      stockActual: 10, stockMinimo: 2, precioCosto: 50, precio: 50, precioVenta: 120,
     });
   });
 
@@ -87,6 +87,7 @@ describe('InventoryService', () => {
 
       const req = httpMock.expectOne('/api/v1/inventory');
       expect(req.request.method).toBe('POST');
+      expect(req.request.body).toMatchObject({ precio: 30, precio_venta: 80 });
       req.flush({ data: { ...baseItemApi, id: 99, nombre: 'Bujía', stock_actual: 5, stock_minimo: 1 } });
 
       const items = service.items();
@@ -119,6 +120,7 @@ describe('InventoryService', () => {
 
       const req = httpMock.expectOne('/api/v1/inventory/1');
       expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toMatchObject({ precio: 50, precio_venta: 120, stock_actual: 20 });
       req.flush({});
     });
   });
