@@ -32,7 +32,7 @@ interface PortalOrder {
 	cliente: { nombre: string; telefono: string } | null;
 	vehiculo: { marca: string; modelo: string; anio: number; placas: string; kilometraje_actual: number } | null;
 	tecnico: { nombre: string } | null;
-	timeline: { id: number; descripcion: string; created_at: string; evento?: string; detalle?: { newStatus?: string; visibility?: string } | null }[];
+	timeline: { id: number; descripcion: string; created_at: string; evento?: string; detalle?: { newStatus?: string; visibility?: string; preview?: string; photoId?: string } | null }[];
 	checklist: { total: number; completadas: number };
 	notas: { id: number; texto: string; created_at: string }[];
 	fotos: { id: number; url: string }[];
@@ -58,6 +58,7 @@ export class PortalOrderViewComponent {
 	protected readonly isLoading = signal(true);
 	protected readonly order = signal<PortalOrder | null>(null);
 	protected readonly isDark = this._themeService.isDark;
+	protected readonly selectedImage = signal<{ url: string; alt: string } | null>(null);
 
 	protected readonly checklistPct = computed(() => {
 		const c = this.order()?.checklist;
@@ -68,10 +69,7 @@ export class PortalOrderViewComponent {
 	protected readonly portalTimeline = computed(() =>
 		(this.order()?.timeline ?? [])
 			.filter((event) => this.isVisiblePortalEvent(event))
-			.map((event) => ({
-				...event,
-				descripcion: this.mapTimelineDescription(event),
-			})),
+			.map((event) => this.mapPortalTimelineEvent(event)),
 	);
 
 	constructor() {
@@ -99,13 +97,33 @@ export class PortalOrderViewComponent {
 		this._themeService.toggleTheme();
 	}
 
+	protected openImage(url: string, alt: string): void {
+		this.selectedImage.set({ url, alt });
+	}
+
+	protected closeImage(): void {
+		this.selectedImage.set(null);
+	}
+
 	private isVisiblePortalEvent(event: PortalOrder['timeline'][number]): boolean {
 		const eventName = (event.evento ?? event.descripcion ?? '').toLowerCase();
 		if (eventName === 'status_changed') return true;
 		if (eventName === 'note_added') {
 			return !event.detalle?.visibility || event.detalle.visibility === 'CLIENT';
 		}
+		if (eventName === 'photo_added') return true;
 		return false;
+	}
+
+	private mapPortalTimelineEvent(event: PortalOrder['timeline'][number]) {
+		const previewUrl = this.resolveTimelinePhotoUrl(event);
+		const noteContent = this.resolveTimelineNoteContent(event);
+		return {
+			...event,
+			descripcion: this.mapTimelineDescription(event),
+			noteContent,
+			previewUrl,
+		};
 	}
 
 	private mapTimelineDescription(event: PortalOrder['timeline'][number]): string {
@@ -116,8 +134,29 @@ export class PortalOrderViewComponent {
 			return translatedStatus ? `Estatus actualizado a ${translatedStatus}` : 'Estatus actualizado';
 		}
 		if (eventName === 'note_added') {
-			return 'Se agrego una nota para el cliente';
+			return 'Nota agregada';
+		}
+		if (eventName === 'photo_added') {
+			return 'Se agrego una foto';
 		}
 		return event.descripcion;
+	}
+
+	private resolveTimelinePhotoUrl(event: PortalOrder['timeline'][number]): string | null {
+		const eventName = (event.evento ?? event.descripcion ?? '').toLowerCase();
+		if (eventName !== 'photo_added') return null;
+
+		const photoId = event.detalle?.photoId;
+		if (!photoId) return null;
+
+		const matchedPhoto = this.order()?.fotos.find((photo) => String(photo.id) === String(photoId));
+		return matchedPhoto?.url ?? null;
+	}
+
+	private resolveTimelineNoteContent(event: PortalOrder['timeline'][number]): string | null {
+		const eventName = (event.evento ?? event.descripcion ?? '').toLowerCase();
+		if (eventName !== 'note_added') return null;
+		const preview = event.detalle?.preview?.trim();
+		return preview || null;
 	}
 }

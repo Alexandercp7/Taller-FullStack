@@ -319,6 +319,16 @@
 	background: color-mix(in srgb, var(--card) 94%, var(--muted) 6%);
 }
 
+.photo-button,
+.timeline-photo-button {
+	display: block;
+	width: 100%;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+}
+
 .photo-thumb {
 	width: 100%;
 	aspect-ratio: 4 / 3;
@@ -327,11 +337,52 @@
 	border: 1px solid var(--border);
 }
 
+.timeline-photo-thumb {
+	width: 92px;
+	height: 68px;
+	object-fit: cover;
+	border-radius: 0.6rem;
+	border: 1px solid var(--border);
+	margin-top: 0.45rem;
+}
+
 .empty-state {
 	padding: 1rem 0.25rem 0.25rem;
 	display: flex;
 	flex-direction: column;
 	gap: 0.75rem;
+}
+
+.image-lightbox {
+	position: fixed;
+	inset: 0;
+	z-index: 60;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	background: rgba(15, 23, 42, 0.78);
+}
+
+.image-lightbox-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	max-width: min(90vw, 960px);
+	max-height: 90vh;
+}
+
+.lightbox-close {
+	align-self: flex-end;
+}
+
+.lightbox-image {
+	max-width: 100%;
+	max-height: calc(90vh - 3.5rem);
+	border-radius: 0.9rem;
+	border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+	background: var(--card);
+	object-fit: contain;
 }
 
 @media (max-width: 900px) {

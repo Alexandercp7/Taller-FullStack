@@ -181,7 +181,7 @@
 									<tr hlmTr>
 										<th hlmTh>Refaccion</th>
 										<th hlmTh>Cant.</th>
-										<th hlmTh>Subtotal</th>
+										<th hlmTh>Precio</th>
 									</tr>
 								</thead>
 								<tbody hlmTBody>
@@ -227,7 +227,9 @@
 				<div hlmCardContent class="photos-grid">
 					@for (foto of ot.fotos; track foto.id) {
 						<figure class="photo-card">
-							<img [src]="foto.url" alt="Foto del vehiculo" class="photo-thumb" />
+							<button type="button" class="photo-button" (click)="openImage(foto.url, 'Foto del vehiculo')">
+								<img [src]="foto.url" alt="Foto del vehiculo" class="photo-thumb" />
+							</button>
 						</figure>
 					}
 				</div>
@@ -265,6 +267,14 @@
 					@for (event of portalTimeline(); track event.id) {
 						<article class="timeline-item">
 							<p class="text-sm font-medium">{{ event.descripcion }}</p>
+							@if (event.noteContent) {
+								<p class="text-sm text-muted-foreground">{{ event.noteContent }}</p>
+							}
+							@if (event.previewUrl) {
+								<button type="button" class="timeline-photo-button" (click)="openImage(event.previewUrl, 'Foto del historial')">
+									<img [src]="event.previewUrl" alt="Foto del historial" class="timeline-photo-thumb" />
+								</button>
+							}
 							<p class="text-muted-foreground text-xs">{{ event.created_at | date: 'dd/MM/yyyy HH:mm' }}</p>
 						</article>
 					}
@@ -298,4 +308,13 @@
 			</div>
 		</hlm-card>
 	</section>
+}
+
+@if (selectedImage(); as image) {
+	<div class="image-lightbox" (click)="closeImage()">
+		<div class="image-lightbox-content" (click)="$event.stopPropagation()">
+			<button hlmBtn variant="outline" type="button" class="lightbox-close action-button" (click)="closeImage()">Cerrar</button>
+			<img [src]="image.url" [alt]="image.alt" class="lightbox-image" />
+		</div>
+	</div>
 }
