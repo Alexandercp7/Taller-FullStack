@@ -1,17 +1,76 @@
 <hlm-card>
 	<hlm-card-header>
-		<h3 hlmCardTitle>Accesos Rapidos</h3>
-		<p hlmCardDescription>Atajos para acciones frecuentes.</p>
+		<div class="quick-access-header">
+			<div>
+				<h3 hlmCardTitle>Accesos Rapidos</h3>
+				<p hlmCardDescription>Atajos personalizados para tu rol.</p>
+			</div>
+			<button hlmBtn type="button" size="sm" variant="outline" (click)="togglePicker()">
+				<ng-icon name="lucidePlus" class="size-4" />
+				Agregar atajo
+			</button>
+		</div>
 	</hlm-card-header>
-	<div hlmCardContent class="grid gap-3 md:grid-cols-2">
-		@for (item of items(); track item.id) {
-			<a hlmBtn variant="outline" class="h-auto justify-start gap-3 py-3 text-left" [routerLink]="item.route">
-				<ng-icon [name]="item.icon" class="text-muted-foreground size-4 shrink-0" />
-				<span class="flex flex-col">
-					<span class="text-sm font-medium">{{ item.title }}</span>
-					<span class="text-muted-foreground text-xs">{{ item.description }}</span>
-				</span>
-			</a>
+
+	<div hlmCardContent class="quick-access-content">
+		@if (selectedItems().length === 0) {
+			<div class="empty-state">
+				<div class="empty-icon">
+					<ng-icon name="lucidePlus" class="size-5" />
+				</div>
+				<div>
+					<p class="empty-title">Aun no tienes atajos</p>
+					<p class="empty-copy">Agrega los accesos que usas mas seguido. Las opciones disponibles cambian segun tu rol.</p>
+				</div>
+				<button hlmBtn type="button" size="sm" (click)="togglePicker()">Agregar atajo</button>
+			</div>
+		} @else {
+			<div class="shortcuts-grid">
+				@for (item of selectedItems(); track item.id) {
+					<div class="shortcut-shell">
+						<a hlmBtn variant="outline" class="shortcut-link" [routerLink]="item.route">
+							<ng-icon [name]="item.icon" class="text-muted-foreground size-4 shrink-0" />
+							<span class="shortcut-copy">
+								<span class="shortcut-title">{{ item.title }}</span>
+								<span class="shortcut-description">{{ item.description }}</span>
+							</span>
+						</a>
+						<button class="remove-shortcut" type="button" aria-label="Quitar atajo" (click)="removeShortcut(item.id)">
+							<ng-icon name="lucideX" class="size-3.5" />
+						</button>
+					</div>
+				}
+			</div>
+		}
+
+		@if (pickerOpen()) {
+			<div class="shortcut-picker">
+				<div class="picker-header">
+					<p class="picker-title">Atajos predeterminados disponibles</p>
+					<div class="picker-meta">
+						<p class="picker-count">{{ addableItems().length }} disponibles</p>
+						<button class="close-picker" type="button" aria-label="Cerrar selector de atajos" (click)="closePicker()">
+							<ng-icon name="lucideX" class="size-3.5" />
+						</button>
+					</div>
+				</div>
+
+				@if (addableItems().length > 0) {
+					<div class="picker-grid">
+						@for (item of addableItems(); track item.id) {
+							<button class="picker-option" type="button" (click)="addShortcut(item.id)">
+								<ng-icon [name]="item.icon" class="text-muted-foreground size-4 shrink-0" />
+								<span>
+									<span class="picker-option-title">{{ item.title }}</span>
+									<span class="picker-option-description">{{ item.description }}</span>
+								</span>
+							</button>
+						}
+					</div>
+				} @else {
+					<p class="picker-empty">Ya agregaste todos los atajos disponibles para tu rol.</p>
+				}
+			</div>
 		}
 	</div>
 </hlm-card>

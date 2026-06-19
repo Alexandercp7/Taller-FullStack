@@ -10,10 +10,15 @@ import type { BadgeVariant, FinancialSummaryItem, QuickAccessItem, WorkOrderItem
 import { workOrderPriorityVariant, workOrderStatusVariant } from '../../work-orders/models';
 
 const QUICK_ACCESS: QuickAccessItem[] = [
-	{ id: 'QA-1', title: 'Crear Orden de Trabajo', description: 'Registrar una nueva solicitud de servicio.', icon: 'lucideSquarePlus', route: '/app/ordenes-trabajo' },
-	{ id: 'QA-2', title: 'Revisar Inventario', description: 'Consultar existencias y reservar materiales.', icon: 'lucidePackageSearch', route: '/app/inventario' },
-	{ id: 'QA-3', title: 'Cotizador de Precios', description: 'Crear y generar cotizaciones de servicios.', icon: 'lucideReceiptText', route: '/app/lista-precios' },
-	{ id: 'QA-4', title: 'Agenda del Equipo', description: 'Ver asignaciones y disponibilidad.', icon: 'lucideUsers', route: '/app/lista-actividades' },
+	{ id: 'QA-OT', title: 'Ordenes de trabajo', description: 'Abrir tablero y crear nuevas OTs.', icon: 'lucideBookOpen', route: '/app/ordenes-trabajo', roles: ['ADMIN', 'TECHNICIAN', 'RECEPTIONIST'] },
+	{ id: 'QA-CLIENTS', title: 'Clientes y vehiculos', description: 'Consultar clientes, vehiculos e historial.', icon: 'lucideUsers', route: '/app/clientes-vehiculos', roles: ['ADMIN', 'RECEPTIONIST'] },
+	{ id: 'QA-INVENTORY', title: 'Inventario', description: 'Revisar stock, costos y materiales.', icon: 'lucidePackageSearch', route: '/app/inventario', roles: ['ADMIN', 'TECHNICIAN'] },
+	{ id: 'QA-ACTIVITIES', title: 'Actividades', description: 'Ver pendientes y asignaciones del equipo.', icon: 'lucideMap', route: '/app/lista-actividades' },
+	{ id: 'QA-PAYMENTS', title: 'Agenda de pagos', description: 'Dar seguimiento a pagos y vencimientos.', icon: 'lucideReceiptText', route: '/app/agenda-pagos', roles: ['ADMIN', 'MANAGER'] },
+	{ id: 'QA-SUPPLIERS', title: 'Proveedores', description: 'Abrir contactos y proveedores.', icon: 'lucideBadgeCheck', route: '/app/contactos-proveedores', roles: ['ADMIN', 'MANAGER'] },
+	{ id: 'QA-PRICES', title: 'Lista de precios', description: 'Consultar y mantener precios de servicios.', icon: 'lucideCreditCard', route: '/app/lista-precios', roles: ['ADMIN', 'MANAGER'] },
+	{ id: 'QA-KPIS', title: 'KPIs', description: 'Revisar objetivos, indicadores y actividades.', icon: 'lucideChartPie', route: '/app/kpis', roles: ['ADMIN', 'MANAGER'] },
+	{ id: 'QA-FINANCE', title: 'Finanzas y reportes', description: 'Abrir reportes financieros del taller.', icon: 'lucideSettings2', route: '/app/finanzas-reportes', roles: ['ADMIN', 'MANAGER'] },
 ];
 
 @Component({

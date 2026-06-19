@@ -1,3 +1,209 @@
 :host {
 	display: block;
 }
+
+.quick-access-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.quick-access-content {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.empty-state {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: 0.9rem;
+	min-height: 124px;
+	border: 1px dashed color-mix(in srgb, var(--border) 92%, var(--foreground) 8%);
+	border-radius: 0.75rem;
+	background: color-mix(in srgb, var(--muted) 44%, transparent);
+	padding: 1rem;
+}
+
+.empty-icon {
+	display: grid;
+	place-items: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--primary) 10%, transparent);
+	color: var(--foreground);
+}
+
+.empty-title,
+.picker-title {
+	margin: 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.empty-copy {
+	margin: 0.2rem 0 0;
+	color: var(--muted-foreground);
+	font-size: 0.78rem;
+	line-height: 1.35;
+}
+
+.shortcuts-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 0.75rem;
+}
+
+.shortcut-shell {
+	position: relative;
+	min-width: 0;
+}
+
+.shortcut-link {
+	width: 100%;
+	height: auto;
+	justify-content: flex-start;
+	gap: 0.75rem;
+	padding: 0.75rem 2.4rem 0.75rem 0.75rem;
+	text-align: left;
+}
+
+.shortcut-copy {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+}
+
+.shortcut-title,
+.picker-option-title {
+	font-size: 0.86rem;
+	font-weight: 600;
+}
+
+.shortcut-description,
+.picker-option-description {
+	color: var(--muted-foreground);
+	font-size: 0.74rem;
+	line-height: 1.3;
+	white-space: normal;
+}
+
+.remove-shortcut {
+	position: absolute;
+	top: 0.55rem;
+	right: 0.55rem;
+	display: grid;
+	place-items: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	color: var(--muted-foreground);
+	background: transparent;
+	transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.remove-shortcut:hover {
+	border-color: var(--border);
+	background: var(--muted);
+	color: var(--foreground);
+}
+
+.shortcut-picker {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: 0.75rem;
+	background: color-mix(in srgb, var(--card) 88%, var(--muted) 12%);
+	padding: 0.9rem;
+}
+
+.picker-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.picker-meta {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.picker-count,
+.picker-empty {
+	margin: 0;
+	color: var(--muted-foreground);
+	font-size: 0.75rem;
+}
+
+.close-picker {
+	display: grid;
+	place-items: center;
+	width: 1.8rem;
+	height: 1.8rem;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	color: var(--muted-foreground);
+	background: transparent;
+	transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.close-picker:hover {
+	border-color: var(--border);
+	background: var(--muted);
+	color: var(--foreground);
+}
+
+.picker-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+	gap: 0.65rem;
+}
+
+.picker-option {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.65rem;
+	width: 100%;
+	border: 1px solid var(--border);
+	border-radius: 0.6rem;
+	background: transparent;
+	padding: 0.7rem;
+	text-align: left;
+	transition: background 150ms ease, border-color 150ms ease;
+}
+
+.picker-option:hover {
+	border-color: color-mix(in srgb, var(--ring) 58%, var(--border) 42%);
+	background: var(--muted);
+}
+
+.picker-option span {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+}
+
+@media (max-width: 640px) {
+	.quick-access-header,
+	.empty-state,
+	.picker-header {
+		align-items: stretch;
+		grid-template-columns: 1fr;
+		flex-direction: column;
+	}
+
+	.picker-meta {
+		justify-content: space-between;
+	}
+
+	.empty-state {
+		display: flex;
+	}
+}

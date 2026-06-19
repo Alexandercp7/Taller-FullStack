@@ -36,6 +36,7 @@ export interface QuickAccessItem {
 	description: string;
 	icon: string;
 	route: string;
+	roles?: string[];
 }
 
 export interface DashboardMockData {
