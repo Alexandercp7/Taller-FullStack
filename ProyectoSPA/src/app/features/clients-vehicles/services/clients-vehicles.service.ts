@@ -3,7 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { NotificationService } from '../../../core';
 import type {
   ClientDetail, ClientListItem, ClientTag, ClientVehicleHistoryItem,
-  ClientWorkOrderHistoryItem, UpsertClientInput,
+  ClientWorkOrderHistoryItem, UpsertClientInput, UpsertVehicleInput,
 } from '../models';
 
 interface ClientApi {
@@ -51,6 +51,7 @@ export class ClientsVehiclesService {
   private readonly _http = inject(HttpClient);
   private readonly _notification = inject(NotificationService);
   private readonly _clients = signal<ClientListItem[]>([]);
+  private readonly _clientVehicles = signal<Record<string, ClientVehicleHistoryItem[]>>({});
 
   public readonly clients = this._clients.asReadonly();
 
@@ -76,9 +77,13 @@ export class ClientsVehiclesService {
     };
   }
 
-  public createClient(payload: UpsertClientInput): string {
+  public createClient(payload: UpsertClientInput, onCreated?: (client: ClientListItem) => void): string {
     this._http.post<{ data: ClientApi }>('/api/v1/clients', payload).subscribe({
-      next: (res) => this._clients.update(list => [this.mapList(res.data), ...list]),
+      next: (res) => {
+        const nextClient = this.mapList(res.data);
+        this._clients.update(list => [nextClient, ...list]);
+        onCreated?.(nextClient);
+      },
     });
     return '';
   }
@@ -138,6 +143,12 @@ export class ClientsVehiclesService {
           services: v.services ?? [],
           workOrderIds: (v.workOrderIds ?? []).map(String),
         }));
+        this._clientVehicles.update(cache => ({ ...cache, [String(item.id)]: vehicles }));
+        this._clients.update(list => list.map(client =>
+          client.id === String(item.id)
+            ? { ...client, vehicleCount: vehicles.length, placas: vehicles.map(vehicle => vehicle.placas).filter(Boolean) }
+            : client
+        ));
         const workOrders: ClientWorkOrderHistoryItem[] = (item.workOrders ?? []).map(wo => ({
           id: wo.id, code: wo.code, status: wo.status as any, priority: wo.priority as any,
           fechaProgramada: wo.fecha_programada,
@@ -154,5 +165,50 @@ export class ClientsVehiclesService {
         });
       },
     });
+  }
+
+  public loadClientVehicles(clientId: string, callback: (vehicles: ClientVehicleHistoryItem[]) => void): void {
+    const cached = this._clientVehicles()[clientId];
+    if (cached) {
+      callback(cached);
+      return;
+    }
+
+    this.loadClientDetail(clientId, (detail) => callback(detail.vehicles));
+  }
+
+  public addLocalVehicleToClient(clientId: string, payload: UpsertVehicleInput): ClientVehicleHistoryItem {
+    const vehicle: ClientVehicleHistoryItem = {
+      id: `temp-${Date.now()}`,
+      marca: payload.marca.trim(),
+      modelo: payload.modelo.trim(),
+      anio: payload.anio,
+      placas: payload.placas.trim().toUpperCase(),
+      vin: payload.vin.trim().toUpperCase(),
+      tipo: payload.tipo,
+      kilometraje: payload.kilometraje,
+      services: [],
+      workOrderIds: [],
+    };
+
+    this._clientVehicles.update(cache => {
+      const current = cache[clientId] ?? [];
+      return { ...cache, [clientId]: [vehicle, ...current] };
+    });
+
+    this._clients.update(list => list.map(client => {
+      if (client.id !== clientId) {
+        return client;
+      }
+
+      const plates = new Set([vehicle.placas, ...client.placas].filter(Boolean));
+      return {
+        ...client,
+        vehicleCount: Math.max(client.vehicleCount + 1, plates.size),
+        placas: [...plates],
+      };
+    }));
+
+    return vehicle;
   }
 }

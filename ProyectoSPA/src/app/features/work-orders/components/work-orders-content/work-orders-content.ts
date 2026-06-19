@@ -10,6 +10,7 @@ import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmSelectImports } from '@spartan-ng/helm/select';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { NotificationService } from '../../../../core';
+import { ClientsVehiclesService } from '../../../clients-vehicles/services';
 import { DatePickerFieldComponent } from '../../../../shared';
 import { CreateWorkOrderDialogComponent, type CreateWorkOrderDialogContext } from '../create-work-order-dialog';
 import {
@@ -43,6 +44,7 @@ import { WorkOrdersService } from '../../services';
 })
 export class WorkOrdersContentComponent {
 	private readonly _service = inject(WorkOrdersService);
+	private readonly _clientsVehiclesService = inject(ClientsVehiclesService);
 	private readonly _router = inject(Router);
 	private readonly _dialog = inject(HlmDialogService);
 	private readonly _notification = inject(NotificationService);
@@ -218,10 +220,21 @@ export class WorkOrdersContentComponent {
 
 	protected createOrder(): void {
 		const context: CreateWorkOrderDialogContext = {
-			clients: this.clients(),
-			clientsDirectory: this._service.clientsDirectory(),
-			onCreateClient: (name) => {
-				this._service.addClient(name);
+			clients: this._service.clientsDirectory(),
+			loadVehiclesForClient: (clientId, done) => {
+				this._clientsVehiclesService.loadClientVehicles(clientId, done);
+			},
+			onCreateClient: (payload, done) => {
+				this._clientsVehiclesService.createClient(payload, (client) => {
+					const nextClient = {
+						id: client.id,
+						nombre: client.nombre,
+						telefono: client.telefono === '-' ? '' : client.telefono,
+						correo: client.correo === '-' ? '' : client.correo,
+					};
+					this._service.upsertClientDirectory(nextClient);
+					done(nextClient);
+				});
 			},
 			onCreate: (payload: CreateWorkOrderInput) => {
 				this._service.createWorkOrder(payload, (order) => {

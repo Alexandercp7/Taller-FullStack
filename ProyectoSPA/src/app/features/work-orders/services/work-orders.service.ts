@@ -29,6 +29,7 @@ interface WoDetailApi extends WoListApi {
 }
 
 interface ClientApi { id: number; nombre: string; telefono: string; correo: string }
+interface ClientDirectoryItem { id: string; nombre: string; telefono: string; correo: string }
 interface Paginated<T> { data: T[] }
 
 @Injectable({ providedIn: 'root' })
@@ -38,7 +39,7 @@ export class WorkOrdersService {
   private readonly _auth = inject(AuthService);
   private readonly _workOrders = signal<WorkOrder[]>([]);
   private readonly _listLoaded = signal(false);
-  private readonly _clientsDirectory = signal<{ nombre: string; telefono: string; correo: string }[]>([]);
+  private readonly _clientsDirectory = signal<ClientDirectoryItem[]>([]);
 
   public readonly workOrders = this._workOrders.asReadonly();
   public readonly listLoaded = this._listLoaded.asReadonly();
@@ -55,7 +56,7 @@ export class WorkOrdersService {
   private loadClients(): void {
     this._http.get<Paginated<ClientApi>>('/api/v1/clients?per_page=500').subscribe({
       next: (res) => this._clientsDirectory.set(res.data.map(c => ({
-        nombre: c.nombre, telefono: c.telefono, correo: c.correo,
+        id: String(c.id), nombre: c.nombre, telefono: c.telefono, correo: c.correo,
       }))),
     });
   }
@@ -236,6 +237,16 @@ export class WorkOrdersService {
   }
 
   public addClient(_clientName: string): void {}
+  public upsertClientDirectory(client: ClientDirectoryItem): void {
+    this._clientsDirectory.update(list => {
+      const exists = list.some(item => item.id === client.id);
+      if (exists) {
+        return list.map(item => item.id === client.id ? client : item);
+      }
+      return [...list, client].sort((a, b) => a.nombre.localeCompare(b.nombre));
+    });
+  }
+
   public removeManualClient(_clientName: string): void {}
   public replaceManualClient(_previous: string, _next: string): void {}
 

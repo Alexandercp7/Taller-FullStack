@@ -30,6 +30,8 @@ export interface ClientVehicleHistoryItem {
 	anio: number;
 	placas: string;
 	vin: string;
+	tipo?: 'Auto' | 'Camioneta' | 'Camión';
+	kilometraje?: number;
 	services: string[];
 	workOrderIds: string[];
 }
@@ -62,4 +64,14 @@ export interface UpsertClientInput {
 	telefono: string;
 	correo: string;
 	rfc: string;
+}
+
+export interface UpsertVehicleInput {
+	marca: string;
+	modelo: string;
+	anio: number;
+	placas: string;
+	vin: string;
+	kilometraje: number;
+	tipo: 'Auto' | 'Camioneta' | 'Camión';
 }

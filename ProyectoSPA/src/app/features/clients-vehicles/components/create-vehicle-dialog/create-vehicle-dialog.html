@@ -1,0 +1,98 @@
+<div class="dialog-shell">
+	<div>
+		<h3 class="text-lg font-semibold">{{ title() }}</h3>
+		<p class="text-muted-foreground text-sm">{{ description() }}</p>
+	</div>
+
+	<div class="grid gap-3 md:grid-cols-2">
+		<label class="field">
+			<span>Tipo</span>
+			<hlm-select [value]="tipo()" (valueChange)="onVehicleTypeChange(($event ?? 'Auto') + '')">
+				<hlm-select-trigger class="w-full">
+					<hlm-select-value />
+				</hlm-select-trigger>
+				<hlm-select-content *hlmSelectPortal>
+					<hlm-select-group>
+						<hlm-select-item value="Auto">Auto</hlm-select-item>
+						<hlm-select-item value="Camioneta">Camioneta</hlm-select-item>
+						<hlm-select-item value="Camión">Camión</hlm-select-item>
+					</hlm-select-group>
+				</hlm-select-content>
+			</hlm-select>
+		</label>
+
+		<label class="field md:col-span-2">
+			<span>VIN</span>
+			<div class="vin-row">
+				<input hlmInput [value]="vin()" (input)="onVinInput(($any($event.target)).value)" />
+				<button hlmBtn type="button" variant="outline" [disabled]="isVinLookupLoading()" (click)="lookupVehicleByVin()">Buscar VIN</button>
+			</div>
+		</label>
+
+		<label class="field">
+			<span>Marca</span>
+			<hlm-combobox [value]="marca()" (valueChange)="onVehicleMakeSelected(($event ?? '') + '')">
+				<hlm-combobox-input placeholder="Escribe y selecciona marca" (input)="onMakeInputChange(($any($event.target)).value)" />
+				<hlm-combobox-content *hlmComboboxPortal>
+					<div hlmComboboxList>
+						<hlm-combobox-empty>@if (isVehicleLookupLoading()) { Cargando marcas... } @else { Sin resultados }</hlm-combobox-empty>
+						<div hlmComboboxGroup>
+							@for (make of vehicleMakes(); track make) {
+								<hlm-combobox-item [value]="make" (click)="onVehicleMakeSelected(make)">{{ make }}</hlm-combobox-item>
+							}
+						</div>
+					</div>
+				</hlm-combobox-content>
+			</hlm-combobox>
+		</label>
+
+		<label class="field">
+			<span>Modelo</span>
+			<hlm-combobox [value]="modelo()" (valueChange)="onVehicleModelSelected(($event ?? '') + '')">
+				<hlm-combobox-input placeholder="Escribe y selecciona modelo" (input)="onModelInputChange(($any($event.target)).value)" />
+				<hlm-combobox-content *hlmComboboxPortal>
+					<div hlmComboboxList>
+						<hlm-combobox-empty>@if (!marca()) { Selecciona una marca primero } @else if (isVehicleLookupLoading()) { Cargando modelos... } @else { Sin resultados }</hlm-combobox-empty>
+						<div hlmComboboxGroup>
+							@for (model of vehicleModels(); track model) {
+								<hlm-combobox-item [value]="model" (click)="onVehicleModelSelected(model)">{{ model }}</hlm-combobox-item>
+							}
+						</div>
+					</div>
+				</hlm-combobox-content>
+			</hlm-combobox>
+		</label>
+
+		<label class="field">
+			<span>Año</span>
+			<hlm-combobox [value]="anio().toString()" (valueChange)="onVehicleYearSelected(($event ?? '') + '')">
+				<hlm-combobox-input placeholder="Selecciona año" (input)="onYearInputChange(($any($event.target)).value)" />
+				<hlm-combobox-content *hlmComboboxPortal>
+					<div hlmComboboxList>
+						<hlm-combobox-empty>@if (!modelo()) { Selecciona un modelo primero } @else { Sin resultados }</hlm-combobox-empty>
+						<div hlmComboboxGroup>
+							@for (year of filteredVehicleYears(); track year) {
+								<hlm-combobox-item [value]="year.toString()" (click)="onVehicleYearSelected(year.toString())">{{ year }}</hlm-combobox-item>
+							}
+						</div>
+					</div>
+				</hlm-combobox-content>
+			</hlm-combobox>
+		</label>
+
+		<label class="field">
+			<span>Placas</span>
+			<input hlmInput [value]="placas()" (input)="placas.set(($any($event.target)).value.toUpperCase())" />
+		</label>
+
+		<label class="field">
+			<span>Kilometraje</span>
+			<input hlmInput type="number" [value]="kilometraje()" (input)="kilometraje.set(+($any($event.target)).value || 0)" />
+		</label>
+	</div>
+
+	<div class="actions-row">
+		<button hlmBtn type="button" variant="ghost" (click)="cancel()">Cancelar</button>
+		<button hlmBtn type="button" [disabled]="!canCreate()" (click)="submit()">Guardar vehículo</button>
+	</div>
+</div>

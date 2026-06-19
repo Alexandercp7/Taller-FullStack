@@ -55,7 +55,10 @@
 
 		<hlm-card>
 			<hlm-card-header>
-				<h3 hlmCardTitle>Historial de vehiculos y servicios</h3>
+				<div class="flex items-center justify-between gap-2">
+					<h3 hlmCardTitle>Historial de vehiculos y servicios</h3>
+					<button hlmBtn size="sm" variant="outline" type="button" (click)="addVehicle()">Agregar vehiculo</button>
+				</div>
 			</hlm-card-header>
 			<div hlmCardContent>
 				<div hlmTableContainer>

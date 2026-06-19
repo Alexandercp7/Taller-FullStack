@@ -5,9 +5,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { NotificationService } from '../../../../core';
+import { CreateVehicleDialogComponent, type CreateVehicleDialogContext } from '../create-vehicle-dialog';
 import type { ClientDetail } from '../../models';
 import { ClientsVehiclesService } from '../../services';
 
@@ -22,6 +24,7 @@ export class ClientDetailContentComponent {
 	private readonly _route = inject(ActivatedRoute);
 	private readonly _router = inject(Router);
 	private readonly _service = inject(ClientsVehiclesService);
+	private readonly _dialog = inject(HlmDialogService);
 	private readonly _notification = inject(NotificationService);
 	private readonly _params = toSignal(this._route.paramMap, { initialValue: this._route.snapshot.paramMap });
 
@@ -111,5 +114,27 @@ export class ClientDetailContentComponent {
 
 	protected paymentClass(state: string): string {
 		return state === 'Pagado' ? 'payment-paid' : 'payment-pending';
+	}
+
+	protected addVehicle(): void {
+		const client = this.detail();
+		if (!client) {
+			return;
+		}
+
+		const context: CreateVehicleDialogContext = {
+			title: 'Agregar vehículo al cliente',
+			description: 'Asigna un vehículo a este cliente para reutilizarlo al crear OTs.',
+			onCreate: (payload) => {
+				const vehicle = this._service.addLocalVehicleToClient(client.id, payload);
+				this.detail.update(current => current ? { ...current, vehicles: [vehicle, ...current.vehicles] } : current);
+				this._notification.success('Vehículo agregado al cliente.');
+			},
+		};
+
+		this._dialog.open(CreateVehicleDialogComponent, {
+			context,
+			contentClass: 'client-dialog-content',
+		});
 	}
 }
