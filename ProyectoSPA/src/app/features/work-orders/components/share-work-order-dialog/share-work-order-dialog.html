@@ -1,6 +1,6 @@
 <div class="share-shell">
 	<div>
-		<h2 class="text-lg font-semibold">Compartir OT con cliente</h2>
+		<h2 class="text-lg font-semibold">Compartir OT</h2>
 		<p class="text-muted-foreground text-sm">El cliente puede escanear el QR o abrir el enlace para ver el estado de la orden {{ orderId }}.</p>
 	</div>
 
@@ -18,7 +18,12 @@
 	</div>
 
 	<div class="qr-container">
-		<img [src]="qrUrl" [alt]="'QR para OT ' + orderId" class="qr-image" />
+		<div class="qr-card">
+			<div class="qr-glow"></div>
+			@if (qrUrl()) {
+				<img [src]="qrUrl()" [alt]="'QR para OT ' + orderId" class="qr-image" />
+			}
+		</div>
 	</div>
 
 	<div class="url-row">
@@ -26,7 +31,9 @@
 	</div>
 
 	<div class="actions-row">
-		<button hlmBtn type="button" variant="outline" (click)="close()">Cerrar</button>
+		<button hlmBtn type="button" variant="secondary" [disabled]="!clientPhone.trim() || sendingWhatsApp()" (click)="sendWhatsApp()">
+			{{ sendingWhatsApp() ? 'Enviando...' : 'Enviar WhatsApp' }}
+		</button>
 		<button hlmBtn type="button" variant="outline" [disabled]="sending()" (click)="sendEmail()">
 			{{ sending() ? 'Enviando...' : 'Enviar correo' }}
 		</button>

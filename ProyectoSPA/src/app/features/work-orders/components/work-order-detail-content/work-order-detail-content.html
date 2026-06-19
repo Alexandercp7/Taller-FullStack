@@ -14,9 +14,8 @@
 			</div>
 			<div class="flex items-center gap-2">
 				<button hlmBtn variant="outline" type="button" (click)="goBack()">Volver al listado</button>
-				<button hlmBtn type="button" (click)="cerrarOrden()">Cerrar OT</button>
-				<button hlmBtn variant="outline" type="button" (click)="shareWithClient(ot.id)">Compartir OT con cliente</button>
-				<button hlmBtn variant="secondary" type="button" [disabled]="!canSendWhatsApp() || sendingWhatsApp()" (click)="sendWhatsApp(ot.id)">{{ sendingWhatsApp() ? 'Enviando...' : whatsappActionLabel() }}</button>
+				<button hlmBtn type="button" (click)="cerrarOrden()">Terminar OT</button>
+				<button hlmBtn variant="outline" type="button" (click)="shareWithClient(ot.id)">Compartir OT</button>
 			</div>
 		</div>
 

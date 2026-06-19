@@ -77,6 +77,7 @@ export class WorkOrderDetailContentComponent {
 					orderId: id,
 					portalUrl,
 					clientEmail: this.order()?.clientData.correo ?? '',
+					clientPhone: this.order()?.clientData.telefono ?? '',
 				};
 				this._dialog.open(ShareWorkOrderDialogComponent, {
 					context,
@@ -109,7 +110,7 @@ export class WorkOrderDetailContentComponent {
 		const order = this.order();
 		if (!order) return;
 		this._service.updateStatus(order.id, 'Terminado', 'Supervisor');
-		this._notification.success('OT cerrada. Cargo enviado a finanzas.');
+		this._notification.success('OT terminada. Cargo enviado a finanzas.');
 	}
 
 	protected statusChipClass(status: WorkOrderStatus): string {
