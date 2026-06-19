@@ -226,6 +226,53 @@ export async function registerRestApi(app: FastifyInstance, container: Container
 
   app.post('/api/v1/auth/logout', async () => ({ message: 'ok' }));
 
+  app.get('/api/v1/dashboard/shortcuts', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const shortcuts = await (db as any).dashboardShortcut.findMany({
+      where: { userId: u.id },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    });
+    return {
+      data: shortcuts.map((shortcut: any) => ({
+        id: shortcut.id,
+        shortcutId: shortcut.shortcutId,
+        sortOrder: shortcut.sortOrder,
+      })),
+    };
+  });
+
+  app.put('/api/v1/dashboard/shortcuts', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const body = req.body as any;
+    const shortcutIds = Array.isArray(body.shortcuts)
+      ? body.shortcuts.filter((id: unknown): id is string => typeof id === 'string' && id.trim().length > 0)
+      : [];
+    const normalized = [...new Set(shortcutIds)].map((shortcutId, sortOrder) => ({
+      userId: u.id,
+      shortcutId,
+      sortOrder,
+    }));
+
+    await (db as any).$transaction([
+      (db as any).dashboardShortcut.deleteMany({ where: { userId: u.id } }),
+      ...(normalized.length > 0 ? [(db as any).dashboardShortcut.createMany({ data: normalized })] : []),
+    ]);
+
+    const saved = await (db as any).dashboardShortcut.findMany({
+      where: { userId: u.id },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    });
+    return {
+      data: saved.map((shortcut: any) => ({
+        id: shortcut.id,
+        shortcutId: shortcut.shortcutId,
+        sortOrder: shortcut.sortOrder,
+      })),
+    };
+  });
+
   // ── WORK ORDERS ───────────────────────────────────────────────────────────
 
   app.get('/api/v1/work-orders', async (req, reply) => {

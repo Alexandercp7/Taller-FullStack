@@ -142,8 +142,24 @@ model User {
   checklistItems      Checklist[]
   notes               Note[]
   kpiActivities       KpiActivity[]    @relation("KpiActivityAssignee")
+  dashboardShortcuts  DashboardShortcut[]
 
   @@map("users")
+}
+
+model DashboardShortcut {
+  id         String   @id @default(cuid())
+  userId     String
+  shortcutId String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, shortcutId])
+  @@index([userId, sortOrder])
+  @@map("dashboard_shortcuts")
 }
 
 // ─── Client ───────────────────────────────────────────────────────────────────
