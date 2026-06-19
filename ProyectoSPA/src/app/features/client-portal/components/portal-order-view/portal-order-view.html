@@ -1,61 +1,157 @@
 @if (isLoading()) {
 	<section class="portal-order-page">
-		<hlm-card>
-			<div hlmCardContent class="empty-state">
+		<div class="portal-shell-header">
+			<div>
+				<p class="portal-eyebrow">Portal cliente</p>
+				<h1 class="portal-page-title">Seguimiento de servicio</h1>
+			</div>
+			<div class="portal-header-actions">
+				<button hlmBtn variant="outline" type="button" class="theme-toggle detail-action-button action-button" (click)="toggleTheme()">
+					<ng-icon [name]="isDark() ? 'lucideSun' : 'lucideMoon'" class="action-icon" />
+					{{ isDark() ? 'Modo dia' : 'Modo noche' }}
+				</button>
+			</div>
+		</div>
+		<hlm-card class="portal-panel">
+			<div hlmCardContent class="empty-state flex flex-col items-center gap-4 py-10">
 				<p class="text-sm text-muted-foreground">Cargando orden...</p>
 			</div>
 		</hlm-card>
 	</section>
 } @else if (order(); as ot) {
 	<section class="portal-order-page">
-		<div class="portal-order-header">
+		<div class="portal-shell-header">
 			<div>
-				<div class="flex items-center gap-2 flex-wrap">
-					<h1 class="text-xl font-semibold">{{ ot.code }}</h1>
-					<span hlmBadge [ngClass]="['wo-chip', statusChipClass(ot.status)]">{{ ot.status }}</span>
-					<span hlmBadge [ngClass]="['wo-chip', priorityChipClass(ot.priority)]">{{ ot.priority }}</span>
-				</div>
-				<p class="text-muted-foreground text-sm">{{ ot.vehiculo?.marca }} {{ ot.vehiculo?.modelo }} {{ ot.vehiculo?.anio }}</p>
+				<p class="portal-eyebrow">Portal cliente</p>
+				<h1 class="portal-page-title">Seguimiento de servicio</h1>
+				<p class="portal-page-copy">Consulta el avance de tu orden, el detalle del trabajo y las notas compartidas por el taller.</p>
 			</div>
-			<button hlmBtn variant="outline" type="button" (click)="goBack()">Volver</button>
+			<div class="portal-header-actions">
+				<button hlmBtn variant="outline" type="button" class="theme-toggle detail-action-button action-button" (click)="toggleTheme()">
+					<ng-icon [name]="isDark() ? 'lucideSun' : 'lucideMoon'" class="action-icon" />
+					{{ isDark() ? 'Modo dia' : 'Modo noche' }}
+				</button>
+			</div>
 		</div>
 
-		<hlm-card>
-			<hlm-card-header>
-				<h3 hlmCardTitle>Informacion del servicio</h3>
+		<hlm-card class="portal-panel portal-summary-card">
+			<hlm-card-header class="portal-summary-header">
+				<div class="summary-heading">
+					<p class="portal-code-label">Orden de trabajo</p>
+					<h2 class="portal-code">{{ ot.code }}</h2>
+					<p class="portal-vehicle">{{ ot.vehiculo?.marca || 'Vehiculo' }} {{ ot.vehiculo?.modelo || '' }} {{ ot.vehiculo?.anio || '' }}</p>
+				</div>
+				<div class="summary-actions">
+					<button hlmBtn variant="outline" type="button" class="back-button detail-action-button action-button" (click)="goBack()">
+							<ng-icon name="lucideArrowLeft" class="action-icon" />
+							<span>Volver</span>
+					</button>
+				</div>
 			</hlm-card-header>
-			<div hlmCardContent class="info-grid">
-				<p><strong>Cliente:</strong> {{ ot.cliente?.nombre }}</p>
-				<p><strong>Tecnico asignado:</strong> {{ ot.tecnico?.nombre ?? 'Sin asignar' }}</p>
-				<p><strong>Fecha de ingreso:</strong> {{ ot.fecha_ingreso }}</p>
-				<p><strong>Fecha programada:</strong> {{ ot.fecha_programada }}</p>
-				<p class="full-width"><strong>Problema reportado:</strong> {{ ot.problema }}</p>
-				<p class="full-width"><strong>Diagnostico:</strong> {{ ot.diagnostico }}</p>
+			<div hlmCardContent class="portal-hero">
+				<div class="hero-stats">
+					<article class="hero-stat">
+						<div class="hero-stat-icon">
+							<ng-icon name="lucideCalendarDays" class="stat-icon" />
+						</div>
+						<div>
+							<p class="hero-stat-label">Fecha de ingreso</p>
+							<p class="hero-stat-value">{{ ot.fecha_ingreso ? (ot.fecha_ingreso | date: 'dd/MM/yyyy') : 'Sin registro' }}</p>
+						</div>
+					</article>
+
+					<article class="hero-stat">
+						<div class="hero-stat-icon">
+							<ng-icon name="lucideClock3" class="stat-icon" />
+						</div>
+						<div>
+							<p class="hero-stat-label">Fecha programada</p>
+							<p class="hero-stat-value">{{ ot.fecha_programada ? (ot.fecha_programada | date: 'dd/MM/yyyy') : 'Pendiente' }}</p>
+						</div>
+					</article>
+
+					<article class="hero-stat">
+						<div class="hero-stat-icon">
+							<ng-icon name="lucideWrench" class="stat-icon" />
+						</div>
+						<div>
+							<p class="hero-stat-label">Total estimado</p>
+							<p class="hero-stat-value">${{ ot.total_estimado | number: '1.2-2' }}</p>
+						</div>
+					</article>
+				</div>
 			</div>
 		</hlm-card>
 
-		<hlm-card>
-			<hlm-card-header>
-				<h3 hlmCardTitle>Datos del vehiculo</h3>
-			</hlm-card-header>
-			<div hlmCardContent class="info-grid">
-				<p><strong>Marca:</strong> {{ ot.vehiculo?.marca }}</p>
-				<p><strong>Modelo:</strong> {{ ot.vehiculo?.modelo }}</p>
-				<p><strong>Año:</strong> {{ ot.vehiculo?.anio }}</p>
-				<p><strong>Placas:</strong> {{ ot.vehiculo?.placas }}</p>
-				<p><strong>Kilometraje:</strong> {{ ot.vehiculo?.kilometraje_actual | number }} km</p>
-			</div>
-		</hlm-card>
+		<div class="portal-section-grid">
+			<hlm-card class="portal-panel">
+				<hlm-card-header>
+					<h3 hlmCardTitle>Informacion del servicio</h3>
+				</hlm-card-header>
+				<div hlmCardContent class="detail-list">
+					<div class="detail-row">
+						<span class="detail-label">Cliente</span>
+						<span class="detail-value">{{ ot.cliente?.nombre || 'Sin registro' }}</span>
+					</div>
+					<div class="detail-row full-width">
+						<span class="detail-label">Problema reportado</span>
+						<span class="detail-value">{{ ot.problema || 'Sin informacion' }}</span>
+					</div>
+					<div class="detail-row full-width">
+						<span class="detail-label">Diagnostico</span>
+						<span class="detail-value">{{ ot.diagnostico || 'Aun sin diagnostico compartido' }}</span>
+					</div>
+				</div>
+			</hlm-card>
+
+			<hlm-card class="portal-panel">
+				<hlm-card-header>
+					<h3 hlmCardTitle>Datos del vehiculo</h3>
+				</hlm-card-header>
+				<div hlmCardContent class="detail-list">
+					<div class="detail-row">
+						<span class="detail-label">Marca</span>
+						<span class="detail-value">{{ ot.vehiculo?.marca || 'Sin registro' }}</span>
+					</div>
+					<div class="detail-row">
+						<span class="detail-label">Modelo</span>
+						<span class="detail-value">{{ ot.vehiculo?.modelo || 'Sin registro' }}</span>
+					</div>
+					<div class="detail-row">
+						<span class="detail-label">Año</span>
+						<span class="detail-value">{{ ot.vehiculo?.anio || 'Sin registro' }}</span>
+					</div>
+					<div class="detail-row">
+						<span class="detail-label">Placas</span>
+						<span class="detail-value">{{ ot.vehiculo?.placas || 'Sin registro' }}</span>
+					</div>
+					<div class="detail-row">
+						<span class="detail-label">Kilometraje</span>
+						<span class="detail-value">
+							@if (ot.vehiculo?.kilometraje_actual != null) {
+								{{ ot.vehiculo?.kilometraje_actual | number }} km
+							} @else {
+								Sin registro
+							}
+						</span>
+					</div>
+				</div>
+			</hlm-card>
+		</div>
 
 		@if (ot.servicios.length > 0 || ot.refacciones.length > 0) {
-			<hlm-card>
+			<hlm-card class="portal-panel">
 				<hlm-card-header>
 					<h3 hlmCardTitle>Detalle del servicio</h3>
+					<p hlmCardDescription>Conceptos considerados actualmente en la orden.</p>
 				</hlm-card-header>
-				<div hlmCardContent>
+				<div hlmCardContent class="service-detail-content">
 					@if (ot.servicios.length > 0) {
-						<p class="text-sm font-medium mb-2">Servicios</p>
-						<div hlmTableContainer>
+						<div class="section-heading">
+							<ng-icon name="lucideClipboardList" class="section-icon" />
+							<p class="text-sm font-medium">Servicios</p>
+						</div>
+						<div hlmTableContainer class="table-shell">
 							<table hlmTable>
 								<thead hlmTHead>
 									<tr hlmTr>
@@ -75,8 +171,11 @@
 						</div>
 					}
 					@if (ot.refacciones.length > 0) {
-						<p class="text-sm font-medium mt-4 mb-2">Refacciones</p>
-						<div hlmTableContainer>
+						<div class="section-heading with-margin">
+							<ng-icon name="lucideWrench" class="section-icon" />
+							<p class="text-sm font-medium">Refacciones</p>
+						</div>
+						<div hlmTableContainer class="table-shell">
 							<table hlmTable>
 								<thead hlmTHead>
 									<tr hlmTr>
@@ -97,13 +196,16 @@
 							</table>
 						</div>
 					}
-					<p class="text-sm font-semibold mt-3 text-right">Total estimado: ${{ ot.total_estimado | number: '1.2-2' }}</p>
+					<div class="portal-total-row">
+						<span>Total estimado</span>
+						<strong>${{ ot.total_estimado | number: '1.2-2' }}</strong>
+					</div>
 				</div>
 			</hlm-card>
 		}
 
 		@if (ot.checklist.total > 0) {
-			<hlm-card>
+			<hlm-card class="portal-panel">
 				<hlm-card-header>
 					<h3 hlmCardTitle>Progreso de trabajo</h3>
 					<p hlmCardDescription>{{ ot.checklist.completadas }} de {{ ot.checklist.total }} tareas completadas</p>
@@ -117,44 +219,53 @@
 		}
 
 		@if (ot.fotos.length > 0) {
-			<hlm-card>
+			<hlm-card class="portal-panel">
 				<hlm-card-header>
 					<h3 hlmCardTitle>Fotos</h3>
+					<p hlmCardDescription>Evidencia visual compartida durante el servicio.</p>
 				</hlm-card-header>
 				<div hlmCardContent class="photos-grid">
 					@for (foto of ot.fotos; track foto.id) {
-						<img [src]="foto.url" alt="Foto del vehiculo" class="photo-thumb" />
+						<figure class="photo-card">
+							<img [src]="foto.url" alt="Foto del vehiculo" class="photo-thumb" />
+						</figure>
 					}
 				</div>
 			</hlm-card>
 		}
 
-		@if (ot.notas.length > 0) {
-			<hlm-card>
-				<hlm-card-header>
-					<h3 hlmCardTitle>Mensajes del taller</h3>
-				</hlm-card-header>
-				<div hlmCardContent class="notes-list">
-					@for (nota of ot.notas; track nota.id) {
-						<article class="note-item">
-							<p class="text-sm">{{ nota.texto }}</p>
-							<p class="text-muted-foreground text-xs">{{ nota.created_at }}</p>
-						</article>
-					}
-				</div>
-			</hlm-card>
-		}
+		<hlm-card class="portal-panel">
+			<hlm-card-header>
+				<h3 hlmCardTitle>Notas para el cliente</h3>
+				<p hlmCardDescription>Mensajes y observaciones compartidas contigo por el taller.</p>
+			</hlm-card-header>
+			<div hlmCardContent>
+				@if (ot.notas.length > 0) {
+					<div class="notes-list">
+						@for (nota of ot.notas; track nota.id) {
+							<article class="note-item">
+								<p class="text-sm">{{ nota.texto }}</p>
+								<p class="text-muted-foreground text-xs">{{ nota.created_at | date: 'dd/MM/yyyy HH:mm' }}</p>
+							</article>
+						}
+					</div>
+				} @else {
+					<p class="text-sm text-muted-foreground">Aun no hay notas visibles para ti en esta orden.</p>
+				}
+			</div>
+		</hlm-card>
 
-		@if (ot.timeline.length > 0) {
-			<hlm-card>
+		@if (portalTimeline().length > 0) {
+			<hlm-card class="portal-panel">
 				<hlm-card-header>
 					<h3 hlmCardTitle>Historial de cambios</h3>
+					<p hlmCardDescription>Resumen de eventos visibles para el cliente.</p>
 				</hlm-card-header>
 				<div hlmCardContent class="timeline-list">
-					@for (event of ot.timeline; track event.id) {
+					@for (event of portalTimeline(); track event.id) {
 						<article class="timeline-item">
 							<p class="text-sm font-medium">{{ event.descripcion }}</p>
-							<p class="text-muted-foreground text-xs">{{ event.created_at }}</p>
+							<p class="text-muted-foreground text-xs">{{ event.created_at | date: 'dd/MM/yyyy HH:mm' }}</p>
 						</article>
 					}
 				</div>
@@ -163,11 +274,26 @@
 	</section>
 } @else {
 	<section class="portal-order-page">
-		<hlm-card>
+		<div class="portal-shell-header">
+			<div>
+				<p class="portal-eyebrow">Portal cliente</p>
+				<h1 class="portal-page-title">Seguimiento de servicio</h1>
+			</div>
+			<div class="portal-header-actions">
+				<button hlmBtn variant="outline" type="button" class="theme-toggle detail-action-button action-button" (click)="toggleTheme()">
+					<ng-icon [name]="isDark() ? 'lucideSun' : 'lucideMoon'" class="action-icon" />
+					{{ isDark() ? 'Modo dia' : 'Modo noche' }}
+				</button>
+			</div>
+		</div>
+		<hlm-card class="portal-panel">
 			<div hlmCardContent class="empty-state">
 				<p class="text-sm text-muted-foreground">Orden no encontrada.</p>
 				<div>
-					<button hlmBtn variant="outline" type="button" (click)="goBack()">Volver</button>
+					<button hlmBtn variant="outline" type="button" class="back-button detail-action-button action-button" (click)="goBack()">
+						<ng-icon name="lucideArrowLeft" class="action-icon" />
+						<span>Volver</span>
+					</button>
 				</div>
 			</div>
 		</hlm-card>

@@ -1,37 +1,54 @@
 <section class="portal-search-page">
-	<hlm-card>
+	<div class="portal-shell-header">
+		<div>
+			<p class="portal-eyebrow">Portal cliente</p>
+			<h1 class="portal-page-title">Consulta tu servicio</h1>
+			<p class="portal-page-copy">Busca tu orden por telefono, numero de OT o placas del vehiculo y revisa el avance desde cualquier dispositivo.</p>
+		</div>
+		<button hlmBtn variant="outline" type="button" class="theme-toggle" (click)="toggleTheme()">
+			<ng-icon [name]="isDark() ? 'lucideSun' : 'lucideMoon'" />
+			{{ isDark() ? 'Modo dia' : 'Modo noche' }}
+		</button>
+	</div>
+
+	<hlm-card class="portal-search-hero">
 		<hlm-card-header>
 			<h3 hlmCardTitle>Consulta tu servicio</h3>
-			<p hlmCardDescription>Ingresa tu numero de telefono o nombre para encontrar tus ordenes de servicio.</p>
+			<p hlmCardDescription>Ingresa telefono completo, numero de OT completo o placas completas. Puedes escribir sin guiones, espacios o mayusculas.</p>
 		</hlm-card-header>
 		<div hlmCardContent class="search-form">
 			<input
 				hlmInput
 				type="text"
-				placeholder="Numero de telefono o nombre..."
+				placeholder="Telefono, OT o placas..."
 				[value]="searchTerm()"
 				(input)="searchTerm.set($any($event.target).value)"
 				(keydown.enter)="search()"
 			/>
-			<button hlmBtn type="button" (click)="search()">Buscar</button>
+			<button hlmBtn type="button" (click)="search()">
+				<ng-icon name="lucideSearch" />
+				Buscar
+			</button>
 		</div>
+		<p class="search-help">Ejemplos: 9981234567, OT0002, ABC123A.</p>
 	</hlm-card>
 
 	@if (hasSearched()) {
 		@if (results().length > 0) {
-			<hlm-card>
+			<hlm-card class="portal-search-results">
 				<hlm-card-header>
+					<h3 hlmCardTitle>Resultados</h3>
 					<p hlmCardDescription>{{ results().length }} {{ results().length === 1 ? 'orden encontrada' : 'ordenes encontradas' }}</p>
 				</hlm-card-header>
 				<div hlmCardContent>
-					<div hlmTableContainer>
+					<div hlmTableContainer class="desktop-results">
 						<table hlmTable>
 							<thead hlmTHead>
 								<tr hlmTr>
 									<th hlmTh>OT</th>
 									<th hlmTh>Vehiculo</th>
+									<th hlmTh>Placas</th>
 									<th hlmTh>Fecha programada</th>
-									<th hlmTh>Estatus</th>
 									<th hlmTh>Acciones</th>
 								</tr>
 							</thead>
@@ -40,24 +57,45 @@
 									<tr hlmTr>
 										<td hlmTd class="font-medium">{{ order.code }}</td>
 										<td hlmTd>{{ order.vehiculo?.marca }} {{ order.vehiculo?.modelo }} {{ order.vehiculo?.anio }}</td>
+										<td hlmTd>{{ order.vehiculo?.placas || '-' }}</td>
 										<td hlmTd>{{ order.fecha_programada }}</td>
 										<td hlmTd>
-											<span hlmBadge [ngClass]="['wo-chip', statusChipClass(order.status)]">{{ order.status }}</span>
-										</td>
-										<td hlmTd>
-											<button hlmBtn size="sm" variant="outline" type="button" (click)="openOrder(order.portalToken)">Ver detalle</button>
+											<button hlmBtn size="sm" variant="outline" type="button" class="result-action-button" (click)="openOrder(order.portalToken)">Ver detalle</button>
 										</td>
 									</tr>
 								}
 							</tbody>
 						</table>
 					</div>
+
+					<div class="mobile-results">
+						@for (order of results(); track order.portalToken) {
+							<article class="order-card">
+								<div class="order-card-header">
+									<div>
+										<p class="order-card-code">{{ order.code }}</p>
+										<p class="order-card-vehicle">{{ order.vehiculo?.marca }} {{ order.vehiculo?.modelo }} {{ order.vehiculo?.anio }}</p>
+										<p class="order-card-plates">Placas: {{ order.vehiculo?.placas || '-' }}</p>
+									</div>
+								</div>
+								<div class="order-card-meta">
+									<div class="meta-item">
+										<ng-icon name="lucideCalendarDays" />
+										<span>{{ order.fecha_programada }}</span>
+									</div>
+								</div>
+								<div class="order-card-actions">
+									<button hlmBtn size="sm" variant="outline" type="button" class="result-action-button" (click)="openOrder(order.portalToken)">Ver detalle</button>
+								</div>
+							</article>
+						}
+					</div>
 				</div>
 			</hlm-card>
 		} @else {
-			<hlm-card>
-				<div hlmCardContent class="empty-results">
-					<p class="text-sm text-muted-foreground">No se encontraron ordenes con ese dato. Verifica que el numero de telefono o nombre sea correcto.</p>
+			<hlm-card class="portal-search-results">
+				<div hlmCardContent class="empty-results flex flex-col items-center gap-4 py-10">
+					<p class="text-sm text-muted-foreground">No se encontraron ordenes con ese dato. Verifica el telefono, la OT o las placas e intenta de nuevo.</p>
 				</div>
 			</hlm-card>
 		}

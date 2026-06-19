@@ -106,6 +106,33 @@ function mapOrderList(o: any) {
   };
 }
 
+function mapPortalTimelineEntry(t: any) {
+  if (t.event === 'status_changed') {
+    const newStatus = STATUS_MAP[t.detail?.newStatus] ?? t.detail?.newStatus ?? 'Actualizado';
+    return {
+      id: t.id,
+      descripcion: `Estatus actualizado a ${newStatus}`,
+      evento: t.event,
+      detalle: t.detail ?? null,
+      created_at: t.createdAt?.toISOString(),
+      user: t.user ? { name: t.user.name } : undefined,
+    };
+  }
+
+  if (t.event === 'note_added' && t.detail?.visibility === 'CLIENT') {
+    return {
+      id: t.id,
+      descripcion: 'Se agrego una nota para el cliente',
+      evento: t.event,
+      detalle: t.detail ?? null,
+      created_at: t.createdAt?.toISOString(),
+      user: t.user ? { name: t.user.name } : undefined,
+    };
+  }
+
+  return null;
+}
+
 async function mapOrderDetail(o: any) {
   const base = mapOrderList(o);
   const storage = new S3FileStorageAdapter();
@@ -113,29 +140,43 @@ async function mapOrderDetail(o: any) {
     id: f.id,
     url: f.key ? await storage.getDownloadUrl(f.key) : f.url,
   })));
+  const servicios = (o.quotes ?? []).map((q: any) => ({
+    id: q.id, price_item_id: q.serviceId ?? q.id, nombre: q.service?.name ?? 'Servicio', precio: Number(q.total),
+  }));
+  const partes = (o.assignedParts ?? []).map((p: any) => ({
+    id: p.id, inventory_item_id: p.itemId, nombre: p.item?.name ?? '', cantidad: p.quantity,
+    costo_unitario: Number(p.unitPrice),
+  }));
+  const checklistItems = (o.checklist ?? []).map((c: any) => ({
+    id: c.id, tipo: c.phase ?? 'inicial', tarea: c.label,
+    responsable: c.responsable?.name ?? '', responsableId: c.responsableId ?? null, completada: c.checked,
+  }));
+  const totalServicios = servicios.reduce((sum: number, s: any) => sum + Number(s.precio || 0), 0);
+  const totalPartes = partes.reduce((sum: number, p: any) => sum + Number(p.costo_unitario || 0) * Number(p.cantidad || 0), 0);
+
   return {
     ...base,
-    checklists: (o.checklist ?? []).map((c: any) => ({
-      id: c.id, tipo: c.phase ?? 'inicial', tarea: c.label,
-      responsable: c.responsable?.name ?? '', responsableId: c.responsableId ?? null, completada: c.checked,
-    })),
+    checklist: {
+      total: checklistItems.length,
+      completadas: checklistItems.filter((item: any) => item.completada).length,
+    },
+    checklists: checklistItems,
     fotos,
     notas: (o.notes ?? []).map((n: any) => ({
       id: n.id, tipo: n.visibility === 'CLIENT' ? 'cliente' : 'interna', texto: n.content, created_at: n.createdAt?.toISOString(),
       user: n.user ? { name: n.user.name } : undefined,
     })),
-    partes: (o.assignedParts ?? []).map((p: any) => ({
-      id: p.id, inventory_item_id: p.itemId, nombre: p.item?.name ?? '', cantidad: p.quantity,
-      costo_unitario: Number(p.unitPrice),
+    partes,
+    refacciones: partes.map((p: any) => ({
+      nombre: p.nombre,
+      cantidad: p.cantidad,
+      subtotal: Number(p.costo_unitario || 0) * Number(p.cantidad || 0),
     })),
-    servicios: (o.quotes ?? []).map((q: any) => ({
-      id: q.id, price_item_id: q.serviceId ?? q.id, nombre: q.service?.name ?? 'Servicio', precio: Number(q.total),
-    })),
-    timeline: (o.timeline ?? []).map((t: any) => ({
-      id: t.id, descripcion: t.event, evento: t.event, detalle: t.detail ?? null,
-      created_at: t.createdAt?.toISOString(),
-      user: t.user ? { name: t.user.name } : undefined,
-    })),
+    servicios,
+    total_estimado: totalServicios + totalPartes,
+    timeline: (o.timeline ?? [])
+      .map((t: any) => mapPortalTimelineEntry(t))
+      .filter(Boolean),
   };
 }
 
@@ -1615,27 +1656,42 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const { q } = req.query as any;
     const term = String(q ?? '').trim();
     if (!term) return { data: [] };
+
+    const normalizeAlphaNumeric = (value: string | null | undefined) =>
+      String(value ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    const normalizeDigits = (value: string | null | undefined) => String(value ?? '').replace(/\D/g, '');
+
+    const normalizedTerm = normalizeAlphaNumeric(term);
+    const numericTerm = normalizeDigits(term);
+
     const orders = await db.workOrder.findMany({
-      where: {
-        client: {
-          OR: [
-            { name: { contains: term, mode: 'insensitive' } },
-            { phone: { contains: term, mode: 'insensitive' } },
-          ],
-        },
-      },
       include: { client: true, vehicle: true },
       orderBy: { createdAt: 'desc' },
-      take: 20,
+      take: 200,
     });
+
+    const filteredOrders = orders.filter((o) => {
+      const normalizedCode = normalizeAlphaNumeric(o.code);
+      const normalizedPlates = normalizeAlphaNumeric(o.vehicle?.plates);
+      const normalizedPhone = normalizeDigits(o.client?.phone);
+
+      const matchesCode = /^(ot|wo)[a-z0-9]+$/i.test(normalizedTerm) && normalizedCode === normalizedTerm;
+      const matchesPlates = normalizedTerm.length >= 5 && normalizedPlates === normalizedTerm;
+      const matchesPhone = numericTerm.length >= 10 && normalizedPhone === numericTerm;
+
+      return matchesCode || matchesPlates || matchesPhone;
+    });
+
     return {
-      data: orders.map((o) => ({
+      data: filteredOrders.slice(0, 20).map((o) => ({
         portalToken: o.portalToken,
         code: o.code,
         status: STATUS_MAP[o.status] ?? o.status,
         fecha_programada: toDate(o.scheduledAt),
         vehiculo: o.vehicle
-          ? { marca: o.vehicle.brand, modelo: o.vehicle.model, anio: o.vehicle.year }
+          ? { marca: o.vehicle.brand, modelo: o.vehicle.model, anio: o.vehicle.year, placas: o.vehicle.plates }
           : null,
       })),
     };
@@ -1647,7 +1703,11 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       where: { portalToken: token },
       include: {
         client: true, vehicle: true, technician: true, accountReceivable: true,
-        checklist: true, photos: true, notes: { include: { user: { select: { name: true } } } },
+        checklist: { include: { responsable: { select: { name: true } } } },
+        photos: true,
+        notes: { include: { user: { select: { name: true } } } },
+        assignedParts: { include: { item: true } },
+        quotes: { include: { service: true } },
         timeline: { include: { user: { select: { name: true } } } },
       },
     });

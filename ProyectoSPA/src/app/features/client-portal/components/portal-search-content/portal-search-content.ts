@@ -2,24 +2,25 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { HlmBadgeImports } from '@spartan-ng/helm/badge';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideCalendarDays, lucideMoon, lucideSearch, lucideSun } from '@ng-icons/lucide';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmTableImports } from '@spartan-ng/helm/table';
-import { type WorkOrderStatus } from '../../../work-orders/models';
+import { ThemeService } from '../../../../core';
 
 interface PortalSearchResult {
 	portalToken: string;
 	code: string;
-	status: WorkOrderStatus;
 	fecha_programada: string;
-	vehiculo: { marca: string; modelo: string; anio: number } | null;
+	vehiculo: { marca: string; modelo: string; anio: number; placas?: string } | null;
 }
 
 @Component({
 	selector: 'spartan-portal-search-content',
-	imports: [CommonModule, HlmCardImports, HlmButtonImports, HlmInputImports, HlmBadgeImports, HlmTableImports],
+	imports: [CommonModule, HlmCardImports, HlmButtonImports, HlmInputImports, HlmTableImports, NgIcon],
+	providers: [provideIcons({ lucideCalendarDays, lucideMoon, lucideSearch, lucideSun })],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	templateUrl: './portal-search-content.html',
 	styleUrl: './portal-search-content.css',
@@ -27,13 +28,15 @@ interface PortalSearchResult {
 export class PortalSearchContentComponent {
 	private readonly _http = inject(HttpClient);
 	private readonly _router = inject(Router);
+	private readonly _themeService = inject(ThemeService);
 
 	protected readonly searchTerm = signal('');
 	protected readonly hasSearched = signal(false);
 	protected readonly results = signal<PortalSearchResult[]>([]);
+	protected readonly isDark = this._themeService.isDark;
 
 	protected search(): void {
-		const term = this.searchTerm().trim();
+		const term = this.searchTerm().trim().replace(/\s+/g, ' ');
 		if (!term) {
 			this.results.set([]);
 			this.hasSearched.set(true);
@@ -55,16 +58,7 @@ export class PortalSearchContentComponent {
 		void this._router.navigate(['/portal', token]);
 	}
 
-	protected statusChipClass(status: WorkOrderStatus): string {
-		const map: Record<WorkOrderStatus, string> = {
-			Agendado: 'wo-chip-status-agendado',
-			'En Espera': 'wo-chip-status-espera',
-			'En Proceso': 'wo-chip-status-proceso',
-			Terminado: 'wo-chip-status-terminado',
-			'En Garantia': 'wo-chip-status-garantia',
-			Rezagado: 'wo-chip-status-rezagado',
-			Entregado: 'wo-chip-status-entregado',
-		};
-		return map[status] ?? '';
+	protected toggleTheme(): void {
+		this._themeService.toggleTheme();
 	}
 }
