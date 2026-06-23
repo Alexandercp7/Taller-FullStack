@@ -344,6 +344,13 @@ export async function registerRestApi(app: FastifyInstance, container: Container
           type: VEHICLE_TYPE_REVERSE[body.tipo_vehiculo] as any ?? 'CAR',
         },
       });
+    } else if (vehicle.clientId !== client.id) {
+      // Plates already exist under a different client (e.g. ownership transfer).
+      // Reassign the vehicle to the current client so the use case validation passes.
+      vehicle = await db.vehicle.update({
+        where: { id: vehicle.id },
+        data: { clientId: client.id },
+      });
     }
 
     const priority = (PRIORITY_REVERSE[body.priority] ?? 'MEDIUM') as any;

@@ -32,8 +32,7 @@ Backend API para la gestión integral de un taller automotriz. Construido con **
 | API layer | tRPC | 10.45.2 |
 | ORM | Prisma | 5.14.0 |
 | Base de datos | PostgreSQL | 16 |
-| Cache / Cola | Redis | 7 |
-| Cola de trabajos | BullMQ | latest |
+| Caché | En memoria | — |
 | Validación | Zod | 3.23.8 |
 | Hash contraseñas | Argon2 | latest |
 | Tokens | jsonwebtoken (JWT) | latest |
@@ -68,9 +67,9 @@ src/
 │
 ├── infrastructure/      # Implementaciones concretas de los puertos
 │   ├── persistence/     # Repositorios Prisma + mappers
-│   ├── adapters/        # S3, JWT, Argon2, Redis, PDFKit, Resend, Twilio, NHTSA
-│   ├── queue/           # BullMQ workers (notificaciones, alertas de stock)
-│   └── config/          # env.ts, logger.ts, redis.ts, container.ts
+│   ├── adapters/        # S3, JWT, Argon2, PDFKit, Resend, Twilio, NHTSA
+│   ├── events/          # InProcessDomainEventDispatcher
+│   └── config/          # env.ts, logger.ts, container.ts
 │
 ├── presentation/        # Capa de entrada — routers y validadores tRPC
 │   ├── routers/         # 8 routers (auth, orders, inventory, clients, etc.)
@@ -86,6 +85,7 @@ src/
 - **State Machine**: `OrderStateMachine` valida cada transición de estado de una orden, haciendo imposibles transiciones inválidas.
 - **Inversión de dependencias**: `container.ts` conecta interfaces con implementaciones concretas en un solo lugar.
 - **Errores semánticos**: `InvalidStateTransitionError`, `InsufficientStockError`, etc. — nunca errores genéricos.
+- **Eventos de dominio en-proceso**: `InProcessDomainEventDispatcher` despacha eventos síncronamente dentro del mismo proceso, sin Redis ni workers externos. El dispatch es fire-and-forget: un fallo no revierte la transacción ya commiteada.
 
 ---
 
@@ -119,14 +119,14 @@ SCHEDULED → IN_PROGRESS → COMPLETED → DELIVERED → ARCHIVED
 - Control de stock con stock mínimo configurable
 - Asignación de piezas a órdenes (deduce stock automáticamente)
 - Registro manual de movimientos (entrada, salida, ajuste)
-- Alertas automáticas cuando el stock cae bajo el mínimo (BullMQ)
+- Alertas automáticas cuando el stock cae bajo el mínimo (evento de dominio en log)
 - Búsqueda con filtros y paginación
 
 ### Clientes (`Clients`)
 - Etiquetado automático: `NEW`, `FREQUENT`, `WITH_DEBT`
 - Historial de vehículos por cliente
 - Validación de eliminación (no se puede eliminar con órdenes activas)
-- Decodificación de VIN con NHTSA API (con caché Redis)
+- Decodificación de VIN con NHTSA API (con caché en memoria)
 - Verificación de recalls de vehículos
 
 ### Finanzas (`Finance`)
@@ -190,7 +190,7 @@ SCHEDULED → IN_PROGRESS → COMPLETED → DELIVERED → ARCHIVED
 ## Requisitos previos
 
 - **Node.js** >= 20
-- **Docker** y **Docker Compose** (para PostgreSQL y Redis)
+- **Docker** y **Docker Compose** (para PostgreSQL)
 - **npm** >= 10
 
 ---
@@ -226,7 +226,6 @@ docker-compose up -d
 Esto levanta:
 - PostgreSQL en `localhost:5432` (producción/desarrollo)
 - PostgreSQL en `localhost:5433` (tests)
-- Redis en `localhost:6379`
 
 ### 5. Ejecutar migraciones y generar el cliente Prisma
 
@@ -260,41 +259,36 @@ Crear un archivo `.env` en la raíz con las siguientes variables:
 NODE_ENV=development
 PORT=3000
 
-# Base de datos
+# Base de datos (requeridas)
 DATABASE_URL="postgresql://user:password@localhost:5432/taller_automotriz"
+DIRECT_URL="postgresql://user:password@localhost:5432/taller_automotriz"
 
-# Redis
-REDIS_URL="redis://localhost:6379"
-
-# JWT
+# JWT (requeridas)
 JWT_SECRET="tu-secreto-muy-largo-y-aleatorio"
 JWT_EXPIRES_IN="7d"
 JWT_REFRESH_EXPIRES_IN="30d"
 
-# Almacenamiento S3 / Cloudflare R2
+# Almacenamiento S3 / Cloudflare R2 (requeridas)
 S3_ENDPOINT="https://tu-account.r2.cloudflarestorage.com"
 S3_BUCKET="taller-automotriz"
 S3_ACCESS_KEY_ID="tu-access-key"
 S3_SECRET_ACCESS_KEY="tu-secret-key"
 S3_REGION="auto"
 
-# Emails (Resend)
+# Emails — opcional
 RESEND_API_KEY="re_xxxxxxxxx"
 RESEND_FROM="noreply@tudominio.com"
 
-# WhatsApp (Twilio)
+# WhatsApp — opcional
 TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxx"
 TWILIO_AUTH_TOKEN="xxxxxxxxxxxxxxxx"
 TWILIO_WHATSAPP_FROM="whatsapp:+14155238886"
 
-# Push notifications (Expo) — opcional
+# Push notifications — opcional
 EXPO_ACCESS_TOKEN="tu-expo-token"
-
-# Google OAuth — opcional
-GOOGLE_CLIENT_ID="xxx.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="GOCSPX-xxx"
-GOOGLE_REDIRECT_URI="http://localhost:3000/auth/google/callback"
 ```
+
+> `REDIS_URL` ya **no es requerida**. El sistema usa caché en memoria y despacho de eventos en-proceso.
 
 ---
 
@@ -382,10 +376,9 @@ AssignPartToOrderUseCase
 POST /trpc/auth.login
   → LoginUseCase verifica email/password con Argon2
   → Genera access token (JWT, 7d) + refresh token (JWT, 30d)
-  → Almacena refresh token en Redis
 
 POST /trpc/auth.refresh
-  → RefreshTokenUseCase valida refresh token en Redis
+  → RefreshTokenUseCase valida el refresh token
   → Genera nuevo par de tokens
 ```
 
@@ -470,7 +463,7 @@ docker run -p 3000:3000 --env-file .env taller-automotriz
 - Usar un secreto JWT largo y aleatorio (mínimo 64 caracteres)
 - Configurar CORS en Fastify según el dominio del frontend
 - Habilitar SSL/TLS (recomendado via proxy reverso: Nginx / Caddy)
-- Monitorear la cola BullMQ (workers: `NotificationWorker`, `StockAlertWorker`, `CloseOrderWorker`)
+- No se requiere Redis ni BullMQ — el servidor es stateless excepto por la base de datos y S3
 
 ---
 

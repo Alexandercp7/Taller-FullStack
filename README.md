@@ -25,7 +25,7 @@ ProyectoSPA/                # Frontend SPA (Angular 21)
 | Protocolo API | tRPC 10 |
 | ORM | Prisma 5 |
 | Base de datos | PostgreSQL 16 |
-| Caché / Cola | Redis 7 + BullMQ 5 |
+| Caché | En memoria (InMemoryCacheAdapter) |
 | Validación | Zod 3 |
 | Auth | JWT + Argon2 |
 | Storage | AWS S3 / Cloudflare R2 |
@@ -64,7 +64,7 @@ src/
 
 - **Inversión de dependencias**: el dominio define interfaces; la infraestructura las implementa.
 - **State machine**: `OrderStateMachine` controla todas las transiciones de estado de órdenes.
-- **Eventos de dominio**: publicados vía BullMQ y consumidos por workers asíncronos.
+- **Eventos de dominio**: despachados en-proceso vía `InProcessDomainEventDispatcher` (sin Redis ni workers externos).
 - **Either monad**: manejo de errores sin excepciones en casos de uso.
 
 ### Frontend — Feature-based (Angular 21 standalone)
@@ -118,8 +118,7 @@ src/app/
 
 - Node.js 20+
 - PostgreSQL 16
-- Redis 7
-- pnpm o npm
+- npm
 
 ---
 
@@ -149,23 +148,28 @@ Variables requeridas:
 
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/taller_automotriz
-REDIS_URL=redis://localhost:6379
+DIRECT_URL=postgresql://user:password@localhost:5432/taller_automotriz
 JWT_SECRET=...
-JWT_REFRESH_SECRET=...
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
-AWS_BUCKET_NAME=...
-AWS_REGION=...
-RESEND_API_KEY=...
-TWILIO_ACCOUNT_SID=...
+S3_ENDPOINT=...
+S3_BUCKET=...
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+```
+
+Variables opcionales:
+
+```env
+RESEND_API_KEY=...        # Email
+TWILIO_ACCOUNT_SID=...    # WhatsApp
 TWILIO_AUTH_TOKEN=...
+EXPO_ACCESS_TOKEN=...     # Push notifications
 ```
 
 ### 3. Levantar servicios con Docker (opcional)
 
 ```bash
 cd taller-automotriz
-docker compose up -d   # Levanta PostgreSQL + Redis
+docker compose up -d   # Levanta PostgreSQL
 ```
 
 ### 4. Inicializar base de datos
@@ -188,7 +192,7 @@ cd ProyectoSPA
 npm start
 ```
 
-El frontend proxea las llamadas `/trpc` al backend en `localhost:3000` via `proxy.conf.json`.
+El frontend proxea las llamadas `/api` y `/trpc` al backend en `localhost:3000` via `proxy.conf.json`.
 
 ---
 
