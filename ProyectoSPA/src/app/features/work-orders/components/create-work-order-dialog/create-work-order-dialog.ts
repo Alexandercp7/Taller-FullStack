@@ -211,6 +211,7 @@ export class CreateWorkOrderDialogComponent {
 			telefono: this.telefono().trim(),
 			correo: this.correo().trim(),
 			tecnico: this.tecnico().trim(),
+			tecnicoId: this.tecnicoId() || undefined,
 			fechaProgramada: this.fechaProgramada(),
 			priority: this.priority(),
 			vehicle: {

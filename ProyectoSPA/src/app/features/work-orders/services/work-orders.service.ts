@@ -172,7 +172,7 @@ export class WorkOrdersService {
     return this._workOrders().find(o => o.id === id);
   }
 
-  public createWorkOrder(input: CreateWorkOrderInput | undefined, onCreated: (order: WorkOrder) => void): void {
+  public createWorkOrder(input: CreateWorkOrderInput | undefined, onCreated: (order: WorkOrder) => void, onError?: () => void): void {
     const nextId = this.buildNextOrderId();
     const nowDate = this.todayDate();
     const payload: CreateWorkOrderInput = {
@@ -207,6 +207,7 @@ export class WorkOrdersService {
       cliente_nombre: payload.cliente,
       cliente_telefono: payload.telefono || undefined,
       cliente_correo: payload.correo || undefined,
+      tecnico_id: payload.tecnicoId || undefined,
       vehiculo_marca: payload.vehicle.marca,
       vehiculo_modelo: payload.vehicle.modelo,
       vehiculo_anio: payload.vehicle.anio,
@@ -218,6 +219,10 @@ export class WorkOrdersService {
         const realOrder = this.mapDetail(res.data);
         this._workOrders.update(orders => orders.map(o => o.id === nextId ? realOrder : o));
         onCreated(realOrder);
+      },
+      error: () => {
+        this._workOrders.update(orders => orders.filter(o => o.id !== nextId));
+        onError?.();
       },
     });
   }

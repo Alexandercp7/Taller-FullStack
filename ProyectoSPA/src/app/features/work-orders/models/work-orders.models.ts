@@ -123,6 +123,7 @@ export interface CreateWorkOrderInput {
 	telefono: string;
 	correo: string;
 	tecnico: string;
+	tecnicoId?: string;
 	fechaProgramada: string;
 	priority: WorkOrderPriority;
 	vehicle: VehicleData;
