@@ -80,8 +80,11 @@ export class WorkOrdersContentComponent {
 			const matchesSearch =
 				!search ||
 				order.id.toLowerCase().includes(search) ||
+				order.code.toLowerCase().includes(search) ||
 				order.cliente.toLowerCase().includes(search) ||
 				order.tecnico.toLowerCase().includes(search) ||
+				order.vehicle.marca.toLowerCase().includes(search) ||
+				order.vehicle.modelo.toLowerCase().includes(search) ||
 				order.vehicle.placas.toLowerCase().includes(search);
 			const isFinished = order.status === 'Terminado' || order.status === 'Entregado';
 			const matchesQuickStatus =
@@ -248,5 +251,25 @@ export class WorkOrdersContentComponent {
 			context,
 			contentClass: 'work-order-dialog-content',
 		});
+	}
+
+	protected vehicleSummary(order: WorkOrder): string {
+		const parts = [order.vehicle.marca, order.vehicle.modelo]
+			.map((value) => value.trim())
+			.filter(Boolean);
+		const label = parts.join(' ');
+		return label || 'Sin vehiculo';
+	}
+
+	protected vehicleMeta(order: WorkOrder): string {
+		const year = order.vehicle.anio > 0 ? `${order.vehicle.anio}` : '';
+		const plates = order.vehicle.placas.trim();
+		return [year, plates].filter(Boolean).join(' · ');
+	}
+
+	protected vehicleHeading(order: WorkOrder): string {
+		const summary = this.vehicleSummary(order);
+		const year = order.vehicle.anio > 0 ? `${order.vehicle.anio}` : '';
+		return [summary, year].filter(Boolean).join(' ');
 	}
 }

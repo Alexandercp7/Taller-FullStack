@@ -190,7 +190,7 @@ describe('WorkOrdersService', () => {
     it('invierte el estado completada del item indicado', () => {
       const order = buildOrder({
         id: 'WO-1',
-        checklistInicial: [{ id: '5', tarea: 'Revisar luces', responsable: 'Juan', completada: false }],
+        checklistInicial: [{ id: '5', tarea: 'Revisar luces', responsable: 'Juan', responsables: ['Juan'], responsableIds: [], completada: false }],
       });
       (service as any)._workOrders.set([order]);
 
@@ -207,7 +207,7 @@ describe('WorkOrdersService', () => {
     it('no llama al API si el id del item no contiene dígitos', () => {
       const order = buildOrder({
         id: 'WO-1',
-        checklistInicial: [{ id: 'abc', tarea: 'Revisar luces', responsable: 'Juan', completada: false }],
+        checklistInicial: [{ id: 'abc', tarea: 'Revisar luces', responsable: 'Juan', responsables: ['Juan'], responsableIds: [], completada: false }],
       });
       (service as any)._workOrders.set([order]);
 

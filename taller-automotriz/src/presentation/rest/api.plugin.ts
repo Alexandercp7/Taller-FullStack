@@ -133,7 +133,7 @@ function mapPortalTimelineEntry(t: any) {
   return null;
 }
 
-async function mapOrderDetail(o: any) {
+async function mapOrderDetail(o: any, checklistUserMap: Record<string, string> = {}) {
   const base = mapOrderList(o);
   const storage = new S3FileStorageAdapter();
   const fotos = await Promise.all((o.photos ?? []).map(async (f: any) => ({
@@ -148,8 +148,19 @@ async function mapOrderDetail(o: any) {
     costo_unitario: Number(p.unitPrice),
   }));
   const checklistItems = (o.checklist ?? []).map((c: any) => ({
-    id: c.id, tipo: c.phase ?? 'inicial', tarea: c.label,
-    responsable: c.responsable?.name ?? '', responsableId: c.responsableId ?? null, completada: c.checked,
+    id: c.id,
+    tipo: c.phase ?? 'inicial',
+    tarea: c.label,
+    responsable: [c.responsable?.name, ...((c.responsableIds ?? []).map((id: string) => checklistUserMap[id]).filter(Boolean))]
+      .filter((value: string, index: number, array: string[]) => !!value && array.indexOf(value) === index)
+      .join(', '),
+    responsables: [c.responsable?.name, ...((c.responsableIds ?? []).map((id: string) => checklistUserMap[id]).filter(Boolean))]
+      .filter((value: string, index: number, array: string[]) => !!value && array.indexOf(value) === index),
+    responsableId: c.responsableId ?? null,
+    responsableIds: (c.responsableIds ?? []).length > 0
+      ? c.responsableIds
+      : (c.responsableId ? [c.responsableId] : []),
+    completada: c.checked,
   }));
   const totalServicios = servicios.reduce((sum: number, s: any) => sum + Number(s.precio || 0), 0);
   const totalPartes = partes.reduce((sum: number, p: any) => sum + Number(p.costo_unitario || 0) * Number(p.cantidad || 0), 0);
@@ -184,6 +195,26 @@ async function mapOrderDetail(o: any) {
 
 export async function registerRestApi(app: FastifyInstance, container: Container) {
   const db = container.prisma;
+
+  const buildChecklistUserMap = async (checklist: any[] = []) => {
+    const ids = [...new Set(
+      checklist.flatMap((item: any) => [
+        item.responsableId,
+        ...((item.responsableIds ?? []) as string[]),
+      ]).filter(Boolean),
+    )] as string[];
+
+    if (ids.length === 0) {
+      return {} as Record<string, string>;
+    }
+
+    const users = await db.user.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true },
+    });
+
+    return Object.fromEntries(users.map((user: any) => [user.id, user.name])) as Record<string, string>;
+  };
 
   // ── AUTH ──────────────────────────────────────────────────────────────────
 
@@ -304,7 +335,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       },
     });
     if (!o) return reply.status(404).send({ error: 'Orden no encontrada' });
-    return { data: await mapOrderDetail(o) };
+    return { data: await mapOrderDetail(o, await buildChecklistUserMap(o.checklist)) };
   });
 
   app.post('/api/v1/work-orders', async (req, reply) => {
@@ -379,7 +410,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         quotes: { include: { service: true } }, timeline: { include: { user: { select: { name: true } } } },
       },
     });
-    return { data: await mapOrderDetail(order) };
+    return { data: await mapOrderDetail(order, await buildChecklistUserMap(order?.checklist ?? [])) };
   });
 
   app.delete('/api/v1/work-orders/:id', async (req, reply) => {
@@ -628,27 +659,83 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const { id } = req.params as any;
     const body = req.body as any;
+    const responsableIds = [...new Set(Array.isArray(body.responsableIds) ? body.responsableIds.filter(Boolean) : (body.responsableId ? [body.responsableId] : []))] as string[];
     const item = await db.checklist.create({
-      data: { orderId: id, label: body.tarea, checked: false, phase: body.tipo ?? 'inicial', responsableId: body.responsableId || null },
+      data: {
+        orderId: id,
+        label: body.tarea,
+        checked: false,
+        phase: body.tipo ?? 'inicial',
+        responsableId: (responsableIds[0] as string | undefined) ?? null,
+        responsableIds: responsableIds as any,
+      },
       include: { responsable: { select: { name: true } } },
-    });
+    }) as any;
+    const checklistUserMap = await buildChecklistUserMap([item as any]);
+    const responsables = [item.responsable?.name, ...responsableIds.map((responsableId) => checklistUserMap[responsableId]).filter(Boolean)]
+      .filter((value: string, index: number, array: string[]) => !!value && array.indexOf(value) === index);
     await db.timelineEntry.create({
       data: { orderId: id, userId: u.id, event: 'checklist_item_added', detail: { label: item.label } },
     });
-    return { data: { id: item.id, tarea: item.label, responsable: item.responsable?.name ?? body.responsable ?? '', responsableId: item.responsableId, completada: item.checked } };
+    return {
+      data: {
+        id: item.id,
+        tarea: item.label,
+        responsable: responsables.join(', '),
+        responsables,
+        responsableId: item.responsableId,
+        responsableIds: item.responsableIds,
+        completada: item.checked,
+      },
+    };
   });
 
   app.patch('/api/v1/work-orders/:id/checklist/:itemId', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const { id, itemId } = req.params as any;
+    const body = req.body as any;
     const current = await db.checklist.findUnique({ where: { id: itemId } });
     if (!current) return reply.status(404).send({ error: 'Item no encontrado' });
-    const updated = await db.checklist.update({ where: { id: itemId }, data: { checked: !current.checked } });
+    const shouldEdit = body.tarea !== undefined || body.responsableIds !== undefined || body.responsableId !== undefined;
+    const responsableIds: string[] = shouldEdit
+      ? [...new Set(Array.isArray(body.responsableIds) ? body.responsableIds.filter(Boolean) : (body.responsableId ? [body.responsableId] : []))]
+      : (current.responsableIds?.length ? current.responsableIds : (current.responsableId ? [current.responsableId] : []));
+    const updated = await db.checklist.update({
+      where: { id: itemId },
+      data: shouldEdit
+        ? {
+            label: body.tarea ?? current.label,
+            responsableId: (responsableIds[0] as string | undefined) ?? null,
+            responsableIds: responsableIds as any,
+          }
+        : { checked: !current.checked },
+      include: { responsable: { select: { name: true } } },
+    }) as any;
+    const checklistUserMap = await buildChecklistUserMap([updated as any]);
+    const responsables = [updated.responsable?.name, ...responsableIds.map((responsableId) => checklistUserMap[responsableId]).filter(Boolean)]
+      .filter((value: string, index: number, array: string[]) => !!value && array.indexOf(value) === index);
     await db.timelineEntry.create({
-      data: { orderId: id, userId: u.id, event: 'checklist_item_updated', detail: { label: updated.label, checked: updated.checked } },
+      data: {
+        orderId: id,
+        userId: u.id,
+        event: 'checklist_item_updated',
+        detail: shouldEdit
+          ? { label: updated.label, responsables }
+          : { label: updated.label, checked: updated.checked },
+      },
     });
-    return { message: 'ok' };
+    return {
+      data: {
+        id: updated.id,
+        tarea: updated.label,
+        responsable: responsables.join(', '),
+        responsables,
+        responsableId: updated.responsableId,
+        responsableIds: updated.responsableIds,
+        completada: updated.checked,
+      },
+    };
   });
 
   // ── CLIENTS ───────────────────────────────────────────────────────────────
@@ -1316,11 +1403,15 @@ export async function registerRestApi(app: FastifyInstance, container: Container
   // ── ACTIVITIES ────────────────────────────────────────────────────────────
 
   function mapActivity(a: any) {
+    const assignedUsers = Array.isArray(a.assignedUsers) ? a.assignedUsers : [];
+    const fallbackAssignee = a.asignee ? [{ id: a.asignee.id, name: a.asignee.name }] : [];
+    const assignees = assignedUsers.length > 0 ? assignedUsers : fallbackAssignee;
+
     return {
       id: a.id, titulo: a.titulo, descripcion: a.descripcion ?? '',
       prioridad: a.prioridad, etiqueta: a.etiqueta, estado: a.estado,
       fecha_limite: a.fechaLimite ? toDate(a.fechaLimite) : null,
-      asignado_a: a.asignee ? { id: a.asignee.id, name: a.asignee.name } : null,
+      asignado_a: assignees,
       creado_por_id: a.creadoPorId ?? null,
       creado_por_role: a.creator?.role ?? null,
       comentarios: (a.comments ?? []).map((c: any) => ({
@@ -1336,20 +1427,42 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const perPage = Math.min(Number((req.query as any).per_page ?? 100), 500);
-    const where = u.role === 'ADMIN' || u.role === 'MANAGER' ? {} : { asignadoAId: u.id };
+    const where = u.role === 'ADMIN' || u.role === 'MANAGER'
+      ? {}
+      : { OR: [{ asignadoAId: u.id }, { asignadoAIds: { has: u.id } }] };
     const activities = await db.activity.findMany({
       where,
       include: { asignee: true, creator: true, comments: { include: { user: true }, orderBy: { createdAt: 'asc' } } },
       orderBy: { createdAt: 'desc' },
       take: perPage,
     });
-    return { data: activities.map(mapActivity) };
+    const assignedUserIds = Array.from(new Set(activities.flatMap((activity) => activity.asignadoAIds ?? [])));
+    const assignedUsers = assignedUserIds.length > 0
+      ? await db.user.findMany({ where: { id: { in: assignedUserIds } }, select: { id: true, name: true } })
+      : [];
+    const assignedUsersMap = new Map(assignedUsers.map((user) => [user.id, user]));
+
+    return {
+      data: activities
+        .map((activity) => ({
+          ...activity,
+          assignedUsers: (activity.asignadoAIds ?? [])
+            .map((userId) => assignedUsersMap.get(userId))
+            .filter(Boolean),
+        }))
+        .map(mapActivity),
+    };
   });
 
   app.post('/api/v1/activities', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const body = req.body as any;
+    const asignadoAIds = Array.isArray(body.asignado_a_ids)
+      ? body.asignado_a_ids.filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0)
+      : body.asignado_a_id
+        ? [body.asignado_a_id]
+        : [];
     const a = await db.activity.create({
       data: {
         titulo: body.titulo,
@@ -1357,13 +1470,17 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         prioridad: body.prioridad ?? 'Media',
         etiqueta: body.etiqueta ?? '',
         estado: body.estado ?? 'Pendiente',
-        asignadoAId: body.asignado_a_id || null,
+        asignadoAId: asignadoAIds[0] || null,
+        asignadoAIds,
         fechaLimite: body.fecha_limite ? new Date(body.fecha_limite) : null,
         creadoPorId: u.id,
       },
       include: { asignee: true, creator: true, comments: { include: { user: true } } },
     });
-    return { data: mapActivity(a) };
+    const assignedUsers = asignadoAIds.length > 0
+      ? await db.user.findMany({ where: { id: { in: asignadoAIds } }, select: { id: true, name: true } })
+      : [];
+    return { data: mapActivity({ ...a, assignedUsers }) };
   });
 
   app.put('/api/v1/activities/:id', async (req, reply) => {
@@ -1371,6 +1488,12 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const { id } = req.params as any;
     const body = req.body as any;
+    const hasAssignedIds = body.asignado_a_ids !== undefined || body.asignado_a_id !== undefined;
+    const asignadoAIds = Array.isArray(body.asignado_a_ids)
+      ? body.asignado_a_ids.filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0)
+      : body.asignado_a_id !== undefined
+        ? (body.asignado_a_id ? [body.asignado_a_id] : [])
+        : undefined;
     const a = await db.activity.update({
       where: { id },
       data: {
@@ -1379,12 +1502,16 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         prioridad: body.prioridad || undefined,
         etiqueta: body.etiqueta !== undefined ? body.etiqueta : undefined,
         estado: body.estado || undefined,
-        asignadoAId: body.asignado_a_id !== undefined ? (body.asignado_a_id || null) : undefined,
+        asignadoAId: hasAssignedIds ? (asignadoAIds?.[0] || null) : undefined,
+        asignadoAIds: hasAssignedIds ? (asignadoAIds ?? []) : undefined,
         fechaLimite: body.fecha_limite !== undefined ? (body.fecha_limite ? new Date(body.fecha_limite) : null) : undefined,
       },
       include: { asignee: true, creator: true, comments: { include: { user: true } } },
     });
-    return { data: mapActivity(a) };
+    const assignedUsers = (a.asignadoAIds ?? []).length > 0
+      ? await db.user.findMany({ where: { id: { in: a.asignadoAIds } }, select: { id: true, name: true } })
+      : [];
+    return { data: mapActivity({ ...a, assignedUsers }) };
   });
 
   app.delete('/api/v1/activities/:id', async (req, reply) => {
@@ -1760,6 +1887,6 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     });
     if (!order) return reply.status(404).send({ error: 'No encontrado' });
     order.notes = (order.notes ?? []).filter((n: any) => n.visibility === 'CLIENT');
-    return { data: await mapOrderDetail(order) };
+    return { data: await mapOrderDetail(order, await buildChecklistUserMap(order.checklist)) };
   });
 }

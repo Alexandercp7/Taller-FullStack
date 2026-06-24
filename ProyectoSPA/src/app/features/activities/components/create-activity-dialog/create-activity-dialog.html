@@ -30,19 +30,25 @@
     </label>
 
     <label class="field">
-      <span>Asignado a</span>
-      <hlm-select [value]="asignadoAId()" (valueChange)="onAsignadoChange(($event ?? '') + '')">
+      <span>Responsables</span>
+      <hlm-select-multiple [value]="asignadoAIds()">
         <hlm-select-trigger class="w-full">
-          <hlm-select-value placeholder="Seleccionar persona" />
+          <hlm-select-placeholder>{{ asignadosSummary() }}</hlm-select-placeholder>
+          <ng-template hlmSelectValues let-values>
+            <hlm-select-values-content>
+              {{ asignadosSummary() }}
+            </hlm-select-values-content>
+          </ng-template>
         </hlm-select-trigger>
         <hlm-select-content *hlmSelectPortal>
           <hlm-select-group>
+            <hlm-select-label>Responsables</hlm-select-label>
             @for (emp of employees(); track emp.id) {
-              <hlm-select-item [value]="emp.id">{{ emp.name }}</hlm-select-item>
+              <hlm-select-item [value]="emp.id" (click)="toggleAsignado(emp.id)">{{ emp.name }}</hlm-select-item>
             }
           </hlm-select-group>
         </hlm-select-content>
-      </hlm-select>
+      </hlm-select-multiple>
     </label>
 
     <label class="field">

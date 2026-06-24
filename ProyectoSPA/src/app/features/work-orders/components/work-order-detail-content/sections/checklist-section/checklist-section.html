@@ -7,22 +7,84 @@
 				<p class="text-muted-foreground text-xs">Avance: {{ checklistInicialProgress() }}%</p>
 				@for (item of ot.checklistInicial; track item.id) {
 					<div class="check-item">
-						<div>
-							<p class="text-sm font-medium">{{ item.tarea }}</p>
-							<p class="text-muted-foreground text-xs">Responsable: {{ item.responsable }}</p>
+						<div class="check-item-main">
+							@if (!isEditing(item.id)) {
+								<div class="check-item-summary">
+									<p class="text-sm font-medium">{{ item.tarea }}</p>
+									<p class="text-muted-foreground text-xs">Responsables: {{ responsablesLabel(item.responsables) }}</p>
+								</div>
+							} @else {
+								<div class="check-item-editor">
+									<div class="editor-fields">
+										<input
+											hlmInput
+											type="text"
+											[value]="editingItem(item.id)?.tarea ?? ''"
+											(input)="updateEditingTask(item.id, ($any($event.target)).value)"
+										/>
+										<hlm-select-multiple>
+											<hlm-select-trigger class="w-full">
+												<hlm-select-placeholder>{{ responsablesSummaryByIds(editingItem(item.id)?.responsableIds ?? []) }}</hlm-select-placeholder>
+												<ng-template hlmSelectValues let-values>
+													<hlm-select-values-content>
+														{{ responsablesSummaryByIds(editingItem(item.id)?.responsableIds ?? []) }}
+													</hlm-select-values-content>
+												</ng-template>
+											</hlm-select-trigger>
+											<hlm-select-content *hlmSelectPortal>
+												<hlm-select-group>
+													<hlm-select-label>Responsables</hlm-select-label>
+													@for (resp of responsables(); track resp.id) {
+														<hlm-select-item [value]="resp.id" (click)="toggleEditingResponsable(item.id, resp.id)">
+															{{ resp.name }}
+														</hlm-select-item>
+													}
+												</hlm-select-group>
+											</hlm-select-content>
+										</hlm-select-multiple>
+									</div>
+									<div class="edit-actions">
+										<button hlmBtn type="button" size="sm" (click)="saveChecklistItem('checklistInicial', item.id)">Guardar</button>
+										<button hlmBtn type="button" size="sm" variant="outline" (click)="cancelEditing(item.id)">Cancelar</button>
+									</div>
+								</div>
+							}
 						</div>
-						<hlm-checkbox [checked]="item.completada" (checkedChange)="toggleChecklist('checklistInicial', item.id)" />
+						<div class="check-item-actions">
+							<button hlmBtn type="button" size="sm" variant="ghost" (click)="isEditing(item.id) ? cancelEditing(item.id) : startEditing(item)">
+								{{ isEditing(item.id) ? 'Cancelar' : 'Editar' }}
+							</button>
+							<hlm-checkbox [checked]="item.completada" (checkedChange)="toggleChecklist('checklistInicial', item.id)" />
+						</div>
 					</div>
 				}
-				<div class="add-row">
-					<input hlmInput type="text" placeholder="Nueva tarea" [value]="newChecklistInicialTask()" (input)="newChecklistInicialTask.set(($any($event.target)).value)" />
-					<select hlmInput [value]="newChecklistInicialOwner()" (change)="newChecklistInicialOwner.set(($any($event.target)).value)">
-						<option value="">Sin asignar</option>
-						@for (resp of responsables(); track resp.id) {
-							<option [value]="resp.id">{{ resp.name }}</option>
-						}
-					</select>
-					<button hlmBtn type="button" size="sm" (click)="addChecklistItem('checklistInicial')">Agregar</button>
+				<div class="add-panel">
+					<div class="add-fields">
+						<input hlmInput type="text" placeholder="Nueva tarea" [value]="newChecklistInicialTask()" (input)="newChecklistInicialTask.set(($any($event.target)).value)" />
+						<hlm-select-multiple>
+							<hlm-select-trigger class="w-full">
+								<hlm-select-placeholder>{{ responsablesSummaryByIds(newChecklistInicialOwners()) }}</hlm-select-placeholder>
+								<ng-template hlmSelectValues let-values>
+									<hlm-select-values-content>
+										{{ responsablesSummaryByIds(newChecklistInicialOwners()) }}
+									</hlm-select-values-content>
+								</ng-template>
+							</hlm-select-trigger>
+							<hlm-select-content *hlmSelectPortal>
+								<hlm-select-group>
+									<hlm-select-label>Responsables</hlm-select-label>
+									@for (resp of responsables(); track resp.id) {
+										<hlm-select-item [value]="resp.id" (click)="toggleNewResponsable('checklistInicial', resp.id)">
+											{{ resp.name }}
+										</hlm-select-item>
+									}
+								</hlm-select-group>
+							</hlm-select-content>
+						</hlm-select-multiple>
+					</div>
+					<div class="add-actions">
+						<button hlmBtn type="button" size="sm" (click)="addChecklistItem('checklistInicial')">Crear</button>
+					</div>
 				</div>
 			</div>
 		</hlm-card>
@@ -34,22 +96,84 @@
 				<p class="text-muted-foreground text-xs">Avance: {{ checklistTrabajoProgress() }}%</p>
 				@for (item of ot.checklistTrabajo; track item.id) {
 					<div class="check-item">
-						<div>
-							<p class="text-sm font-medium">{{ item.tarea }}</p>
-							<p class="text-muted-foreground text-xs">Responsable: {{ item.responsable }}</p>
+						<div class="check-item-main">
+							@if (!isEditing(item.id)) {
+								<div class="check-item-summary">
+									<p class="text-sm font-medium">{{ item.tarea }}</p>
+									<p class="text-muted-foreground text-xs">Responsables: {{ responsablesLabel(item.responsables) }}</p>
+								</div>
+							} @else {
+								<div class="check-item-editor">
+									<div class="editor-fields">
+										<input
+											hlmInput
+											type="text"
+											[value]="editingItem(item.id)?.tarea ?? ''"
+											(input)="updateEditingTask(item.id, ($any($event.target)).value)"
+										/>
+										<hlm-select-multiple>
+											<hlm-select-trigger class="w-full">
+												<hlm-select-placeholder>{{ responsablesSummaryByIds(editingItem(item.id)?.responsableIds ?? []) }}</hlm-select-placeholder>
+												<ng-template hlmSelectValues let-values>
+													<hlm-select-values-content>
+														{{ responsablesSummaryByIds(editingItem(item.id)?.responsableIds ?? []) }}
+													</hlm-select-values-content>
+												</ng-template>
+											</hlm-select-trigger>
+											<hlm-select-content *hlmSelectPortal>
+												<hlm-select-group>
+													<hlm-select-label>Responsables</hlm-select-label>
+													@for (resp of responsables(); track resp.id) {
+														<hlm-select-item [value]="resp.id" (click)="toggleEditingResponsable(item.id, resp.id)">
+															{{ resp.name }}
+														</hlm-select-item>
+													}
+												</hlm-select-group>
+											</hlm-select-content>
+										</hlm-select-multiple>
+									</div>
+									<div class="edit-actions">
+										<button hlmBtn type="button" size="sm" (click)="saveChecklistItem('checklistTrabajo', item.id)">Guardar</button>
+										<button hlmBtn type="button" size="sm" variant="outline" (click)="cancelEditing(item.id)">Cancelar</button>
+									</div>
+								</div>
+							}
 						</div>
-						<hlm-checkbox [checked]="item.completada" (checkedChange)="toggleChecklist('checklistTrabajo', item.id)" />
+						<div class="check-item-actions">
+							<button hlmBtn type="button" size="sm" variant="ghost" (click)="isEditing(item.id) ? cancelEditing(item.id) : startEditing(item)">
+								{{ isEditing(item.id) ? 'Cancelar' : 'Editar' }}
+							</button>
+							<hlm-checkbox [checked]="item.completada" (checkedChange)="toggleChecklist('checklistTrabajo', item.id)" />
+						</div>
 					</div>
 				}
-				<div class="add-row">
-					<input hlmInput type="text" placeholder="Nueva tarea" [value]="newChecklistTrabajoTask()" (input)="newChecklistTrabajoTask.set(($any($event.target)).value)" />
-					<select hlmInput [value]="newChecklistTrabajoOwner()" (change)="newChecklistTrabajoOwner.set(($any($event.target)).value)">
-						<option value="">Sin asignar</option>
-						@for (resp of responsables(); track resp.id) {
-							<option [value]="resp.id">{{ resp.name }}</option>
-						}
-					</select>
-					<button hlmBtn type="button" size="sm" (click)="addChecklistItem('checklistTrabajo')">Agregar</button>
+				<div class="add-panel">
+					<div class="add-fields">
+						<input hlmInput type="text" placeholder="Nueva tarea" [value]="newChecklistTrabajoTask()" (input)="newChecklistTrabajoTask.set(($any($event.target)).value)" />
+						<hlm-select-multiple>
+							<hlm-select-trigger class="w-full">
+								<hlm-select-placeholder>{{ responsablesSummaryByIds(newChecklistTrabajoOwners()) }}</hlm-select-placeholder>
+								<ng-template hlmSelectValues let-values>
+									<hlm-select-values-content>
+										{{ responsablesSummaryByIds(newChecklistTrabajoOwners()) }}
+									</hlm-select-values-content>
+								</ng-template>
+							</hlm-select-trigger>
+							<hlm-select-content *hlmSelectPortal>
+								<hlm-select-group>
+									<hlm-select-label>Responsables</hlm-select-label>
+									@for (resp of responsables(); track resp.id) {
+										<hlm-select-item [value]="resp.id" (click)="toggleNewResponsable('checklistTrabajo', resp.id)">
+											{{ resp.name }}
+										</hlm-select-item>
+									}
+								</hlm-select-group>
+							</hlm-select-content>
+						</hlm-select-multiple>
+					</div>
+					<div class="add-actions">
+						<button hlmBtn type="button" size="sm" (click)="addChecklistItem('checklistTrabajo')">Crear</button>
+					</div>
 				</div>
 			</div>
 		</hlm-card>

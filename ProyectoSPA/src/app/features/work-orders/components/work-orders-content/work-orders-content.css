@@ -46,6 +46,10 @@
 	min-width: 160px;
 }
 
+.cell-stack-compact {
+	gap: 0.1rem;
+}
+
 .pagination-row {
 	display: flex;
 	align-items: center;
@@ -103,6 +107,16 @@
 	pointer-events: auto;
 	position: relative;
 	z-index: 2;
+}
+
+.kanban-order-id {
+	line-height: 1.1;
+}
+
+.kanban-vehicle {
+	font-size: 0.95rem;
+	font-weight: 700;
+	line-height: 1.2;
 }
 
 .kanban-card:active {

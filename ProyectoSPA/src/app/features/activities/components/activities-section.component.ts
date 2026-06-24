@@ -233,9 +233,9 @@ export class ActivitiesSectionComponent implements OnInit {
 
   protected createActivity(): void {
     const context: CreateActivityDialogContext = {
-      onCreate: (payload, asignadoAId) => {
+      onCreate: (payload, asignadoAIds) => {
         const activity = this.service.generateActivityWithId(payload);
-        this.service.addActivity(activity, asignadoAId);
+        this.service.addActivity(activity, asignadoAIds);
         this.notification.success('Actividad creada correctamente.');
       },
     };
@@ -249,8 +249,8 @@ export class ActivitiesSectionComponent implements OnInit {
   protected editActivity(activity: Activity): void {
     const context: CreateActivityDialogContext = {
       activity,
-      onUpdate: (id: string, payload, asignadoAId) => {
-        this.service.updateActivity(id, payload, asignadoAId);
+      onUpdate: (id: string, payload, asignadoAIds) => {
+        this.service.updateActivity(id, payload, asignadoAIds);
         this.notification.success('Actividad actualizada correctamente.');
       },
     };

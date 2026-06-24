@@ -2,52 +2,53 @@
   <div class="detail-header">
     <div class="title-section">
       <h2 class="activity-title">{{ activity().titulo }}</h2>
+      <p class="activity-subtitle">Seguimiento, responsables y conversación de la actividad.</p>
     </div>
-    <button hlmBtn size="sm" variant="outline" (click)="close()">Cerrar</button>
   </div>
 
   <div class="detail-body">
-    <div class="info-grid">
-      <div class="info-item">
-        <label class="info-label">Descripción</label>
-        <p class="info-value">{{ activity().descripcion }}</p>
-      </div>
-
-      <div class="info-row">
-        <div class="info-item">
-          <label class="info-label">Asignado a</label>
-          <p class="info-value">{{ activity().asignadoA }}</p>
+    <section class="detail-panel">
+      <div class="info-grid">
+        <div class="info-item info-item-full">
+          <label class="info-label">Descripción</label>
+          <p class="info-value">{{ activity().descripcion }}</p>
         </div>
+
+        <div class="info-item">
+          <label class="info-label">Responsables</label>
+          <p class="info-value">{{ activity().asignadoA || 'Sin asignar' }}</p>
+        </div>
+
         <div class="info-item">
           <label class="info-label">Vencimiento</label>
-          <p class="info-value">{{ activity().fechaLimite }}</p>
+          <p class="info-value">{{ activity().fechaLimite || 'Sin fecha' }}</p>
         </div>
-      </div>
 
-      <div class="info-row-3">
         <div class="info-item">
           <label class="info-label">Etiqueta</label>
           <span hlmBadge [ngClass]="tagStyle(activity().etiqueta)">{{ activity().etiqueta }}</span>
         </div>
+
         <div class="info-item">
           <label class="info-label">Prioridad</label>
           <span hlmBadge [ngClass]="priorityClass(activity().prioridad)">
             {{ activity().prioridad }}
           </span>
         </div>
+
         <div class="info-item">
           <label class="info-label">Estado</label>
           <span hlmBadge>{{ activity().estado }}</span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="comments-section">
+    <section class="comments-section detail-panel">
       <h3 class="comments-title">Comentarios ({{ activity().comentarios.length }})</h3>
 
       <div class="comments-list">
         @if (activity().comentarios.length === 0) {
-          <p class="no-comments">Sin comentarios. ¡Sé el primero en comentar!</p>
+          <p class="no-comments">Sin comentarios. Sé el primero en comentar.</p>
         }
 
         @for (comment of activity().comentarios; track comment.id) {
@@ -71,20 +72,22 @@
           </div>
         }
       </div>
+    </section>
+  </div>
 
-      <div class="comment-input-group">
-        <input
-          hlmInput
-          type="text"
-          placeholder="Agregar comentario..."
-          [(ngModel)]="newComment"
-          (keyup.enter)="onAddComment()"
-        />
-        <button hlmBtn type="button" (click)="onAddComment()" [disabled]="!newComment().trim()">
-          <ng-icon name="lucideSend" class="size-4" />
-          Enviar
-        </button>
-      </div>
+  <div class="comment-input-bar">
+    <div class="comment-input-group">
+      <input
+        hlmInput
+        type="text"
+        placeholder="Agregar comentario..."
+        [(ngModel)]="newComment"
+        (keyup.enter)="onAddComment()"
+      />
+      <button hlmBtn type="button" (click)="onAddComment()" [disabled]="!newComment().trim()">
+        <ng-icon name="lucideSend" class="size-4" />
+        Enviar
+      </button>
     </div>
   </div>
 </div>

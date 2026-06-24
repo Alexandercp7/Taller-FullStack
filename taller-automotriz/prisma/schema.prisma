@@ -487,6 +487,7 @@ model Activity {
   etiqueta    String    @default("")
   estado      String    @default("Pendiente")
   asignadoAId String?
+  asignadoAIds String[] @default([])
   fechaLimite DateTime?
   creadoPorId String
   createdAt   DateTime  @default(now())
@@ -590,6 +591,7 @@ model Checklist {
   checked       Boolean  @default(false)
   phase         String?
   responsableId String?
+  responsableIds String[] @default([])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

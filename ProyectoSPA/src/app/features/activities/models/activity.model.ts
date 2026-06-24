@@ -4,6 +4,8 @@ export interface Activity {
   descripcion: string;
   asignadoA: string;
   asignadoAId?: string;
+  asignadosA: string[];
+  asignadoAIds: string[];
   creadoPorId?: string;
   creadoPorRole?: string;
   fechaLimite: string;

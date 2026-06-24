@@ -20,7 +20,7 @@ interface WoListApi {
 
 interface WoDetailApi extends WoListApi {
   diagnostico: string;
-  checklists: { id: number; tipo: string; tarea: string; responsable: string; responsableId: string | null; completada: boolean }[];
+  checklists: { id: string; tipo: string; tarea: string; responsable: string; responsables?: string[]; responsableId: string | null; responsableIds?: string[]; completada: boolean }[];
   fotos: { id: number; url: string }[];
   notas: { id: number; tipo: string; texto: string; created_at: string; user?: { name: string } }[];
   partes: { id: number; inventory_item_id: number; nombre: string; cantidad: number; costo_unitario: number }[];
@@ -124,10 +124,22 @@ export class WorkOrdersService {
       ...base,
       diagnostico: item.diagnostico ?? '',
       checklistInicial: (item.checklists ?? []).filter(c => c.tipo === 'inicial').map(c => ({
-        id: String(c.id), tarea: c.tarea, responsable: c.responsable ?? '', responsableId: c.responsableId ?? null, completada: c.completada,
+        id: String(c.id),
+        tarea: c.tarea,
+        responsable: c.responsable ?? '',
+        responsables: c.responsables ?? (c.responsable ? [c.responsable] : []),
+        responsableId: c.responsableId ?? null,
+        responsableIds: c.responsableIds ?? (c.responsableId ? [c.responsableId] : []),
+        completada: c.completada,
       })),
       checklistTrabajo: (item.checklists ?? []).filter(c => c.tipo === 'trabajo').map(c => ({
-        id: String(c.id), tarea: c.tarea, responsable: c.responsable ?? '', responsableId: c.responsableId ?? null, completada: c.completada,
+        id: String(c.id),
+        tarea: c.tarea,
+        responsable: c.responsable ?? '',
+        responsables: c.responsables ?? (c.responsable ? [c.responsable] : []),
+        responsableId: c.responsableId ?? null,
+        responsableIds: c.responsableIds ?? (c.responsableId ? [c.responsableId] : []),
+        completada: c.completada,
       })),
       fotosIngreso: (item.fotos ?? []).map(f => f.url),
       fotos: (item.fotos ?? []).map(f => ({ id: String(f.id), url: f.url })),
@@ -324,20 +336,75 @@ export class WorkOrdersService {
     this._http.patch(`/api/v1/work-orders/${id}/checklist/${itemId}`, {}).subscribe();
   }
 
-  public addChecklistItem(id: string, listType: 'checklistInicial' | 'checklistTrabajo', tarea: string, responsableId: string | null, _usuario = 'Supervisor'): void {
+  public addChecklistItem(id: string, listType: 'checklistInicial' | 'checklistTrabajo', tarea: string, responsableIds: string[], _usuario = 'Supervisor'): void {
     const trimmedTask = tarea.trim();
     if (!trimmedTask) return;
 
     const tipo = listType === 'checklistInicial' ? 'inicial' : 'trabajo';
-    this._http.post<{ data: { id: number; tarea: string; responsable: string; responsableId: string | null; completada: boolean } }>(
+    const cleanResponsableIds = [...new Set(responsableIds.filter(Boolean))];
+    this._http.post<{ data: { id: string; tarea: string; responsable: string; responsables?: string[]; responsableId: string | null; responsableIds?: string[]; completada: boolean } }>(
       `/api/v1/work-orders/${id}/checklist`,
-      { tipo, tarea: trimmedTask, responsableId }
+      { tipo, tarea: trimmedTask, responsableIds: cleanResponsableIds }
     ).subscribe({
       next: (res) => {
-        const newItem: ChecklistItem = { id: String(res.data.id), tarea: res.data.tarea, responsable: res.data.responsable, responsableId: res.data.responsableId, completada: false };
+        const newItem: ChecklistItem = {
+          id: String(res.data.id),
+          tarea: res.data.tarea,
+          responsable: res.data.responsable,
+          responsables: res.data.responsables ?? (res.data.responsable ? [res.data.responsable] : []),
+          responsableId: res.data.responsableId,
+          responsableIds: res.data.responsableIds ?? (res.data.responsableId ? [res.data.responsableId] : []),
+          completada: false,
+        };
         this._workOrders.update(orders => orders.map(o =>
           o.id === id ? { ...o, [listType]: [...o[listType], newItem] } : o
         ));
+      },
+    });
+  }
+
+  public updateChecklistItem(
+    id: string,
+    listType: 'checklistInicial' | 'checklistTrabajo',
+    itemId: string,
+    payload: { tarea: string; responsableIds: string[] },
+  ): void {
+    const trimmedTask = payload.tarea.trim();
+    const cleanResponsableIds = [...new Set(payload.responsableIds.filter(Boolean))];
+    if (!trimmedTask) return;
+
+    this._workOrders.update(orders => orders.map(o => {
+      if (o.id !== id) return o;
+      const list = o[listType].map(item =>
+        item.id === itemId
+          ? { ...item, tarea: trimmedTask, responsableIds: cleanResponsableIds }
+          : item
+      );
+      return { ...o, [listType]: list };
+    }));
+
+    this._http.patch<{ data: { id: string; tarea: string; responsable: string; responsables?: string[]; responsableId: string | null; responsableIds?: string[]; completada: boolean } }>(
+      `/api/v1/work-orders/${id}/checklist/${itemId}`,
+      { tarea: trimmedTask, responsableIds: cleanResponsableIds }
+    ).subscribe({
+      next: (res) => {
+        this._workOrders.update(orders => orders.map(o => {
+          if (o.id !== id) return o;
+          const list = o[listType].map(item =>
+            item.id === itemId
+              ? {
+                  ...item,
+                  tarea: res.data.tarea,
+                  responsable: res.data.responsable,
+                  responsables: res.data.responsables ?? (res.data.responsable ? [res.data.responsable] : []),
+                  responsableId: res.data.responsableId,
+                  responsableIds: res.data.responsableIds ?? (res.data.responsableId ? [res.data.responsableId] : []),
+                  completada: res.data.completada,
+                }
+              : item
+          );
+          return { ...o, [listType]: list };
+        }));
       },
     });
   }

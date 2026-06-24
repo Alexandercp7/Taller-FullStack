@@ -21,14 +21,14 @@ export const workOrdersMock: WorkOrder[] = [
 		diagnostico: 'Desgaste irregular en discos delanteros y bujes con holgura.',
 		fotosIngreso: [], fotos: [],
 		checklistInicial: [
-			{ id: 'ci-1', tarea: 'Revision visual de carroceria', responsable: 'Recepcion', completada: true },
-			{ id: 'ci-2', tarea: 'Lectura de kilometraje', responsable: 'Recepcion', completada: true },
-			{ id: 'ci-3', tarea: 'Prueba de luces', responsable: 'Recepcion', completada: false },
+			{ id: 'ci-1', tarea: 'Revision visual de carroceria', responsable: 'Recepcion', responsables: ['Recepcion'], responsableIds: [], completada: true },
+			{ id: 'ci-2', tarea: 'Lectura de kilometraje', responsable: 'Recepcion', responsables: ['Recepcion'], responsableIds: [], completada: true },
+			{ id: 'ci-3', tarea: 'Prueba de luces', responsable: 'Recepcion', responsables: ['Recepcion'], responsableIds: [], completada: false },
 		],
 		checklistTrabajo: [
-			{ id: 'ct-1', tarea: 'Cambio de discos delanteros', responsable: 'M. Rivera', completada: false },
-			{ id: 'ct-2', tarea: 'Alineacion y balanceo', responsable: 'A. Salinas', completada: false },
-			{ id: 'ct-3', tarea: 'Prueba de ruta final', responsable: 'Supervisor', completada: false },
+			{ id: 'ct-1', tarea: 'Cambio de discos delanteros', responsable: 'M. Rivera', responsables: ['M. Rivera'], responsableIds: [], completada: false },
+			{ id: 'ct-2', tarea: 'Alineacion y balanceo', responsable: 'A. Salinas', responsables: ['A. Salinas'], responsableIds: [], completada: false },
+			{ id: 'ct-3', tarea: 'Prueba de ruta final', responsable: 'Supervisor', responsables: ['Supervisor'], responsableIds: [], completada: false },
 		],
 		timeline: [
 			{ id: 'tl-1', descripcion: 'OT creada', evento: 'order_created', detalle: null, timestamp: '2026-04-02 08:40', usuario: 'Recepcion' },
@@ -75,10 +75,10 @@ export const workOrdersMock: WorkOrder[] = [
 		diagnostico: 'Pendiente de inspeccion electrica completa.',
 		fotosIngreso: [], fotos: [],
 		checklistInicial: [
-			{ id: 'ci-1', tarea: 'Revision de bateria', responsable: 'Recepcion', completada: false },
+			{ id: 'ci-1', tarea: 'Revision de bateria', responsable: 'Recepcion', responsables: ['Recepcion'], responsableIds: [], completada: false },
 		],
 		checklistTrabajo: [
-			{ id: 'ct-1', tarea: 'Prueba de alternador', responsable: 'D. Ortega', completada: false },
+			{ id: 'ct-1', tarea: 'Prueba de alternador', responsable: 'D. Ortega', responsables: ['D. Ortega'], responsableIds: [], completada: false },
 		],
 		timeline: [{ id: 'tl-1', descripcion: 'OT creada', evento: 'order_created', detalle: null, timestamp: '2026-04-01 09:05', usuario: 'Recepcion' }],
 		catalogoRefacciones: [
@@ -118,10 +118,10 @@ export const workOrdersMock: WorkOrder[] = [
 		diagnostico: 'Pendiente llegada de refaccion.',
 		fotosIngreso: [], fotos: [],
 		checklistInicial: [
-			{ id: 'ci-1', tarea: 'Inspeccion de suspension', responsable: 'Recepcion', completada: true },
+			{ id: 'ci-1', tarea: 'Inspeccion de suspension', responsable: 'Recepcion', responsables: ['Recepcion'], responsableIds: [], completada: true },
 		],
 		checklistTrabajo: [
-			{ id: 'ct-1', tarea: 'Sustitucion de buje trasero', responsable: 'A. Salinas', completada: false },
+			{ id: 'ct-1', tarea: 'Sustitucion de buje trasero', responsable: 'A. Salinas', responsables: ['A. Salinas'], responsableIds: [], completada: false },
 		],
 		timeline: [{ id: 'tl-1', descripcion: 'Estado actualizado a En Espera', evento: 'status_changed', detalle: { newStatus: 'ON_HOLD' }, timestamp: '2026-04-01 15:30', usuario: 'Supervisor' }],
 		catalogoRefacciones: [

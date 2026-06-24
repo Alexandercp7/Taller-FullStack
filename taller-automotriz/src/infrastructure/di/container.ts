@@ -165,7 +165,7 @@ export function createContainer() {
   const redis = getRedis();
 
   // Core services (initialized first — used by UnitOfWork)
-  const hasher = new Argon2HasherAdapter();
+   const hasher = new Argon2HasherAdapter();
   const tokenProvider = new JWTTokenProviderAdapter(env.JWT_SECRET);
   const cache = new RedisCacheAdapter(redis);
   const jobQueue = new BullMQJobQueueAdapter(redis);

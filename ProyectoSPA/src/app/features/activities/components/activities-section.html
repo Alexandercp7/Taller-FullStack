@@ -241,23 +241,33 @@
             (cdkDropListDropped)="onKanbanDrop($event, column.estado)"
           >
             @for (activity of column.activities; track activity.id) {
-              <button
-                hlmBtn
-                type="button"
-                variant="outline"
+              <div
                 class="kanban-card"
                 cdkDrag
                 [cdkDragData]="activity"
                 [cdkDragStartDelay]="{ touch: 140, mouse: 0 }"
                 [cdkDragDisabled]="!canManage(activity)"
               >
-                <span class="font-medium">{{ activity.titulo }}</span>
-                <span class="text-muted-foreground text-xs">{{ activity.asignadoA }}</span>
+                <div class="kanban-card-top">
+                  <span class="font-medium">{{ activity.titulo }}</span>
+                  <button
+                    hlmBtn
+                    size="icon"
+                    variant="ghost"
+                    type="button"
+                    class="kanban-eye"
+                    (click)="viewDetails(activity)"
+                    title="Ver detalles"
+                  >
+                    <ng-icon name="lucideEye" class="size-4" />
+                  </button>
+                </div>
+                <span class="text-muted-foreground text-xs">{{ activity.asignadoA || 'Sin asignar' }}</span>
                 <span class="text-muted-foreground text-xs">{{ activity.etiqueta }}</span>
                 <span hlmBadge [ngClass]="['act-chip', priorityChipClass(activity.prioridad)]" [variant]="priorityVariant(activity.prioridad)">
                   {{ activity.prioridad }}
                 </span>
-              </button>
+              </div>
             }
           </div>
         </hlm-card>
@@ -288,22 +298,32 @@
             (cdkDropListDropped)="onTagKanbanDrop($event, column.tag)"
           >
             @for (activity of column.activities; track activity.id) {
-              <button
-                hlmBtn
-                type="button"
-                variant="outline"
+              <div
                 class="kanban-card"
                 cdkDrag
                 [cdkDragData]="activity"
                 [cdkDragStartDelay]="{ touch: 140, mouse: 0 }"
               >
-                <span class="font-medium">{{ activity.titulo }}</span>
-                <span class="text-muted-foreground text-xs">{{ activity.asignadoA }}</span>
+                <div class="kanban-card-top">
+                  <span class="font-medium">{{ activity.titulo }}</span>
+                  <button
+                    hlmBtn
+                    size="icon"
+                    variant="ghost"
+                    type="button"
+                    class="kanban-eye"
+                    (click)="viewDetails(activity)"
+                    title="Ver detalles"
+                  >
+                    <ng-icon name="lucideEye" class="size-4" />
+                  </button>
+                </div>
+                <span class="text-muted-foreground text-xs">{{ activity.asignadoA || 'Sin asignar' }}</span>
                 <span class="text-muted-foreground text-xs">{{ activity.estado }}</span>
                 <span hlmBadge [ngClass]="['act-chip', priorityChipClass(activity.prioridad)]" [variant]="priorityVariant(activity.prioridad)">
                   {{ activity.prioridad }}
                 </span>
-              </button>
+              </div>
             }
           </div>
         </hlm-card>

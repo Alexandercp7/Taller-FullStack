@@ -98,6 +98,7 @@
 							<tr hlmTr>
 								<th hlmTh>OT</th>
 								<th hlmTh>Cliente</th>
+								<th hlmTh>Vehiculo</th>
 								<th hlmTh>Tecnico</th>
 								<th hlmTh>Fecha</th>
 								<th hlmTh>Estado</th>
@@ -110,6 +111,12 @@
 								<tr hlmTr>
 									<td hlmTd class="font-medium">{{ order.code }}</td>
 									<td hlmTd>{{ order.cliente }}</td>
+									<td hlmTd>
+										<div class="cell-stack cell-stack-compact">
+											<span>{{ vehicleSummary(order) }}</span>
+											<span class="text-muted-foreground text-xs">{{ vehicleMeta(order) || '-' }}</span>
+										</div>
+									</td>
 									<td hlmTd>{{ order.tecnico }}</td>
 									<td hlmTd>{{ order.fechaProgramada }}</td>
 									<td hlmTd>
@@ -194,9 +201,10 @@
 								[cdkDragStartDelay]="{ touch: 140, mouse: 0 }"
 								(click)="goToDetail(order.id)"
 							>
-								<span class="font-medium">{{ order.code }}</span>
+								<span class="text-muted-foreground text-xs kanban-order-id">{{ order.code }}</span>
+								<span class="kanban-vehicle">{{ vehicleHeading(order) }}</span>
+								<span class="text-muted-foreground text-xs">{{ order.vehicle.placas.trim() || '-' }}</span>
 								<span class="text-muted-foreground text-xs">{{ order.cliente }}</span>
-								<span class="text-muted-foreground text-xs">{{ order.tecnico }}</span>
 								<span hlmBadge [ngClass]="['wo-chip', priorityChipClass(order.priority)]" [variant]="priorityVariant(order.priority)">
 									{{ order.priority }}
 								</span>
