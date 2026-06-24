@@ -84,6 +84,8 @@ export class ActivitiesService {
   }
 
   updateActivity(id: string, update: Partial<Activity>, asignadoAId?: string | null) {
+    const prev = this._activities().find(a => a.id === id);
+    if (!prev) return;
     this._activities.update(list => list.map(a => a.id === id ? { ...a, ...update } : a));
     const body: Record<string, unknown> = {};
     if (update.titulo !== undefined) body['titulo'] = update.titulo;
@@ -93,19 +95,32 @@ export class ActivitiesService {
     if (update.fechaLimite !== undefined) body['fecha_limite'] = update.fechaLimite;
     if (update.estado !== undefined) body['estado'] = update.estado;
     if (asignadoAId !== undefined) body['asignado_a_id'] = asignadoAId;
-    this._http.put(`/api/v1/activities/${id}`, body).subscribe();
+    this._http.put(`/api/v1/activities/${id}`, body).subscribe({
+      error: () => this._activities.update(list => list.map(a => a.id === id ? prev : a)),
+    });
   }
 
   deleteActivity(id: string) {
+    const prev = this._activities().find(a => a.id === id);
+    if (!prev) return;
     this._activities.update(list => list.filter(a => a.id !== id));
-    this._http.delete(`/api/v1/activities/${id}`).subscribe();
+    this._http.delete(`/api/v1/activities/${id}`).subscribe({
+      error: () => this._activities.update(list => [prev, ...list]),
+    });
   }
 
   addComment(activityId: string, comment: Comment) {
     this._activities.update(list =>
       list.map(a => a.id === activityId ? { ...a, comentarios: [...a.comentarios, comment] } : a)
     );
-    this._http.post(`/api/v1/activities/${activityId}/comments`, { texto: comment.texto }).subscribe();
+    this._http.post(`/api/v1/activities/${activityId}/comments`, { texto: comment.texto }).subscribe({
+      error: () => this._activities.update(list =>
+        list.map(a => a.id === activityId
+          ? { ...a, comentarios: a.comentarios.filter(c => c.id !== comment.id) }
+          : a
+        )
+      ),
+    });
   }
 
   deleteComment(activityId: string, commentId: string) {

@@ -158,8 +158,12 @@ export class FinancesService {
   }
 
   public removeDailyCashEntry(id: string): void {
+    const prev = this._dailyCashEntries().find(e => e.id === id);
+    if (!prev) return;
     this._dailyCashEntries.update(list => list.filter(e => e.id !== id));
-    this._http.delete(`/api/v1/finance/cash/${id}`).subscribe();
+    this._http.delete(`/api/v1/finance/cash/${id}`).subscribe({
+      error: () => this._dailyCashEntries.update(list => [prev, ...list]),
+    });
   }
 
   public updateDailyCashEntry(id: string, updates: Partial<DailyCashEntry>): void {

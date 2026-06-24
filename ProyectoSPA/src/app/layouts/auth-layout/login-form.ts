@@ -68,7 +68,10 @@ export class LoginForm {
 		const password = this.form.controls.password.value ?? '';
 
 		this._auth.login(email, password).subscribe({
-			next: () => void this._router.navigate(['/app']),
+			next: () => {
+				this.loading.set(false);
+				void this._router.navigate(['/app']);
+			},
 			error: (err) => {
 				this.loading.set(false);
 				this.loginError.set(

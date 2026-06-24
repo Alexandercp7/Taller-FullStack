@@ -77,14 +77,21 @@ export class ContactsService {
   }
 
   updateContact(id: string, update: Partial<Contact>) {
+    const prev = this._contacts().find(c => c.id === id);
+    if (!prev) return;
     this._contacts.update(list => list.map(c => c.id === id ? { ...c, ...update } : c));
-    const current = this._contacts().find(c => c.id === id);
-    if (current) this._http.put(`/api/v1/contacts/${id}`, this.toBody({ ...current, ...update })).subscribe();
+    this._http.put(`/api/v1/contacts/${id}`, this.toBody({ ...prev, ...update })).subscribe({
+      error: () => this._contacts.update(list => list.map(c => c.id === id ? prev : c)),
+    });
   }
 
   deleteContact(id: string) {
+    const prev = this._contacts().find(c => c.id === id);
+    if (!prev) return;
     this._contacts.update(list => list.filter(c => c.id !== id));
-    this._http.delete(`/api/v1/contacts/${id}`).subscribe();
+    this._http.delete(`/api/v1/contacts/${id}`).subscribe({
+      error: () => this._contacts.update(list => [prev, ...list]),
+    });
   }
 
   generateContactWithId(contact: Omit<Contact, 'id'>): Contact {

@@ -498,6 +498,16 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     return { message: 'ok' };
   });
 
+  app.patch('/api/v1/work-orders/:id/scheduled-date', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    const body = req.body as any;
+    if (!body.fecha_programada) return reply.status(400).send({ error: 'fecha_programada requerida' });
+    await db.workOrder.update({ where: { id }, data: { scheduledAt: new Date(body.fecha_programada) } });
+    return { message: 'ok' };
+  });
+
   app.patch('/api/v1/work-orders/:id/priority', async (req, reply) => {
     const u = getAuthUser(req, container);
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
