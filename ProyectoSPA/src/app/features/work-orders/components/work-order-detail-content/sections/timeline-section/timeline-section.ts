@@ -51,7 +51,10 @@ export class WorkOrderTimelineSectionComponent {
 			case 'checklist_item_added':
 				return `Tarea agregada al checklist: "${detalle['label'] ?? ''}"`;
 			case 'checklist_item_updated':
-				return `Tarea "${detalle['label'] ?? ''}" marcada como ${detalle['checked'] ? 'completada' : 'pendiente'}`;
+				if ('checked' in detalle) {
+					return `Tarea "${detalle['label'] ?? ''}" marcada como ${detalle['checked'] ? 'completada' : 'pendiente'}`;
+				}
+				return `Tarea "${detalle['label'] ?? ''}" actualizada`;
 			default:
 				return event.descripcion;
 		}
