@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
@@ -44,7 +44,7 @@ export class ClientDetailContentComponent {
 				return;
 			}
 
-			this.detail.set(this._service.getClientById(id));
+			this.detail.set(untracked(() => this._service.getClientById(id)));
 			this._service.loadClientDetail(id, (client) => {
 				this.detail.set(client);
 			});
