@@ -92,7 +92,7 @@ function mapOrderList(o: any) {
     priority: PRIORITY_MAP[o.priority] ?? o.priority,
     tipo_vehiculo: o.vehicle ? (VEHICLE_TYPE_MAP[o.vehicle.type] ?? 'Auto') : 'Auto',
     problema: o.problem ?? '',
-    diagnostico: o.repairNotes ?? '',
+    diagnostico: o.diagnostico ?? '',
     fecha_ingreso: toDate(o.createdAt),
     fecha_programada: toDate(o.scheduledAt),
     cargo_generado: !!o.accountReceivable,
@@ -100,7 +100,7 @@ function mapOrderList(o: any) {
       ? { id: o.client.id, nombre: o.client.name, telefono: o.client.phone, correo: o.client.email ?? '' }
       : null,
     vehiculo: o.vehicle
-      ? { id: o.vehicle.id, marca: o.vehicle.brand, modelo: o.vehicle.model, anio: o.vehicle.year, placas: o.vehicle.plates, vin: o.vehicle.vin ?? '' }
+      ? { id: o.vehicle.id, marca: o.vehicle.brand, modelo: o.vehicle.model, anio: o.vehicle.year, placas: o.vehicle.plates, vin: o.vehicle.vin ?? '', kilometraje: o.vehicle.mileage ?? 0 }
       : null,
     tecnico: o.technician ? { id: o.technician.id, name: o.technician.name } : null,
   };
@@ -524,7 +524,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     const body = req.body as any;
     await db.workOrder.update({
       where: { id },
-      data: { problem: body.problema || undefined, repairNotes: body.diagnostico || null },
+      data: { problem: body.problema || undefined, diagnostico: body.diagnostico ?? null },
     });
     return { message: 'ok' };
   });

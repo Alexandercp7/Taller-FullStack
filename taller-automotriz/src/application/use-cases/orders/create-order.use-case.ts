@@ -64,14 +64,13 @@ export class CreateOrderUseCase {
         createdById: input.createdById,
         problem: input.problem,
         mileageIn: input.mileageIn ?? null,
-        mileageOut: null,
+        diagnostico: null,
         portalToken,
         scheduledAt: input.scheduledAt,
         closedAt: null,
         needsDiagnosis: false,
         intakeCauses: [],
         discoveredFaults: [],
-        repairNotes: null,
       });
 
       try {

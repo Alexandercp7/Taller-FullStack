@@ -217,18 +217,15 @@ model WorkOrder {
   priority      Priority     @default(MEDIUM)
   type          OrderType    @default(NORMAL)
   problem       String
+  diagnostico   String?
   mileageIn     Int?
-  mileageOut    Int?
   portalToken   String       @unique @default(cuid())
   scheduledAt   DateTime
   closedAt      DateTime?
   needsDiagnosis Boolean     @default(false)
   intakeCauses  String[]     @default([])
   discoveredFaults String[]  @default([])
-  repairNotes   String?
-  exitKm        Int?
   exitDate      DateTime?
-  fuelLevel     String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 

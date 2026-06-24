@@ -41,7 +41,6 @@ export function createTestOrder(overrides: Partial<{
     false,
     [],
     [],
-    null,
   );
 }
 
