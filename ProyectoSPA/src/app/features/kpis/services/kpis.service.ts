@@ -142,15 +142,20 @@ export class KpisService {
     const found = this._employees().find(e => e.id === id);
     if (!found) return false;
     this._employees.update(list => list.map(e => e.id === id ? { ...e, ...updates } : e));
-    this._http.put(`/api/v1/employees/${id}`, updates).subscribe();
+    this._http.put(`/api/v1/employees/${id}`, updates).subscribe({
+      error: () => this._employees.update(list => list.map(e => e.id === id ? found : e)),
+    });
     return true;
   }
 
   public deleteEmployee(id: string): boolean {
-    const initial = this._employees().length;
+    const found = this._employees().find(e => e.id === id);
+    if (!found) return false;
     this._employees.update(list => list.filter(e => e.id !== id));
-    this._http.delete(`/api/v1/employees/${id}`).subscribe();
-    return this._employees().length < initial;
+    this._http.delete(`/api/v1/employees/${id}`).subscribe({
+      error: () => this._employees.update(list => [found, ...list]),
+    });
+    return true;
   }
 
   public createKPI(input: CreateKPIInput): KPI {
@@ -178,7 +183,9 @@ export class KpisService {
     if (updates.fechaInicio !== undefined) body['fechaInicio'] = updates.fechaInicio;
     if (updates.fechaFin !== undefined) body['fechaFin'] = updates.fechaFin;
     if (updates.activo !== undefined) body['activo'] = updates.activo;
-    this._http.put(`/api/v1/kpis/${id}`, body).subscribe();
+    this._http.put(`/api/v1/kpis/${id}`, body).subscribe({
+      error: () => this._kpis.update(list => list.map(k => k.id === id ? found : k)),
+    });
     return true;
   }
 
@@ -187,13 +194,13 @@ export class KpisService {
   }
 
   public deleteKPI(id: string): boolean {
-    const initial = this._kpis().length;
+    const found = this._kpis().find(k => k.id === id);
+    if (!found) return false;
     this._kpis.update(list => list.filter(k => k.id !== id));
-    if (this._kpis().length < initial) {
-      this._http.delete(`/api/v1/kpis/${id}`).subscribe();
-      return true;
-    }
-    return false;
+    this._http.delete(`/api/v1/kpis/${id}`).subscribe({
+      error: () => this._kpis.update(list => [found, ...list]),
+    });
+    return true;
   }
 
   public createActivity(input: CreateActivityInput): Activity {
@@ -226,7 +233,9 @@ export class KpisService {
     if (updates.fechaVencimiento !== undefined) body['fechaVencimiento'] = updates.fechaVencimiento;
     if (updates.empleadoAsignado !== undefined) body['empleadoAsignado'] = updates.empleadoAsignado;
     if (updates.tags !== undefined) body['tags'] = updates.tags;
-    this._http.put(`/api/v1/kpi-activities/${id}`, body).subscribe();
+    this._http.put(`/api/v1/kpi-activities/${id}`, body).subscribe({
+      error: () => this._activities.update(list => list.map(a => a.id === id ? found : a)),
+    });
     return true;
   }
 
@@ -234,10 +243,13 @@ export class KpisService {
   public updateActivityRole(id: string, roleAsignado: RoleType): boolean { return this.updateActivity(id, { roleAsignado }); }
 
   public deleteActivity(id: string): boolean {
-    const initial = this._activities().length;
+    const found = this._activities().find(a => a.id === id);
+    if (!found) return false;
     this._activities.update(list => list.filter(a => a.id !== id));
-    this._http.delete(`/api/v1/kpi-activities/${id}`).subscribe();
-    return this._activities().length < initial;
+    this._http.delete(`/api/v1/kpi-activities/${id}`).subscribe({
+      error: () => this._activities.update(list => [found, ...list]),
+    });
+    return true;
   }
 
   public createTag(input: CreateTagInput): ActivityTag {
@@ -253,19 +265,21 @@ export class KpisService {
     const found = this._tags().find(t => t.id === id);
     if (!found) return false;
     this._tags.update(list => list.map(t => t.id === id ? { ...t, ...updates } : t));
-    this._http.put(`/api/v1/activity-tags/${id}`, updates).subscribe();
+    this._http.put(`/api/v1/activity-tags/${id}`, updates).subscribe({
+      error: () => this._tags.update(list => list.map(t => t.id === id ? found : t)),
+    });
     return true;
   }
 
   public deleteTag(id: string): boolean {
-    const initial = this._tags().length;
+    const found = this._tags().find(t => t.id === id);
+    if (!found) return false;
     this._tags.update(list => list.filter(t => t.id !== id));
-    if (this._tags().length < initial) {
-      this._activities.update(list => list.map(a => ({ ...a, tags: a.tags.filter(t => t !== id) })));
-      this._http.delete(`/api/v1/activity-tags/${id}`).subscribe();
-      return true;
-    }
-    return false;
+    this._activities.update(list => list.map(a => ({ ...a, tags: a.tags.filter(t => t !== id) })));
+    this._http.delete(`/api/v1/activity-tags/${id}`).subscribe({
+      error: () => this._tags.update(list => [found, ...list]),
+    });
+    return true;
   }
 
   public updateOrganizationInfo(updates: Partial<OrganizationInfo>): boolean {

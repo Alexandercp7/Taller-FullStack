@@ -117,7 +117,7 @@ export class PriceQuoterComponent {
     this.quoteItems.update(items => items.filter(item => item.id !== itemId));
   }
 
-  protected generatePDF(): void {
+  protected async generatePDF(): Promise<void> {
     const items = this.quoteItems();
     if (items.length === 0) return;
 
@@ -128,7 +128,7 @@ export class PriceQuoterComponent {
       const taxAmount = this.taxAmount();
       const total     = this.total();
 
-      const doc = this.pdfMaker.create();
+      const doc = await this.pdfMaker.create();
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 40;
 
@@ -140,7 +140,7 @@ export class PriceQuoterComponent {
 
       doc.setDrawColor(220).line(margin, 92, pageW - margin, 92);
 
-      this.pdfMaker.addTable(doc, {
+      await this.pdfMaker.addTable(doc, {
         startY: 102,
         margin: { left: margin, right: margin },
         head: [['Descripción', 'Cantidad', 'Precio Unitario', 'Subtotal']],

@@ -40,6 +40,7 @@ export class WorkOrdersService {
   private readonly _workOrders = signal<WorkOrder[]>([]);
   private readonly _listLoaded = signal(false);
   private readonly _clientsDirectory = signal<ClientDirectoryItem[]>([]);
+  private readonly _checklistPending = new Set<string>();
 
   public readonly workOrders = this._workOrders.asReadonly();
   public readonly listLoaded = this._listLoaded.asReadonly();
@@ -54,7 +55,7 @@ export class WorkOrdersService {
   }
 
   private loadClients(): void {
-    this._http.get<Paginated<ClientApi>>('/api/v1/clients?per_page=500').subscribe({
+    this._http.get<Paginated<ClientApi>>('/api/v1/clients?per_page=100').subscribe({
       next: (res) => this._clientsDirectory.set(res.data.map(c => ({
         id: String(c.id), nombre: c.nombre, telefono: c.telefono, correo: c.correo,
       }))),
@@ -279,43 +280,66 @@ export class WorkOrdersService {
   }
 
   public updateClientData(id: string, clientData: ClientData): void {
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o =>
       o.id === id ? { ...o, cliente: clientData.nombre, clientData } : o
     ));
     this._http.patch(`/api/v1/work-orders/${id}/client`, {
       nombre: clientData.nombre, telefono: clientData.telefono, correo: clientData.correo,
-    }).subscribe();
+    }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public updateVehicleData(id: string, vehicle: VehicleData): void {
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o => o.id === id ? { ...o, vehicle } : o));
     this._http.patch(`/api/v1/work-orders/${id}/vehicle`, {
       placas: vehicle.placas, vin: vehicle.vin, marca: vehicle.marca,
       modelo: vehicle.modelo, anio: vehicle.anio, kilometraje_actual: vehicle.kilometraje,
-    }).subscribe();
+    }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public updateProblemDiagnosis(id: string, problema: string, diagnostico: string): void {
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o => o.id === id ? { ...o, problema, diagnostico } : o));
-    this._http.patch(`/api/v1/work-orders/${id}/diagnosis`, { problema, diagnostico }).subscribe();
+    this._http.patch(`/api/v1/work-orders/${id}/diagnosis`, { problema, diagnostico }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public updateAssignedTechnician(id: string, technicianId: string, technicianName: string): void {
     const trimmed = technicianName.trim();
     if (!trimmed || !technicianId) return;
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o => o.id === id ? { ...o, tecnico: trimmed } : o));
-    this._http.patch(`/api/v1/work-orders/${id}/technician`, { technicianId }).subscribe();
+    this._http.patch(`/api/v1/work-orders/${id}/technician`, { technicianId }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public updateScheduledDate(id: string, fechaProgramada: string, _usuario = 'Asesor'): void {
     const trimmed = fechaProgramada.trim();
     if (!trimmed) return;
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o =>
       o.id === id && o.fechaProgramada !== trimmed ? { ...o, fechaProgramada: trimmed } : o
     ));
+    this._http.patch(`/api/v1/work-orders/${id}/scheduled-date`, { fecha_programada: trimmed }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public updateStatus(id: string, status: WorkOrderStatus, _usuario = 'Supervisor'): void {
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o => {
       if (o.id !== id || o.status === status) return o;
       const updated = { ...o, status };
@@ -324,21 +348,36 @@ export class WorkOrdersService {
       }
       return updated;
     }));
-    this._http.patch(`/api/v1/work-orders/${id}/status`, { status }).subscribe();
+    this._http.patch(`/api/v1/work-orders/${id}/status`, { status }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public updatePriority(id: string, priority: WorkOrderPriority, _usuario = 'Supervisor'): void {
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o => o.id === id ? { ...o, priority } : o));
-    this._http.patch(`/api/v1/work-orders/${id}/priority`, { priority }).subscribe();
+    this._http.patch(`/api/v1/work-orders/${id}/priority`, { priority }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public toggleChecklist(id: string, listType: 'checklistInicial' | 'checklistTrabajo', itemId: string, _usuario = 'Tecnico'): void {
+    if (this._checklistPending.has(itemId)) return;
+    this._checklistPending.add(itemId);
+    const prevList = this._workOrders().find(o => o.id === id)?.[listType] ?? [];
     this._workOrders.update(orders => orders.map(o => {
       if (o.id !== id) return o;
       const list = o[listType].map(c => c.id === itemId ? { ...c, completada: !c.completada } as ChecklistItem : c);
       return { ...o, [listType]: list };
     }));
-    this._http.patch(`/api/v1/work-orders/${id}/checklist/${itemId}`, {}).subscribe();
+    this._http.patch(`/api/v1/work-orders/${id}/checklist/${itemId}`, {}).subscribe({
+      next: () => this._checklistPending.delete(itemId),
+      error: () => {
+        this._checklistPending.delete(itemId);
+        this._workOrders.update(orders => orders.map(o => o.id === id ? { ...o, [listType]: prevList } : o));
+      },
+    });
   }
 
   public addChecklistItem(id: string, listType: 'checklistInicial' | 'checklistTrabajo', tarea: string, responsableIds: string[], _usuario = 'Supervisor'): void {
@@ -457,6 +496,8 @@ export class WorkOrdersService {
   }
 
   public assignDirectService(id: string, service: any, _usuario = 'Asesor'): void {
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o => {
       if (o.id !== id || o.serviciosAsignados.some(s => s.id === service.id)) return o;
       const assignedService: AssignedServiceItem = {
@@ -465,10 +506,14 @@ export class WorkOrdersService {
       };
       return { ...o, serviciosAsignados: [...o.serviciosAsignados, assignedService] };
     }));
-    this._http.post(`/api/v1/work-orders/${id}/services`, { price_item_id: service.id, precio: service.precio }).subscribe();
+    this._http.post(`/api/v1/work-orders/${id}/services`, { price_item_id: service.id, precio: service.precio }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public assignDirectPart(id: string, part: any, usuario = 'Almacen'): void {
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return;
     this._workOrders.update(orders => orders.map(o => {
       if (o.id !== id) return o;
       const salePrice = typeof part.precioVenta === 'number' ? part.precioVenta : 0;
@@ -480,7 +525,9 @@ export class WorkOrdersService {
       this._inventoryService.consumeForWorkOrder(part.id, id, usuario);
       return { ...o, refaccionesAsignadas: assigned };
     }));
-    this._http.post(`/api/v1/work-orders/${id}/parts`, { inventory_item_id: part.id, cantidad: 1 }).subscribe();
+    this._http.post(`/api/v1/work-orders/${id}/parts`, { inventory_item_id: part.id, cantidad: 1 }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o => o.id === id ? prev : o)),
+    });
   }
 
   public updateQuoteTaxPreference(id: string, incluirIvaCotizacion: boolean): void {
@@ -506,14 +553,13 @@ export class WorkOrdersService {
   }
 
   public deleteWorkOrder(id: string): boolean {
-    let deleted = false;
-    this._workOrders.update(orders => {
-      const filtered = orders.filter(o => o.id !== id);
-      deleted = filtered.length !== orders.length;
-      return filtered;
+    const prev = this._workOrders().find(o => o.id === id);
+    if (!prev) return false;
+    this._workOrders.update(orders => orders.filter(o => o.id !== id));
+    this._http.delete(`/api/v1/work-orders/${id}`, { body: { confirm_id: id } }).subscribe({
+      error: () => this._workOrders.update(orders => [prev, ...orders]),
     });
-    if (deleted) this._http.delete(`/api/v1/work-orders/${id}`, { body: { confirm_id: id } }).subscribe();
-    return deleted;
+    return true;
   }
 
   private addNote(id: string, type: 'notasInternas' | 'notasCliente', texto: string, usuario: string, apiTipo: string): void {
@@ -523,7 +569,11 @@ export class WorkOrdersService {
     this._workOrders.update(orders => orders.map(o =>
       o.id === id ? { ...o, [type]: [note, ...o[type]] } : o
     ));
-    this._http.post(`/api/v1/work-orders/${id}/notes`, { tipo: apiTipo, texto: trimmed }).subscribe();
+    this._http.post(`/api/v1/work-orders/${id}/notes`, { tipo: apiTipo, texto: trimmed }).subscribe({
+      error: () => this._workOrders.update(orders => orders.map(o =>
+        o.id === id ? { ...o, [type]: o[type].filter(n => n.id !== note.id) } : o
+      )),
+    });
   }
 
   private mergeAssignedPart(assigned: AssignedPartItem[], part: { id: string; nombre: string; costo: number }): AssignedPartItem[] {

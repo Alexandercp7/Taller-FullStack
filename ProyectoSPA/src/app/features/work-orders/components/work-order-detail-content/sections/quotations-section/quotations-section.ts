@@ -285,7 +285,8 @@ export class WorkOrderQuotationsSectionComponent {
 	protected exportQuotationPdf(): void {
 		const order = this.order();
 		if (!order) return;
-		this._quotationExport.exportPdf(order, this.incluirIvaCotizacion());
-		this._notification.success('PDF de cotizacion generado.');
+		void this._quotationExport.exportPdf(order, this.incluirIvaCotizacion()).then(() => {
+			this._notification.success('PDF de cotizacion generado.');
+		});
 	}
 }
