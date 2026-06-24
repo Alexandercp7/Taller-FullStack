@@ -91,9 +91,6 @@ export class ActivitiesService {
     return created;
   }
 
-<<<<<<< HEAD
-    const prev = this._activities().find(a => a.id === id);
-    if (!prev) return;
   updateActivity(id: string, update: Partial<Activity>, asignadoAIds?: string[]) {
     const prev = this._activities().find(a => a.id === id);
     if (!prev) return;

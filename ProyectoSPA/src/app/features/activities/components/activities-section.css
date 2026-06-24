@@ -42,7 +42,8 @@
 }
 
 .activity-detail-dialog-content {
-	max-width: 980px !important;
+	width: min(980px, calc(100vw - 2rem)) !important;
+	max-width: min(980px, calc(100vw - 2rem)) !important;
 }
 
 .kanban-grid {
