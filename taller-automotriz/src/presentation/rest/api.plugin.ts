@@ -133,6 +133,17 @@ function mapPortalTimelineEntry(t: any) {
   return null;
 }
 
+function mapAdminTimelineEntry(t: any) {
+  return {
+    id: t.id,
+    descripcion: t.description ?? '',
+    evento: t.event,
+    detalle: t.detail ?? null,
+    created_at: t.createdAt?.toISOString(),
+    user: t.user ? { name: t.user.name } : undefined,
+  };
+}
+
 async function mapOrderDetail(o: any, checklistUserMap: Record<string, string> = {}) {
   const base = mapOrderList(o);
   const storage = new S3FileStorageAdapter();
@@ -185,9 +196,7 @@ async function mapOrderDetail(o: any, checklistUserMap: Record<string, string> =
     })),
     servicios,
     total_estimado: totalServicios + totalPartes,
-    timeline: (o.timeline ?? [])
-      .map((t: any) => mapPortalTimelineEntry(t))
-      .filter(Boolean),
+    timeline: (o.timeline ?? []).map((t: any) => mapAdminTimelineEntry(t)),
   };
 }
 
