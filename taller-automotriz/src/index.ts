@@ -6,10 +6,6 @@ import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
 import { createContainer } from './infrastructure/di/container';
 import { createContext } from './presentation/trpc/context';
 import { createAppRouter } from './presentation/trpc/router';
-import { createNotificationWorker } from './infrastructure/queue/workers/notification.worker';
-import { createStockAlertWorker } from './infrastructure/queue/workers/stock-alert.worker';
-import { createCloseOrderWorker } from './infrastructure/queue/workers/close-order.worker';
-import { getRedis } from './infrastructure/config/redis';
 import { logger } from './infrastructure/config/logger';
 import { env } from './infrastructure/config/env';
 import { registerRestApi } from './presentation/rest/api.plugin';
@@ -39,12 +35,6 @@ async function bootstrap() {
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
   await registerRestApi(app, container);
-
-  // BullMQ workers
-  const redis = getRedis();
-  createNotificationWorker(redis);
-  createStockAlertWorker(redis);
-  createCloseOrderWorker(redis);
 
   const port = env.PORT;
   await app.listen({ port, host: '0.0.0.0' });

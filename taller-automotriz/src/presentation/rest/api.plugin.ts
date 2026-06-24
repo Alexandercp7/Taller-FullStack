@@ -375,15 +375,25 @@ export async function registerRestApi(app: FastifyInstance, container: Container
           type: VEHICLE_TYPE_REVERSE[body.tipo_vehiculo] as any ?? 'CAR',
         },
       });
+    } else if (vehicle.clientId !== client.id) {
+      // Plates already exist under a different client (e.g. ownership transfer).
+      // Reassign the vehicle to the current client so the use case validation passes.
+      vehicle = await db.vehicle.update({
+        where: { id: vehicle.id },
+        data: { clientId: client.id },
+      });
     }
 
     const priority = (PRIORITY_REVERSE[body.priority] ?? 'MEDIUM') as any;
+    const technicianId = body.tecnico_id && body.tecnico_id !== u.id
+      ? body.tecnico_id
+      : u.id;
     let orderId: string;
     try {
       const result = await container.useCases.createOrder.execute({
         clientId: client.id,
         vehicleId: vehicle.id,
-        technicianId: u.id,
+        technicianId,
         createdById: u.id,
         problem: body.problema ?? 'Sin descripción',
         priority,
@@ -392,13 +402,14 @@ export async function registerRestApi(app: FastifyInstance, container: Container
       });
       orderId = result.id;
     } catch (err: any) {
-      // If the use case throws after committing (e.g., event dispatch failure),
-      // find the order that was created by matching client + vehicle + recent time
+      // If the transaction committed but the post-commit event dispatch failed,
+      // recover the order that was just created (within the last 10 seconds).
+      const tenSecondsAgo = new Date(Date.now() - 10_000);
       const recent = await db.workOrder.findFirst({
-        where: { clientId: client.id, vehicleId: vehicle.id },
+        where: { clientId: client.id, vehicleId: vehicle.id, createdAt: { gte: tenSecondsAgo } },
         orderBy: { createdAt: 'desc' },
       });
-      if (!recent) return reply.status(500).send({ error: err.message });
+      if (!recent) return reply.status(500).send({ error: err.message ?? 'Error al crear la orden de trabajo' });
       orderId = recent.id;
     }
 

@@ -240,10 +240,16 @@ export class WorkOrdersContentComponent {
 				});
 			},
 			onCreate: (payload: CreateWorkOrderInput) => {
-				this._service.createWorkOrder(payload, (order) => {
-					this._notification.success(`OT ${order.code} creada correctamente.`);
-					void this._router.navigate(['/app/ordenes-trabajo', order.id]);
-				});
+				this._service.createWorkOrder(
+					payload,
+					(order) => {
+						this._notification.success(`OT ${order.code} creada correctamente.`);
+						void this._router.navigate(['/app/ordenes-trabajo', order.id]);
+					},
+					() => {
+						this._notification.error('No se pudo crear la orden de trabajo. Intenta de nuevo.');
+					},
+				);
 			},
 		};
 

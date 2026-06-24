@@ -50,7 +50,7 @@ La arquitectura del proyecto es **Clean Architecture + DDD**. Su regla de oro es
 
 4. Crear `src/infrastructure/config/env.ts` con la validación de variables de entorno usando Zod. Este archivo se importa primero en el entry point y lanza error si falta una variable requerida.
 
-5. Configurar **Docker Compose** con PostgreSQL y Redis para tener los servicios listos.
+5. Configurar **Docker Compose** con PostgreSQL para tener los servicios listos.
 
 6. Crear `prisma/schema.prisma` con la configuración mínima (solo el datasource y generator al inicio).
 
@@ -438,10 +438,10 @@ Crear un adaptador por cada servicio externo en `src/infrastructure/adapters/`:
 |-----------|----------------------|------------|
 | `Argon2HasherAdapter` | `IHasher` | argon2 |
 | `JWTTokenProviderAdapter` | `ITokenProvider` | jsonwebtoken |
-| `RedisCacheAdapter` | `ICache` | ioredis |
+| `InMemoryCacheAdapter` | `ICache` | Map nativo |
 | `S3FileStorageAdapter` | `IFileStorage` | AWS SDK v3 |
 | `PDFKitGeneratorAdapter` | `IPDFGenerator` | pdfkit |
-| `NHTSAVinDecoderAdapter` | `IVinDecoder` | fetch + Redis cache |
+| `NHTSAVinDecoderAdapter` | `IVinDecoder` | fetch + caché en memoria |
 | `ResendEmailAdapter` | parte de `INotificationSender` | resend |
 | `TwilioWhatsAppAdapter` | parte de `INotificationSender` | twilio |
 | `ExpoSendAdapter` | parte de `INotificationSender` | expo-server-sdk |
@@ -450,7 +450,7 @@ Crear un adaptador por cada servicio externo en `src/infrastructure/adapters/`:
 
 Empieza por los más críticos para el flujo principal:
 1. `Argon2HasherAdapter` y `JWTTokenProviderAdapter` (sin ellos no hay autenticación)
-2. `RedisCacheAdapter` (lo necesita la cola de trabajos)
+2. `InMemoryCacheAdapter` (caché simple sin dependencias externas)
 3. `S3FileStorageAdapter` (lo necesitan las fotos)
 4. Los de notificaciones al final (son opcionales para el MVP)
 
@@ -460,21 +460,37 @@ Los adaptadores implementan interfaces (`IHasher`, `ICache`). Esas interfaces no
 
 ---
 
-## Etapa 13 — Infraestructura — Cola de trabajos
+## Etapa 13 — Infraestructura — Dispatcher de eventos de dominio
 
 ### Qué hacer
 
-Crear `src/infrastructure/queue/` con:
-- `BullMQJobQueueAdapter.ts` — implementa `IJobQueue`, encola trabajos en Redis
-- `NotificationWorker.ts` — consume trabajos de notificación (email, WhatsApp, push)
-- `StockAlertWorker.ts` — consume eventos `StockBelowMinimum`, notifica al encargado de inventario
-- `CloseOrderWorker.ts` — trabajos de procesamiento asíncrono al cerrar órdenes
+Crear `src/infrastructure/events/InProcessDomainEventDispatcher.ts`:
+- Implementa `IDomainEventDispatcher`
+- Despacha eventos síncronamente dentro del mismo proceso
+- No requiere Redis ni infraestructura externa
 
-### Por qué la cola va aquí
+```typescript
+export class InProcessDomainEventDispatcher implements IDomainEventDispatcher {
+  async dispatch(events: ReadonlyArray<DomainEvent>): Promise<void> {
+    for (const event of events) {
+      this.handle(event); // loga, notifica en memoria, etc.
+    }
+  }
+}
+```
 
-La cola necesita Redis (Etapa 1 — Docker), los adaptadores de notificación (Etapa 12) y conocer los eventos de dominio (Etapa 4). Sin esos tres, no se puede implementar correctamente.
+El dispatch ocurre **después** del commit de la transacción (en `PrismaUnitOfWork`). Si falla, se loguea pero no revierte los datos persistidos.
 
-La cola desacopla el procesamiento asíncrono del flujo principal. `CloseOrderUseCase` no espera a que se envíe el email — encola un trabajo y termina. El worker lo procesa de forma independiente. Este patrón solo tiene sentido una vez que tienes claros todos los flujos del negocio.
+### Por qué en-proceso y no BullMQ
+
+Para proyectos de tamaño pequeño-mediano, un dispatcher en-proceso es suficiente:
+- Sin dependencia de Redis ni costos adicionales
+- Sin complejidad operativa (workers, colas, reintentos)
+- Los eventos aún pueden escalar a BullMQ en el futuro si el volumen lo justifica
+
+### Por qué después de los adaptadores
+
+El dispatcher puede necesitar adaptadores (logger, notificaciones) para reaccionar a los eventos. Esos adaptadores no existían hasta la Etapa 12.
 
 ---
 
@@ -488,7 +504,7 @@ Crear `src/infrastructure/config/container.ts` — el único lugar del proyecto 
 // Adaptadores
 const hasher = new Argon2HasherAdapter();
 const tokenProvider = new JWTTokenProviderAdapter(env.JWT_SECRET);
-const cache = new RedisCacheAdapter(redis);
+const cache = new InMemoryCacheAdapter();
 const fileStorage = new S3FileStorageAdapter(env.S3_BUCKET, ...);
 
 // Repositorios
@@ -637,8 +653,8 @@ ETAPA  CAPA              QUÉ SE CONSTRUYE                          POR QUÉ PRI
   9    Tests             Fakes en memoria + tests unitarios        Validar antes de construir infra
  10    Infraestructura   Schema Prisma + migraciones               Reflejar el dominio ya maduro
  11    Infraestructura   Repositorios Prisma + mappers             Implementar los puertos de BD
- 12    Infraestructura   Adaptadores externos (S3, JWT, Redis…)    Implementar puertos de servicios
- 13    Infraestructura   Cola de trabajos BullMQ                   Necesita adaptadores + eventos
+ 12    Infraestructura   Adaptadores externos (S3, JWT, caché…)    Implementar puertos de servicios
+ 13    Infraestructura   Dispatcher de eventos (InProcess)         Necesita adaptadores + eventos
  14    Infraestructura   Contenedor de dependencias                Conectar todo
  15    Presentación      Routers tRPC                              Exponer casos de uso al exterior
  16    Presentación      Validadores Zod                           Validar input de usuario

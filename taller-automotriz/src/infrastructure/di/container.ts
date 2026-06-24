@@ -1,5 +1,4 @@
 import { getPrismaClient } from '../persistence/prisma/prisma.client';
-import { getRedis } from '../config/redis';
 import { env } from '../config/env';
 
 // Repositories
@@ -19,11 +18,10 @@ import { PrismaScheduledPaymentRepository } from '../persistence/repositories/pr
 
 // Infra
 import { PrismaUnitOfWork } from '../persistence/prisma/prisma-unit-of-work';
-import { BullMQDomainEventDispatcher } from '../events/bullmq-domain-event-dispatcher';
+import { InProcessDomainEventDispatcher } from '../events/in-process-domain-event-dispatcher';
 import { Argon2HasherAdapter } from '../external/argon2-hasher.adapter';
 import { JWTTokenProviderAdapter } from '../external/jwt-token-provider.adapter';
-import { RedisCacheAdapter } from '../external/redis-cache.adapter';
-import { BullMQJobQueueAdapter } from '../queue/bullmq-job-queue.adapter';
+import { InMemoryCacheAdapter } from '../external/in-memory-cache.adapter';
 import { S3FileStorageAdapter } from '../external/s3-file-storage.adapter';
 import { PDFKitGeneratorAdapter } from '../external/pdfkit-generator.adapter';
 import { NHTSAVinDecoderAdapter } from '../external/nhtsa-vin-decoder.adapter';
@@ -162,14 +160,11 @@ class StubTaskRepository {
 
 export function createContainer() {
   const prisma = getPrismaClient();
-  const redis = getRedis();
-
   // Core services (initialized first — used by UnitOfWork)
    const hasher = new Argon2HasherAdapter();
   const tokenProvider = new JWTTokenProviderAdapter(env.JWT_SECRET);
-  const cache = new RedisCacheAdapter(redis);
-  const jobQueue = new BullMQJobQueueAdapter(redis);
-  const dispatcher = new BullMQDomainEventDispatcher(jobQueue);
+  const cache = new InMemoryCacheAdapter();
+  const dispatcher = new InProcessDomainEventDispatcher();
 
   // UoW — handles transactional repos + post-commit event dispatch
   const unitOfWork = new PrismaUnitOfWork(prisma, dispatcher);

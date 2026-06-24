@@ -26,15 +26,19 @@ import { HlmTextareaImports } from '@spartan-ng/helm/textarea';
 								</button>
 							</div>
 							@if (editingMision()) {
-								<textarea 
-									hlmTextarea 
+								<textarea
+									hlmTextarea
 									rows="3"
 									[(ngModel)]="tempMision"
 									class="w-full"
 								></textarea>
 								<button hlmBtn class="w-full" (click)="saveMision()">Guardar Misión</button>
 							} @else {
-								<p class="leading-relaxed">{{ org.mision }}</p>
+								@if (org.mision) {
+									<p class="leading-relaxed">{{ org.mision }}</p>
+								} @else {
+									<p class="text-sm text-muted-foreground italic">Sin descripción. Haz clic en "Editar" para agregar la misión del taller.</p>
+								}
 							}
 						</div>
 					</div>
@@ -48,15 +52,19 @@ import { HlmTextareaImports } from '@spartan-ng/helm/textarea';
 								</button>
 							</div>
 							@if (editingVision()) {
-								<textarea 
-									hlmTextarea 
+								<textarea
+									hlmTextarea
 									rows="3"
 									[(ngModel)]="tempVision"
 									class="w-full"
 								></textarea>
 								<button hlmBtn class="w-full" (click)="saveVision()">Guardar Visión</button>
 							} @else {
-								<p class="leading-relaxed">{{ org.vision }}</p>
+								@if (org.vision) {
+									<p class="leading-relaxed">{{ org.vision }}</p>
+								} @else {
+									<p class="text-sm text-muted-foreground italic">Sin descripción. Haz clic en "Editar" para agregar la visión del taller.</p>
+								}
 							}
 						</div>
 					</div>

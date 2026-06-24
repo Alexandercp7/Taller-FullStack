@@ -3,6 +3,7 @@ import { UnitOfWork } from '../../../application/ports/unit-of-work.port';
 import { IDomainEventDispatcher } from '../../../application/ports/services/domain-event-dispatcher.port';
 import { DomainEventSource } from '../../../domain/events/domain-event-source';
 import { PrismaClientProvider } from './prisma-client-provider';
+import { logger } from '../../config/logger';
 
 export class PrismaUnitOfWork implements UnitOfWork, PrismaClientProvider {
   private _currentTx: PrismaClient | null = null;
@@ -26,13 +27,14 @@ export class PrismaUnitOfWork implements UnitOfWork, PrismaClientProvider {
       }
     });
 
-    // La transacción hizo commit — ahora es seguro despachar.
-    // Si el dispatch falla, la persistencia ya ocurrió; en producción
-    // considera el Outbox Pattern para garantía at-least-once.
+    // Transaction committed — safe to dispatch events.
+    // Dispatch is best-effort: a queue/Redis outage must not roll back committed data.
     const events = eventSources.flatMap((s) => [...s.domainEvents]);
     eventSources.forEach((s) => s.clearEvents());
     if (events.length > 0) {
-      await this.dispatcher.dispatch(events);
+      await this.dispatcher.dispatch(events).catch((err) => {
+        logger.error({ err }, 'Post-commit domain event dispatch failed — data committed, events dropped');
+      });
     }
 
     return result;

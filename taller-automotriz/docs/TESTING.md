@@ -155,7 +155,7 @@ ausentes, duplicados).
 
 | Archivo | Cubre |
 |---|---|
-| `features/work-orders/services/work-orders.service.spec.ts` | carga inicial y mapeo `mapList`/`mapDetail`, signals computados (`technicians`, `clients`, `allClients`), `toggleChecklist`, `updateStatus` (incluye flag `cargoCuentasPorCobrarGenerado`), `assignPart`/`assignService`, `createWorkOrder` (`buildNextOrderId`), `deleteWorkOrder` |
+| `features/work-orders/services/work-orders.service.spec.ts` | carga inicial y mapeo `mapList`/`mapDetail`, signals computados (`technicians`, `clients`, `allClients`), `toggleChecklist`, `updateStatus` (incluye flag `cargoCuentasPorCobrarGenerado`), `assignPart`/`assignService`, `createWorkOrder` (incluyendo rollback del optimistic update ante error de API y callback `onError`), `deleteWorkOrder` |
 | `features/clients-vehicles/services/clients-vehicles.service.spec.ts` | carga inicial, `createClient`, `updateClient` (optimista + confirmación), `canDeleteClient`/`deleteClient` (incluye rollback ante error), `getClientById`, `loadClientDetail` (mapeo de vehículos y órdenes) |
 | `features/inventory/services/inventory.service.spec.ts` | carga inicial (items + custodia), signals computados (`operationalItems`, `saleItems`, `lowStockItems`), `createInventoryItem` (éxito y rollback ante error), `updateInventoryItem`, `deleteInventoryItem`, `recordEntry`/`recordManualAdjustment` (incluye rechazo por stock insuficiente), `consumeForWorkOrder`, custodia (crear/entregar/eliminar) |
 | `core/auth/auth.guards.spec.ts` | `authGuard`, `loggedOutGuard`, `roleGuard` (acceso permitido/denegado y redirecciones) |
@@ -233,9 +233,9 @@ inventario.
   `submit-survey`, jobs/colas).
 - **Tests end-to-end (e2e)**: flujo completo orden → inventario → finanzas →
   cuentas por cobrar, vía API real.
-- **Eventos de dominio**: validar que los `IDomainEventDispatcher` reales
-  despachan correctamente los eventos emitidos por las entidades (más allá
-  del `FakeDomainEventDispatcher`).
+- **Eventos de dominio**: validar que `InProcessDomainEventDispatcher` despacha
+  correctamente los eventos emitidos por las entidades y que el dispatch
+  fire-and-forget no interrumpe el flujo principal ante un fallo.
 
 ### Frontend
 

@@ -101,13 +101,15 @@ export class PrismaOrderRepository implements OrderRepository {
   }
 
   async getNextCode(offset = 0): Promise<string> {
-    const last = await this.db.workOrder.findFirst({
-      orderBy: { code: 'desc' },
-      select: { code: true },
-    });
-    const match = last?.code.match(/(\d+)$/);
-    const lastNumber = match ? parseInt(match[1], 10) : 0;
-    return `OT-${String(lastNumber + 1 + offset).padStart(4, '0')}`;
+    const orders = await this.db.workOrder.findMany({ select: { code: true } });
+    // Find the highest number from codes matching OT-NNNN or WO-NNNN (4-digit sequential codes).
+    // Alphabetical sort is unreliable because WO-* sorts after OT-* and inflates the base.
+    const maxNum = orders.reduce((max, o) => {
+      const m = o.code.match(/^(?:OT|WO)-(\d{4})$/);
+      const n = m ? parseInt(m[1], 10) : 0;
+      return n > max ? n : max;
+    }, 0);
+    return `OT-${String(maxNum + 1 + offset).padStart(4, '0')}`;
   }
 
   async countActiveByClientId(clientId: string): Promise<number> {
