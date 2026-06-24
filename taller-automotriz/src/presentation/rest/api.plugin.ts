@@ -401,6 +401,9 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         mileageIn: Number(body.vehiculo_kilometraje ?? 0) || undefined,
       });
       orderId = result.id;
+      if (body.diagnostico) {
+        await db.workOrder.update({ where: { id: orderId }, data: { diagnostico: body.diagnostico } });
+      }
     } catch (err: any) {
       // If the transaction committed but the post-commit event dispatch failed,
       // recover the order that was just created (within the last 10 seconds).
