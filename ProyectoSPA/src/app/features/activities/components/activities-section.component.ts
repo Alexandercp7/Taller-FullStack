@@ -233,10 +233,14 @@ export class ActivitiesSectionComponent implements OnInit {
 
   protected createActivity(): void {
     const context: CreateActivityDialogContext = {
-      onCreate: (payload, asignadoAIds) => {
+      onCreate: async (payload, asignadoAIds) => {
         const activity = this.service.generateActivityWithId(payload);
-        this.service.addActivity(activity, asignadoAIds);
-        this.notification.success('Actividad creada correctamente.');
+        try {
+          await this.service.addActivity(activity, asignadoAIds);
+          this.notification.success('Actividad creada correctamente.');
+        } catch {
+          this.notification.error('No se pudo crear la actividad. Revisa el backend o la base de datos.');
+        }
       },
     };
 

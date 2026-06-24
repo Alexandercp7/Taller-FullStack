@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import type { Activity, Comment } from '../models/activity.model';
 
 interface ActivityApi {
@@ -74,7 +75,7 @@ export class ActivitiesService {
     return this._activities().find(a => a.id === id);
   }
 
-  addActivity(activity: Activity, asignadoAIds?: string[]) {
+  async addActivity(activity: Activity, asignadoAIds?: string[]): Promise<Activity> {
     const body: Record<string, unknown> = {
       titulo: activity.titulo,
       descripcion: activity.descripcion,
@@ -84,9 +85,10 @@ export class ActivitiesService {
       estado: activity.estado,
     };
     if (asignadoAIds !== undefined) body['asignado_a_ids'] = asignadoAIds;
-    this._http.post<{ data: ActivityApi }>('/api/v1/activities', body).subscribe({
-      next: (res) => this._activities.update(list => [...list, this.map(res.data)]),
-    });
+    const res = await firstValueFrom(this._http.post<{ data: ActivityApi }>('/api/v1/activities', body));
+    const created = this.map(res.data);
+    this._activities.update(list => [...list, created]);
+    return created;
   }
 
   updateActivity(id: string, update: Partial<Activity>, asignadoAIds?: string[]) {
