@@ -14,7 +14,7 @@ interface WoListApi {
   problema: string; fecha_ingreso: string; fecha_programada: string;
   cargo_generado: boolean;
   cliente: { id: number; nombre: string; telefono: string; correo: string } | null;
-  vehiculo: { id: number; marca: string; modelo: string; anio: number; placas: string; vin: string } | null;
+  vehiculo: { id: number; marca: string; modelo: string; anio: number; placas: string; vin: string; kilometraje: number } | null;
   tecnico: { id: number; name: string } | null;
 }
 
@@ -96,7 +96,7 @@ export class WorkOrdersService {
         anio: Number(item.vehiculo?.anio ?? 0),
         placas: item.vehiculo?.placas ?? '',
         vin: item.vehiculo?.vin ?? '',
-        kilometraje: 0,
+        kilometraje: item.vehiculo?.kilometraje ?? 0,
       },
       fotosIngreso: [],
       fotos: [],

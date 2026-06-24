@@ -20,14 +20,13 @@ export class OrderMapper {
       createdById: raw.createdById,
       problem: raw.problem,
       mileageIn: raw.mileageIn,
-      mileageOut: raw.mileageOut,
+      diagnostico: raw.diagnostico,
       portalToken: raw.portalToken,
       scheduledAt: raw.scheduledAt,
       closedAt: raw.closedAt,
       needsDiagnosis: raw.needsDiagnosis,
       intakeCauses: raw.intakeCauses,
       discoveredFaults: raw.discoveredFaults,
-      repairNotes: raw.repairNotes,
     });
   }
 
@@ -45,17 +44,14 @@ export class OrderMapper {
       createdById: entity.createdById,
       problem: entity.problem,
       mileageIn: entity.mileageIn,
-      mileageOut: entity.mileageOut,
+      diagnostico: entity.diagnostico,
       portalToken: entity.portalToken,
       scheduledAt: entity.scheduledAt,
       closedAt: entity.closedAt,
       needsDiagnosis: entity.needsDiagnosis,
       intakeCauses: entity.intakeCauses,
       discoveredFaults: entity.discoveredFaults,
-      repairNotes: entity.repairNotes,
-      exitKm: entity.mileageOut,
       exitDate: entity.closedAt,
-      fuelLevel: null,
     };
   }
 }

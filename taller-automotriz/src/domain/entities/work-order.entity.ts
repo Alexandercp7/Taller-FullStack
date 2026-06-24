@@ -24,14 +24,13 @@ interface WorkOrderProps {
   createdById: string;
   problem: string;
   mileageIn: number | null;
-  mileageOut: number | null;
+  diagnostico: string | null;
   portalToken: string;
   scheduledAt: Date;
   closedAt: Date | null;
   needsDiagnosis: boolean;
   intakeCauses: string[];
   discoveredFaults: string[];
-  repairNotes: string | null;
 }
 
 export class WorkOrder {
@@ -51,14 +50,13 @@ export class WorkOrder {
     public readonly createdById: string,
     public readonly problem: string,
     private _mileageIn: number | null,
-    private _mileageOut: number | null,
+    private _diagnostico: string | null,
     public readonly portalToken: string,
     public readonly scheduledAt: Date,
     private _closedAt: Date | null,
     private _needsDiagnosis: boolean,
     private _intakeCauses: string[],
     private _discoveredFaults: string[],
-    private _repairNotes: string | null,
   ) {}
 
   // ─── Factory: nueva orden (emite OrderCreated) ───────────────────────────
@@ -91,14 +89,13 @@ export class WorkOrder {
       props.createdById,
       props.problem,
       props.mileageIn,
-      props.mileageOut,
+      props.diagnostico,
       props.portalToken,
       props.scheduledAt,
       props.closedAt,
       props.needsDiagnosis,
       props.intakeCauses,
       props.discoveredFaults,
-      props.repairNotes,
     );
   }
 
@@ -110,11 +107,10 @@ export class WorkOrder {
   get technicianId(): string { return this._technicianId; }
   get closedAt(): Date | null { return this._closedAt; }
   get mileageIn(): number | null { return this._mileageIn; }
-  get mileageOut(): number | null { return this._mileageOut; }
+  get diagnostico(): string | null { return this._diagnostico; }
   get needsDiagnosis(): boolean { return this._needsDiagnosis; }
   get intakeCauses(): string[] { return [...this._intakeCauses]; }
   get discoveredFaults(): string[] { return [...this._discoveredFaults]; }
-  get repairNotes(): string | null { return this._repairNotes; }
   get domainEvents(): ReadonlyArray<DomainEvent> { return this._domainEvents; }
 
   // ─── Comportamiento ───────────────────────────────────────────────────────
@@ -196,10 +192,6 @@ export class WorkOrder {
     this._mileageIn = km;
   }
 
-  registerMileageOut(km: number): void {
-    this._mileageOut = km;
-  }
-
   setIntakeCauses(causes: string[]): void {
     this._intakeCauses = causes;
   }
@@ -212,8 +204,8 @@ export class WorkOrder {
     this._needsDiagnosis = value;
   }
 
-  setRepairNotes(notes: string): void {
-    this._repairNotes = notes;
+  setDiagnostico(text: string): void {
+    this._diagnostico = text;
   }
 
   clearEvents(): void {
