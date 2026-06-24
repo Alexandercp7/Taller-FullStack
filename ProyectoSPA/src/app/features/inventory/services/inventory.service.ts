@@ -175,6 +175,8 @@ export class InventoryService {
   }
 
   public updateInventoryItem(itemId: string, payload: Partial<CreateInventoryItemInput>): boolean {
+    const prev = this._items().find(i => i.id === itemId);
+    if (!prev) return false;
     const precioCosto = this.resolvePrecioCosto(payload);
     const precioVenta = this.resolvePrecioVenta(payload);
     this._items.update(items =>
@@ -206,7 +208,9 @@ export class InventoryService {
         precio_venta: updated.precioVenta,
         stock_actual: updated.stockActual,
         stock_minimo: updated.stockMinimo,
-      }).subscribe();
+      }).subscribe({
+        error: () => this._items.update(items => items.map(i => i.id === itemId ? prev : i)),
+      });
     }
     return true;
   }
@@ -262,8 +266,12 @@ export class InventoryService {
   }
 
   public markCustodyDelivered(id: string): void {
+    const prev = this._custody().find(e => e.id === id);
+    if (!prev) return;
     this._custody.update(entries => entries.map(e => e.id === id ? { ...e, estado: 'Entregado' as const } : e));
-    this._http.patch(`/api/v1/inventory/custody/${id}/deliver`, {}).subscribe();
+    this._http.patch(`/api/v1/inventory/custody/${id}/deliver`, {}).subscribe({
+      error: () => this._custody.update(entries => entries.map(e => e.id === id ? prev : e)),
+    });
   }
 
   public deleteCustodyEntry(id: string): boolean {

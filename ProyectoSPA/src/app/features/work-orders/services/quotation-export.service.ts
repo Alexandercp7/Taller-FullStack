@@ -89,7 +89,7 @@ export class QuotationExportService {
 		XLSX.writeFile(wb, `Cotizacion_${order.code || order.id}_${order.fechaIngreso}.xlsx`);
 	}
 
-	exportPdf(order: WorkOrder, includeIva = false): void {
+	async exportPdf(order: WorkOrder, includeIva = false): Promise<void> {
 		const totalParts = order.refaccionesAsignadas.reduce((sum, part) => sum + part.cantidad * part.costoUnitario, 0);
 		const totalServices = order.serviciosAsignados.reduce((sum, service) => sum + this.getServicePrice(service, order.tipoVehiculo), 0);
 		const subtotal = totalParts + totalServices;
@@ -97,7 +97,7 @@ export class QuotationExportService {
 		const total = subtotal + iva;
 		const fmt = this.fmtCurrency.bind(this);
 
-		const doc = this._pdf.create();
+		const doc = await this._pdf.create();
 		const pageWidth = doc.internal.pageSize.getWidth();
 		const pageHeight = doc.internal.pageSize.getHeight();
 		const margin = 36;
@@ -179,7 +179,7 @@ export class QuotationExportService {
 			}),
 		];
 
-		this._pdf.addTable(doc, {
+		await this._pdf.addTable(doc, {
 			startY: y,
 			margin: { left: margin, right: margin },
 			head: [['Cantidad', 'Descripcion', 'Precio Unitario', 'Importe']],
