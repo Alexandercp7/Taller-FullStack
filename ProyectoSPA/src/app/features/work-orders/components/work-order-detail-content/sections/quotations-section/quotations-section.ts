@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
@@ -42,6 +42,22 @@ export class WorkOrderQuotationsSectionComponent {
 	protected readonly descuentoActivo = signal(false);
 	protected readonly descuentoTipo = signal<'porcentaje' | 'monto'>('porcentaje');
 	protected readonly descuentoValorRaw = signal(0);
+
+	constructor() {
+		effect(() => {
+			const order = this.order();
+			if (!order) return;
+			const d = order.descuento;
+			if (d) {
+				this.descuentoActivo.set(true);
+				this.descuentoTipo.set(d.tipo);
+				this.descuentoValorRaw.set(d.valor);
+			} else {
+				this.descuentoActivo.set(false);
+				this.descuentoValorRaw.set(0);
+			}
+		});
+	}
 
 	protected readonly inventoryByType = computed(() => {
 		const search = this.partSearch().toLowerCase();

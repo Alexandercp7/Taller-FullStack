@@ -63,7 +63,7 @@ export const dailyCashEntriesMock: DailyCashEntry[] = [
 export const accountsReceivableMock: AccountReceivable[] = [
 	{
 		id: 'cxc-001',
-		otId: 'OT-2024-001',
+		otId: 'OT-2024-001', code: 'OT-2024-001',
 		cliente: 'Juan Carlos Martínez',
 		concepto: 'Servicios de reparación - Motor',
 		monto: 5000,
@@ -76,7 +76,7 @@ export const accountsReceivableMock: AccountReceivable[] = [
 	},
 	{
 		id: 'cxc-002',
-		otId: 'OT-2024-004',
+		otId: 'OT-2024-004', code: 'OT-2024-004',
 		cliente: 'Empresa TransExpress',
 		concepto: 'Reparación de flotilla (5 vehículos)',
 		monto: 12000,
@@ -89,7 +89,7 @@ export const accountsReceivableMock: AccountReceivable[] = [
 	},
 	{
 		id: 'cxc-003',
-		otId: 'OT-2024-005',
+		otId: 'OT-2024-005', code: 'OT-2024-005',
 		cliente: 'María González',
 		concepto: 'Cambio de aceite y filtros',
 		monto: 1200,
@@ -101,7 +101,7 @@ export const accountsReceivableMock: AccountReceivable[] = [
 	},
 	{
 		id: 'cxc-004',
-		otId: 'OT-2024-006',
+		otId: 'OT-2024-006', code: 'OT-2024-006',
 		cliente: 'Taller Gonzalo',
 		concepto: 'Diagnóstico y ajuste de motor',
 		monto: 2500,
@@ -114,7 +114,7 @@ export const accountsReceivableMock: AccountReceivable[] = [
 	},
 	{
 		id: 'cxc-005',
-		otId: 'OT-2024-007',
+		otId: 'OT-2024-007', code: 'OT-2024-007',
 		cliente: 'Roberto Sánchez',
 		concepto: 'Instalación de kit turbo',
 		monto: 8500,

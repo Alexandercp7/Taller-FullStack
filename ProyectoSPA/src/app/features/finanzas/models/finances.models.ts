@@ -30,6 +30,7 @@ export interface DailyCashSummary {
 export interface AccountReceivable {
 	id: string;
 	otId: string;
+	code: string;
 	cliente: string;
 	concepto: string;
 	monto: number;

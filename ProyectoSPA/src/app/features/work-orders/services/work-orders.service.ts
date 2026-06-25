@@ -170,15 +170,33 @@ export class WorkOrdersService {
     this._http.get<{ data: WoDetailApi }>(`/api/v1/work-orders/${id}`).subscribe({
       next: (res) => {
         const detail = this.mapDetail(res.data as WoDetailApi);
+        const prefs = this.loadQuotePrefs(id);
+        const detailWithPrefs: WorkOrder = { ...detail, ...prefs };
         this._workOrders.update(orders => {
           const idx = orders.findIndex(o => o.id === id);
-          if (idx === -1) return [detail, ...orders];
+          if (idx === -1) return [detailWithPrefs, ...orders];
           const next = [...orders];
-          next[idx] = detail;
+          next[idx] = detailWithPrefs;
           return next;
         });
       },
     });
+  }
+
+  private loadQuotePrefs(id: string): { incluirIvaCotizacion?: boolean; descuento?: QuoteDescuento } {
+    try {
+      const raw = localStorage.getItem(`quote_prefs_${id}`);
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  }
+
+  private saveQuotePrefs(id: string, patch: { incluirIvaCotizacion?: boolean; descuento?: QuoteDescuento | null }): void {
+    try {
+      const current = this.loadQuotePrefs(id);
+      const updated: Record<string, unknown> = { ...current, ...patch };
+      if (patch.descuento === null) delete updated['descuento'];
+      localStorage.setItem(`quote_prefs_${id}`, JSON.stringify(updated));
+    } catch {}
   }
 
   public getById(id: string): WorkOrder | undefined {
@@ -564,12 +582,28 @@ export class WorkOrdersService {
     this._workOrders.update(orders => orders.map(o =>
       o.id === id ? { ...o, incluirIvaCotizacion } : o
     ));
+    this.saveQuotePrefs(id, { incluirIvaCotizacion });
+    this.syncQuoteTotalsToFinanceIfNeeded(id);
   }
 
   public updateQuoteDiscount(id: string, descuento: QuoteDescuento | null): void {
     this._workOrders.update(orders => orders.map(o =>
       o.id === id ? { ...o, descuento: descuento ?? undefined } : o
     ));
+    this.saveQuotePrefs(id, { descuento });
+    this.syncQuoteTotalsToFinanceIfNeeded(id);
+  }
+
+  private syncQuoteTotalsToFinanceIfNeeded(id: string): void {
+    const order = this._workOrders().find(o => o.id === id);
+    if (!order?.cargoCuentasPorCobrarGenerado) return;
+    const totals = this.computeQuoteTotals(order);
+    this._http.patch(`/api/v1/work-orders/${id}/ar-total`, {
+      subtotal: totals.subtotal,
+      descuento: totals.descuentoMonto,
+      iva: totals.iva,
+      total: totals.total,
+    }).subscribe();
   }
 
   public addInternalNote(id: string, texto: string, usuario = this._auth.currentUser()?.name ?? 'Sistema'): void {

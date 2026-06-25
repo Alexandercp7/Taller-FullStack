@@ -1114,7 +1114,7 @@ export async function registerRestApi(app: FastifyInstance, container: Container
     if (!u) return reply.status(401).send({ error: 'No autorizado' });
     const perPage = Math.min(Number((req.query as any).per_page ?? 100), 500);
     const ars = await db.accountReceivable.findMany({
-      include: { client: true },
+      include: { client: true, order: { select: { code: true } } },
       orderBy: { createdAt: 'desc' },
       take: perPage,
     });
@@ -1127,13 +1127,49 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         const overdue = ar.dueDate && ar.dueDate < now && ar.status !== 'PAID';
         const estado = overdue ? 'Vencido' : PAYMENT_STATUS_MAP[ar.status] ?? ar.status;
         return {
-          id: ar.id, work_order_id: ar.orderId, cliente: ar.client?.name ?? '',
+          id: ar.id, work_order_id: ar.orderId, code: (ar as any).order?.code ?? ar.orderId,
+          cliente: ar.client?.name ?? '',
           monto: total, monto_recibido: paid, monto_pendiente: pending,
           fecha_emision: toDate(ar.createdAt), fecha_vencimiento: toDate(ar.dueDate),
           estado: PAYMENT_STATUS_MAP[ar.status] ?? ar.status, estado_calculado: estado,
         };
       }),
     };
+  });
+
+  app.patch('/api/v1/work-orders/:id/ar-total', async (req, reply) => {
+    const u = getAuthUser(req, container);
+    if (!u) return reply.status(401).send({ error: 'No autorizado' });
+    const { id } = req.params as any;
+    const body = req.body as any;
+    const total = Number(body.total ?? 0);
+    if (total < 0) return reply.status(400).send({ error: 'Total inválido' });
+
+    const ar = await db.accountReceivable.findUnique({ where: { orderId: id } });
+    if (!ar) return reply.status(404).send({ error: 'No existe cuenta por cobrar para esta orden' });
+
+    const newBalance = Math.max(0, total - Number(ar.paid));
+    const newStatus = newBalance === 0 ? 'PAID' : Number(ar.paid) > 0 ? 'PARTIAL' : 'PENDING';
+
+    await db.accountReceivable.update({
+      where: { id: ar.id },
+      data: { total, balance: newBalance, status: newStatus as any },
+    });
+
+    await db.timelineEntry.create({
+      data: {
+        orderId: id, userId: u.id, event: 'quote_summary',
+        detail: {
+          subtotal: Number(body.subtotal ?? total),
+          descuento: Number(body.descuento ?? 0),
+          iva: Number(body.iva ?? 0),
+          total,
+          actualizado: true,
+        },
+      },
+    });
+
+    return { message: 'ok' };
   });
 
   app.patch('/api/v1/finance/receivable/:id/payment', async (req, reply) => {
