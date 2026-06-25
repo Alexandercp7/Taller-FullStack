@@ -465,14 +465,35 @@ export async function registerRestApi(app: FastifyInstance, container: Container
         include: { quotes: true, assignedParts: true, accountReceivable: true },
       });
       if (order) {
-        const total = order.quotes.reduce((sum, q) => sum + Number(q.total), 0)
+        const subtotalDB = order.quotes.reduce((sum, q) => sum + Number(q.total), 0)
           + order.assignedParts.reduce((sum, p) => sum + Number(p.unitPrice) * p.quantity, 0);
+
+        // Si el frontend envía el total calculado (con descuento + IVA), se usa ese valor
+        const cotizacionTotal = body.cotizacion_total !== undefined && Number(body.cotizacion_total) > 0
+          ? Number(body.cotizacion_total)
+          : subtotalDB;
 
         let ar = order.accountReceivable;
         if (!ar) {
           ar = await db.accountReceivable.create({
-            data: { orderId: id, clientId: order.clientId, total, paid: 0, balance: total, status: 'PENDING' },
+            data: { orderId: id, clientId: order.clientId, total: cotizacionTotal, paid: 0, balance: cotizacionTotal, status: 'PENDING' },
           });
+
+          // Guardar desglose en timeline para trazabilidad de ganancias
+          const tieneDesglose = body.cotizacion_total !== undefined;
+          if (tieneDesglose) {
+            await db.timelineEntry.create({
+              data: {
+                orderId: id, userId: u.id, event: 'quote_summary',
+                detail: {
+                  subtotal: Number(body.cotizacion_subtotal ?? subtotalDB),
+                  descuento: Number(body.cotizacion_descuento ?? 0),
+                  iva: Number(body.cotizacion_iva ?? 0),
+                  total: cotizacionTotal,
+                },
+              },
+            });
+          }
         }
 
         if (dbStatus === 'DELIVERED' && Number(ar.balance) > 0) {
