@@ -1,0 +1,93 @@
+@startuml
+title Vista General OT + Cotizacion + Cobranza + Facturacion
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam rectangle {
+  BackgroundColor #F8F8F8
+  BorderColor #404040
+  FontColor #202020
+}
+skinparam ArrowColor #404040
+
+rectangle "1. OT" as OT {
+  [Recepcion]
+  [Diagnostico]
+  [Ejecucion]
+  [Control de calidad]
+  [Cierre OT]
+}
+
+rectangle "2. Cotizacion dentro de la OT" as COT {
+  [Servicios propuestos]
+  [Refacciones propuestas]
+  [Descuento por OT]
+  [IVA por OT]
+  [Precios editables solo en esta OT]
+}
+
+rectangle "3. Pagos antes de entrega" as ANT {
+  [Anticipo 1]
+  [Anticipo 2]
+  [Anticipo N]
+  [Caja]
+  [Comision terminal]
+}
+
+rectangle "4. Al cerrar la OT" as CIERRE {
+  [Congelar total final]
+  [Restar anticipos]
+  [Crear cuenta por cobrar]
+}
+
+rectangle "5. Cobranza" as COB {
+  [Pago final]
+  [Saldo pendiente]
+  [CxC Pendiente]
+  [CxC Parcial]
+  [CxC Pagada]
+}
+
+rectangle "6. Facturacion" as FAC {
+  [No requerida]
+  [Pendiente de datos]
+  [Lista para facturar]
+  [Facturada]
+  [Cancelada]
+}
+
+rectangle "7. Reportes" as REP {
+  [Subtotal]
+  [IVA]
+  [Total]
+  [Ingreso bruto]
+  [Comision terminal]
+  [Ingreso neto]
+}
+
+OT --> COT : diagnostico alimenta propuesta
+COT --> ANT : cliente puede pagar por partes
+OT --> CIERRE : cuando el carro esta listo
+ANT --> CIERRE : anticipos acumulados
+CIERRE --> COB : nace CxC al cerrar OT
+CIERRE --> FAC : define estado fiscal
+COB --> REP
+FAC --> REP
+COT --> REP : referencia comercial\npero no fuente final de cobro
+
+note right of COT
+La cotizacion propone.
+No debe ser la fuente final
+del ingreso financiero.
+end note
+
+note right of CIERRE
+Aqui se define el monto
+que realmente pasa a finanzas.
+end note
+
+note right of FAC
+El IVA se separa de utilidad.
+end note
+
+@enduml

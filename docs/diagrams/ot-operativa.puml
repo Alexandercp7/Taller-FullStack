@@ -1,0 +1,64 @@
+@startuml
+title Flujo Operativo de la Orden de Trabajo
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam activity {
+  BackgroundColor #F8F6F1
+  BorderColor #3B3B3B
+  DiamondBackgroundColor #F4E3C1
+  DiamondBorderColor #7A5C1E
+  ArrowColor #3B3B3B
+  FontColor #202020
+}
+
+start
+
+:Recepcion crea OT;
+:Captura cliente, vehiculo,\nfalla reportada, fotos y checklist inicial;
+:Estado OT = Nueva;
+
+:Tecnico revisa unidad;
+:Estado OT = Diagnostico;
+:Se detectan fallas y trabajos sugeridos;
+
+:Se arma cotizacion inicial\ndentro de la OT;
+:Se decide por OT si aplica IVA;
+:Se pueden ajustar precios\nsolo para esta OT;
+
+if (Cliente autoriza?) then (Si)
+  :Estado OT = Esperando autorizacion -> En reparacion;
+  :Se ejecutan trabajos aprobados;
+  :Se asignan piezas y servicios reales;
+  :Se registran cambios sobre\nlo originalmente cotizado;
+else (No)
+  :Revisar / ajustar cotizacion;
+  if (Cliente cancela?) then (Si)
+    :Estado OT = Cancelada;
+    stop
+  else (No)
+    :Volver a presentar propuesta;
+  endif
+endif
+
+:Estado OT = Control de calidad;
+:Se valida trabajo final;
+
+if (Todo correcto?) then (Si)
+  :Estado OT = Lista para entrega;
+else (No)
+  :Regresa a En reparacion;
+  :Corregir detalles;
+  :Volver a control de calidad;
+endif
+
+:Cerrar OT;
+:Congelar monto final cobrable;
+:Estado OT = Cerrada;
+
+:Vehiculo listo para entregar;
+:Entregar unidad al cliente;
+:Estado OT = Entregada;
+
+stop
+@enduml

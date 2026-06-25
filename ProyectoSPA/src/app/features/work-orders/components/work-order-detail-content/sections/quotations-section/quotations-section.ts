@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmCheckboxImports } from '@spartan-ng/helm/checkbox';
 import { HlmComboboxImports } from '@spartan-ng/helm/combobox';
+import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { NotificationService } from '../../../../../../core';
 import { type PartCatalogItem, type ServiceCatalogItem } from '../../../../models';
@@ -18,7 +18,7 @@ import type { Servicio } from '../../../../../prices/models/price.model';
 
 @Component({
 	selector: 'spartan-wo-quotations-section',
-	imports: [CommonModule, FormsModule, HlmCardImports, HlmComboboxImports, HlmButtonImports, HlmCheckboxImports, HlmTableImports],
+	imports: [CommonModule, HlmCardImports, HlmComboboxImports, HlmButtonImports, HlmCheckboxImports, HlmInputImports, HlmTableImports],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	templateUrl: './quotations-section.html',
 	styleUrl: './quotations-section.css',
@@ -335,7 +335,8 @@ export class WorkOrderQuotationsSectionComponent {
 
 	protected onDescuentoValorChange(valor: string): void {
 		const num = parseFloat(valor);
-		this.descuentoValorRaw.set(isNaN(num) || num < 0 ? 0 : num);
+		const normalized = isNaN(num) || num < 0 ? 0 : num;
+		this.descuentoValorRaw.set(this.descuentoTipo() === 'porcentaje' ? Math.min(normalized, 100) : normalized);
 		this.actualizarDescuentoEnServicio();
 	}
 
@@ -343,7 +344,8 @@ export class WorkOrderQuotationsSectionComponent {
 		const order = this.order();
 		if (!order || !this.descuentoActivo()) return;
 		const valor = this.descuentoValorRaw();
-		this._service.updateQuoteDiscount(order.id, valor > 0 ? { tipo: this.descuentoTipo(), valor } : null);
+		if (valor <= 0) return;
+		this._service.updateQuoteDiscount(order.id, { tipo: this.descuentoTipo(), valor });
 	}
 
 	protected exportQuotationPdf(): void {

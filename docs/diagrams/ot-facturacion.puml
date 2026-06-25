@@ -1,0 +1,56 @@
+@startuml
+title Flujo de Facturacion e IVA por OT
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam activity {
+  BackgroundColor #FBF7FF
+  BorderColor #5E3B7A
+  DiamondBackgroundColor #EADCF6
+  DiamondBorderColor #5E3B7A
+  ArrowColor #5E3B7A
+  FontColor #2E1A3A
+}
+
+start
+
+:OT avanza hasta cierre;
+:Monto final queda congelado;
+
+if (La OT requiere factura?) then (No)
+  :Estado facturacion = No requerida;
+  :IVA no se trata como utilidad;\nsolo se conserva la decision fiscal de la OT;
+  stop
+else (Si)
+  :Verificar datos fiscales;
+  if (Faltan datos?) then (Si)
+    :Estado facturacion = Pendiente de datos;
+    :Solicitar RFC, razon social,\nuso CFDI, regimen y correo;
+  else (No)
+    :Estado facturacion = Lista para facturar;
+  endif
+endif
+
+if (Datos completos?) then (Si)
+  :Emitir factura;
+  :Guardar folio, fecha,\nsubtotal, IVA y total facturado;
+  :Estado facturacion = Facturada;
+else (No)
+  :Esperar datos correctos;
+endif
+
+if (Se cancela el proceso o la factura?) then (Si)
+  :Estado facturacion = Cancelada;
+else (No)
+endif
+
+:Reportes separan:
+- subtotal
+- IVA
+- total
+- facturado / no facturado;
+
+:IVA no entra como ganancia;
+
+stop
+@enduml

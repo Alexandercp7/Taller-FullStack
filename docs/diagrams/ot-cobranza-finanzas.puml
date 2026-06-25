@@ -1,0 +1,73 @@
+@startuml
+title Flujo de Cobranza, Anticipos y Finanzas
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam activity {
+  BackgroundColor #F5FAF7
+  BorderColor #2E5E4E
+  DiamondBackgroundColor #D9F0E3
+  DiamondBorderColor #2E5E4E
+  ArrowColor #2E5E4E
+  FontColor #15342A
+}
+
+start
+
+:Crear cotizacion dentro de OT;
+:Definir subtotal,\ndescuento e IVA por OT;
+
+if (Cliente paga anticipo?) then (Si)
+  :Registrar pago parcial / anticipo;
+  :Guardar metodo de pago;
+  if (Pago con terminal?) then (Si)
+    :Guardar porcentaje de comision terminal;
+    :Calcular monto comision;
+    :Calcular monto neto recibido;
+  else (No)
+    :Comision terminal = 0;
+  endif
+  :Acumular anticipos a la OT;
+  :Registrar entrada de caja;
+else (No)
+endif
+
+if (Hay mas anticipos antes de entrega?) then (Si)
+  :Repetir registro de pagos parciales;
+else (No)
+endif
+
+:Cerrar OT cuando el carro\nya esta listo para entregar;
+:Congelar total final cobrable;
+:Calcular anticipos acumulados;
+:Saldo pendiente = total final - anticipos;
+
+:Crear cuenta por cobrar al cerrar OT;
+
+if (Saldo pendiente > 0?) then (Si)
+  :Estado CxC = Pendiente o Parcial;
+  :Cobrar liquidacion al entregar\no despues;
+  if (Pago final recibido?) then (Si)
+    :Registrar pago;
+    :Registrar caja;
+    if (Pago con terminal?) then (Si)
+      :Registrar comision terminal;
+    else (No)
+    endif
+    :Actualizar monto recibido y saldo;
+  else (No)
+    :Mantener saldo por cobrar;
+  endif
+else (No)
+  :Estado CxC = Pagada al nacer;
+endif
+
+:Finanzas reporta por separado:
+- total cobrado bruto
+- anticipos
+- saldo pendiente
+- comisiones terminal
+- ingreso neto;
+
+stop
+@enduml
