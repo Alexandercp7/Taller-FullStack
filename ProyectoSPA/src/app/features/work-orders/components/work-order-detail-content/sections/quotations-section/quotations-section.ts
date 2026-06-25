@@ -67,7 +67,7 @@ export class WorkOrderQuotationsSectionComponent {
 			Herramientas: allItems.filter(i => i.tipo === 'Herramienta' && i.nombre.toLowerCase().includes(search)),
 			Consumibles: allItems.filter(i => i.tipo === 'Consumible' && i.nombre.toLowerCase().includes(search)),
 			Equipos: allItems.filter(i => i.tipo === 'Equipo' && i.nombre.toLowerCase().includes(search)),
-			'Partes en venta': allItems.filter(i => i.tipo === 'Parte en venta' && i.nombre.toLowerCase().includes(search)),
+			'Refacciones en venta': allItems.filter(i => i.tipo === 'Parte en venta' && i.nombre.toLowerCase().includes(search)),
 		};
 		
 		return Object.entries(groups).filter(([_, items]) => items.length > 0);

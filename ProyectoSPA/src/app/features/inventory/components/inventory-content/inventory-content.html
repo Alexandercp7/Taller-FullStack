@@ -2,7 +2,7 @@
 	<div class="header-row">
 		<div>
 			<h1 class="text-xl font-semibold">Inventario</h1>
-			<p class="text-muted-foreground text-sm">Control integrado de herramientas, resguardos y partes en venta.</p>
+			<p class="text-muted-foreground text-sm">Control integrado de herramientas, resguardos y refacciones en venta.</p>
 		</div>
 		<span hlmBadge class="alert-badge">Alertas de stock: {{ lowStock().length }}</span>
 	</div>
@@ -18,7 +18,7 @@
 		<div hlmTabsList class="tabs-grid">
 			<button hlmTabsTrigger="operativo">Herramientas/Consumibles/Equipos</button>
 			<button hlmTabsTrigger="resguardo">Resguardo cliente</button>
-			<button hlmTabsTrigger="venta">Partes en venta</button>
+			<button hlmTabsTrigger="venta">Refacciones en venta</button>
 		</div>
 
 		<div hlmTabsContent="operativo" class="space-y-4 pt-4">
