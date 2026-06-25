@@ -93,7 +93,7 @@ import type { AccountReceivable, ReceivableStatus } from '../../models/finances.
 							<tbody>
 								<tr *ngFor="let account of accounts()" class="border-b hover:bg-muted">
 									<td class="p-3 font-medium">{{ account.cliente }}</td>
-									<td class="p-3 text-xs">{{ account.otId }}</td>
+									<td class="p-3 text-xs font-mono">{{ account.code }}</td>
 									<td class="p-3 text-right font-semibold">{{ account.monto | currency:'MXN':'symbol':'1.0-0' }}</td>
 									<td class="p-3 text-right">{{ account.montoRecibido | currency:'MXN':'symbol':'1.0-0' }}</td>
 									<td class="p-3 text-right font-bold" [class.text-[var(--destructive-foreground)]]="account.montoPendiente > 0">{{ account.montoPendiente | currency:'MXN':'symbol':'1.0-0' }}</td>

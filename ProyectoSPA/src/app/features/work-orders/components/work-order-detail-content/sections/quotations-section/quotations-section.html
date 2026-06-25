@@ -128,8 +128,56 @@
 			</hlm-card-header>
 			<div hlmCardContent class="space-y-2 text-sm">
 				<p>Subtotal: <strong>${{ subtotalCotizacion() | number : '1.0-0' }}</strong></p>
-				<p>IVA: <strong>{{ incluirIvaCotizacion() ? ('$' + (ivaCotizacion() | number : '1.0-0')) : 'No incluido' }}</strong></p>
-				<p class="text-base">Total cotizacion: <strong>${{ totalCotizacion() | number : '1.0-0' }}</strong></p>
+
+				<!-- Descuento -->
+				<div class="border-t pt-3 space-y-2">
+					<label class="flex items-center gap-2">
+						<hlm-checkbox [checked]="descuentoActivo()" (checkedChange)="onDescuentoActivoChange($event)" />
+						<span>Aplicar descuento (opcional)</span>
+					</label>
+					@if (descuentoActivo()) {
+						<div class="flex items-center gap-2 pl-1 flex-wrap">
+							<div class="flex rounded-md overflow-hidden border text-xs">
+								<button
+									type="button"
+									class="px-3 py-1.5 transition-colors"
+									[class.bg-primary]="descuentoTipo() === 'porcentaje'"
+									[class.text-primary-foreground]="descuentoTipo() === 'porcentaje'"
+									[class.bg-background]="descuentoTipo() !== 'porcentaje'"
+									(click)="onDescuentoTipoChange('porcentaje')"
+								>% Porcentaje</button>
+								<button
+									type="button"
+									class="px-3 py-1.5 transition-colors border-l"
+									[class.bg-primary]="descuentoTipo() === 'monto'"
+									[class.text-primary-foreground]="descuentoTipo() === 'monto'"
+									[class.bg-background]="descuentoTipo() !== 'monto'"
+									(click)="onDescuentoTipoChange('monto')"
+								>$ Monto fijo</button>
+							</div>
+							<input
+								type="number"
+								class="border rounded px-2 py-1 text-sm w-28 bg-background"
+								[min]="0"
+								[max]="descuentoTipo() === 'porcentaje' ? 100 : null"
+								[value]="descuentoValorRaw()"
+								(input)="onDescuentoValorChange($any($event.target).value)"
+								placeholder="0"
+							/>
+							<span class="text-muted-foreground">{{ descuentoTipo() === 'porcentaje' ? '%' : 'MXN' }}</span>
+						</div>
+						@if (descuentoMonto() > 0) {
+							<p class="text-destructive pl-1">Descuento aplicado: <strong>-${{ descuentoMonto() | number : '1.0-0' }}</strong></p>
+						}
+					}
+				</div>
+
+				<!-- IVA y Total -->
+				<div class="border-t pt-2 space-y-1">
+					<p>IVA: <strong>{{ incluirIvaCotizacion() ? ('$' + (ivaCotizacion() | number : '1.0-0')) : 'No incluido' }}</strong></p>
+					<p class="text-base font-semibold">Total cotizacion: <strong>${{ totalCotizacion() | number : '1.0-0' }}</strong></p>
+				</div>
+
 				<div class="flex flex-col gap-3 pt-2">
 					<label class="flex items-center gap-2">
 						<hlm-checkbox [checked]="incluirIvaCotizacion()" (checkedChange)="onIncludeIvaChange($event)" />

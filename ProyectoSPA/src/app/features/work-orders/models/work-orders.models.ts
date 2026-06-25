@@ -1,3 +1,8 @@
+export interface QuoteDescuento {
+	tipo: 'porcentaje' | 'monto';
+	valor: number;
+}
+
 export type WorkOrderStatus =
 	| 'Agendado'
 	| 'En Espera'
@@ -113,6 +118,7 @@ export interface WorkOrder {
 	catalogoServicios: ServiceCatalogItem[];
 	serviciosAsignados: AssignedServiceItem[];
 	incluirIvaCotizacion?: boolean;
+	descuento?: QuoteDescuento;
 	cargoCuentasPorCobrarGenerado: boolean;
 	firmaCliente?: ClientSignature;
 	notasInternas: WorkOrderNote[];

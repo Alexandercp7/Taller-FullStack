@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
@@ -17,7 +18,7 @@ import type { Servicio } from '../../../../../prices/models/price.model';
 
 @Component({
 	selector: 'spartan-wo-quotations-section',
-	imports: [CommonModule, HlmCardImports, HlmComboboxImports, HlmButtonImports, HlmCheckboxImports, HlmTableImports],
+	imports: [CommonModule, FormsModule, HlmCardImports, HlmComboboxImports, HlmButtonImports, HlmCheckboxImports, HlmTableImports],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	templateUrl: './quotations-section.html',
 	styleUrl: './quotations-section.css',
@@ -37,6 +38,26 @@ export class WorkOrderQuotationsSectionComponent {
 	protected readonly selectedService = signal<Servicio | null>(null);
 	protected readonly partSearch = signal('');
 	protected readonly serviceSearch = signal('');
+
+	protected readonly descuentoActivo = signal(false);
+	protected readonly descuentoTipo = signal<'porcentaje' | 'monto'>('porcentaje');
+	protected readonly descuentoValorRaw = signal(0);
+
+	constructor() {
+		effect(() => {
+			const order = this.order();
+			if (!order) return;
+			const d = order.descuento;
+			if (d) {
+				this.descuentoActivo.set(true);
+				this.descuentoTipo.set(d.tipo);
+				this.descuentoValorRaw.set(d.valor);
+			} else {
+				this.descuentoActivo.set(false);
+				this.descuentoValorRaw.set(0);
+			}
+		});
+	}
 
 	protected readonly inventoryByType = computed(() => {
 		const search = this.partSearch().toLowerCase();
@@ -262,24 +283,67 @@ export class WorkOrderQuotationsSectionComponent {
 		return order.serviciosAsignados.reduce((sum, service) => sum + this.getPriceToDisplayInTable(service), 0);
 	});
 
-	protected totalCotizacion = computed(() => {
-		return this.subtotalCotizacion() + this.ivaCotizacion();
-	});
-
 	protected subtotalCotizacion = computed(() => {
 		return this.totalRefacciones() + this.totalServicios();
+	});
+
+	protected descuentoMonto = computed(() => {
+		if (!this.descuentoActivo() || this.descuentoValorRaw() <= 0) return 0;
+		const sub = this.subtotalCotizacion();
+		const monto = this.descuentoTipo() === 'porcentaje'
+			? sub * this.descuentoValorRaw() / 100
+			: this.descuentoValorRaw();
+		return Math.min(monto, sub);
+	});
+
+	protected subtotalConDescuento = computed(() => {
+		return Math.max(0, this.subtotalCotizacion() - this.descuentoMonto());
 	});
 
 	protected incluirIvaCotizacion = computed(() => this.order()?.incluirIvaCotizacion ?? false);
 
 	protected ivaCotizacion = computed(() => {
-		return this.incluirIvaCotizacion() ? this.subtotalCotizacion() * 0.16 : 0;
+		return this.incluirIvaCotizacion() ? this.subtotalConDescuento() * 0.16 : 0;
+	});
+
+	protected totalCotizacion = computed(() => {
+		return this.subtotalConDescuento() + this.ivaCotizacion();
 	});
 
 	protected onIncludeIvaChange(checked: boolean | 'indeterminate'): void {
 		const order = this.order();
 		if (!order) return;
 		this._service.updateQuoteTaxPreference(order.id, checked === true);
+	}
+
+	protected onDescuentoActivoChange(checked: boolean | 'indeterminate'): void {
+		const isActive = checked === true;
+		this.descuentoActivo.set(isActive);
+		const order = this.order();
+		if (!order) return;
+		if (!isActive) {
+			this._service.updateQuoteDiscount(order.id, null);
+		} else if (this.descuentoValorRaw() > 0) {
+			this._service.updateQuoteDiscount(order.id, { tipo: this.descuentoTipo(), valor: this.descuentoValorRaw() });
+		}
+	}
+
+	protected onDescuentoTipoChange(tipo: 'porcentaje' | 'monto'): void {
+		this.descuentoTipo.set(tipo);
+		this.actualizarDescuentoEnServicio();
+	}
+
+	protected onDescuentoValorChange(valor: string): void {
+		const num = parseFloat(valor);
+		this.descuentoValorRaw.set(isNaN(num) || num < 0 ? 0 : num);
+		this.actualizarDescuentoEnServicio();
+	}
+
+	private actualizarDescuentoEnServicio(): void {
+		const order = this.order();
+		if (!order || !this.descuentoActivo()) return;
+		const valor = this.descuentoValorRaw();
+		this._service.updateQuoteDiscount(order.id, valor > 0 ? { tipo: this.descuentoTipo(), valor } : null);
 	}
 
 	protected exportQuotationPdf(): void {

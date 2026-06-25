@@ -10,7 +10,7 @@ interface CashApi {
   monto: number; metodo_pago: string; referencia: string | null;
 }
 interface ReceivableApi {
-  id: number; work_order_id: string; cliente: string;
+  id: number; work_order_id: string; code?: string; cliente: string;
   monto: number; monto_recibido: number; monto_pendiente: number;
   fecha_emision: string; fecha_vencimiento: string | null; estado: string; estado_calculado?: string;
 }
@@ -87,9 +87,11 @@ export class FinancesService {
   }
 
   private mapReceivable(item: ReceivableApi): AccountReceivable {
+    const code = item.code ?? item.work_order_id;
     return {
-      id: String(item.id), otId: item.work_order_id, cliente: item.cliente ?? '',
-      concepto: `OT ${item.work_order_id}`, monto: Number(item.monto),
+      id: String(item.id), otId: item.work_order_id, code,
+      cliente: item.cliente ?? '',
+      concepto: `OT ${code}`, monto: Number(item.monto),
       montoRecibido: Number(item.monto_recibido), montoPendiente: Number(item.monto_pendiente),
       fechaEmision: item.fecha_emision, fechaVencimiento: item.fecha_vencimiento ?? undefined,
       estado: (item.estado_calculado ?? item.estado) as AccountReceivable['estado'],
